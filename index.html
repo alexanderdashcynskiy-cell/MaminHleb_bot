@@ -497,16 +497,19 @@
      </div>
      <!-- FIX #4: добавлен блок выбора времени -->
      <div>
-      <label class="block text-sm font-semibold text-coffee mb-3">Время получения*</label>
-      <div class="grid grid-cols-3 gap-2" id="preorder-time-buttons">
-       <button type="button" onclick="selectPreorderTimeSlot('07:00', this)" class="preorder-time-slot-btn py-2 border-2 border-beige rounded-xl text-sm font-semibold text-coffee hover:border-purple-400 transition-colors">07:00</button>
-       <button type="button" onclick="selectPreorderTimeSlot('07:30', this)" class="preorder-time-slot-btn py-2 border-2 border-beige rounded-xl text-sm font-semibold text-coffee hover:border-purple-400 transition-colors">07:30</button>
-       <button type="button" onclick="selectPreorderTimeSlot('08:00', this)" class="preorder-time-slot-btn py-2 border-2 border-beige rounded-xl text-sm font-semibold text-coffee hover:border-purple-400 transition-colors">08:00</button>
-       <button type="button" onclick="selectPreorderTimeSlot('08:30', this)" class="preorder-time-slot-btn py-2 border-2 border-beige rounded-xl text-sm font-semibold text-coffee hover:border-purple-400 transition-colors">08:30</button>
-       <button type="button" onclick="selectPreorderTimeSlot('09:00', this)" class="preorder-time-slot-btn py-2 border-2 border-beige rounded-xl text-sm font-semibold text-coffee hover:border-purple-400 transition-colors">09:00</button>
-      </div>
+        <div="flex gap-3 mb-4">
+            <div class="flex-1">
+                <label class="bloc-text-sm font-semibold text-coffe mb-2">Дата получения*</label>
+                <input type="date" id="preorder-date" class="w-full px-4 py-3 border-2 border-beige rounded-x1 focus:outline-none focus:border-purple-400 transition-colors required">
+</div>
+<div class="flex-1">
+    <label class="block text-sm font-semibold text-coffee mb-2">Время(07:00-09:00)*</label>
+    <input type="time" id="preorder-time" min="07:00" max="09:00" class="w-full px-4 py-3 border-2 border-beige rounded-x1 focus: outline-none focus: border-purple-400 transition-colors" required>
+</div>'
+</div>
+
       <input type="hidden" id="preorder-time-input" value="">
-     </div>
+     </div=>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Ваше имя*</label><input type="text" id="preorder-name" placeholder="Введите имя" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Номер телефона*</label><input type="tel" id="preorder-phone" placeholder="+375 (XX) XXX-XX-XX" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="preorder-note" placeholder="Ваши пожелания..." rows="2" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none"></textarea></div>
@@ -663,13 +666,13 @@
         if (screenName === 'preorder') {
           preorderCart = [];
           preorderTime = null;
-          document.getElementById('preorder-time-input').value = '';
-          document.querySelectorAll('.preorder-time-slot-btn').forEach(b => {
-            b.classList.remove('bg-purple-100', 'border-purple-400');
-            b.classList.add('border-beige');
-          });
           renderPreorderProducts();
           updatePreorderTotal();
+const dateInput=document.getElementById('preorder-date');
+if(dateInput) {
+    const today=new Date().toISOString().split('T') [0];
+    dateInput.min = today;
+           } 
         }
       }
     }
@@ -930,9 +933,9 @@
       const total = subtotal + (deliveryMethod === 'delivery' ? DELIVERY_COST : 0);
       setTimeout(() => {
         const orderId = 'ORD' + Date.now();
-        showReceipt(orderId, name, phone, cartSnapshot, total, deliveryMethod, address, pickupTime);
-        const orderData = {
+        sendOrderToServer({
             orderNumber: orderId,
+            type: "Заказ",
             name: name,
             phone: phone,
             telegramId: telegramId,
@@ -941,10 +944,16 @@
             time: pickupTime ||"Как можно быстрее",
             items: JSON.stringify(cartSnapshot),
             total: total,
-        };
-        sendOrderToServer(orderData);
+        });
+        showReceipt(orderId, name, phone, cartSnapshot, total, deliveryMethod, address, pickupTime);
         cart = [];
-        updateCartUI(); updateFloatingCart();
+        updateCartUI(); 
+        updateFloatingCart();
+
+        document.getElementById('checkout-name').value='';
+        document.getElementById('checkout-phone').value='';
+        document.getElementById('checkout-addres').value='';
+        document.getElementById('checkout-note').value='';
         btn.disabled = false; btn.textContent = 'Подтвердить заказ';
       }, 1500);
     }
@@ -1084,7 +1093,10 @@
 
     function submitPreorder(event) {
       event.preventDefault();
-      if (!preorderTime) { showToast('Пожалуйста, выберите время получения', '⚠️'); return; }
+      const dateVal=document.getElementById('preorder-date')?.value;
+      const timeVal=document.getElementById('preorder-time')?.value;
+      if(!dateVal || !timeVal) {showToast('Пожалуйста выберете дату и время', '⚠️' ); return;}
+      preorderTime = `${dateVal} в ${timeVal}`;
       if (preorderCart.length === 0) { showToast('Пожалуйста, выберите хотя бы один товар', '⚠️'); return; }
       const name = document.getElementById('preorder-name').value.trim();
       const phone = document.getElementById('preorder-phone').value.trim();
@@ -1096,7 +1108,16 @@
       const total = cartSnapshot.reduce((s, i) => s + i.price * i.quantity, 0);
       setTimeout(() => {
         const orderId = 'PRE' + Date.now();
-        sendOrderToServer({ orderNumber: orderId, name, phone, telegramId, items: JSON.stringify(cartSnapshot), total });
+        sendOrderToServer({ 
+            orderNumber: orderId, 
+            type:"Предзаказ",
+            time: preorderTime,
+            name:name, 
+            phone:phone, 
+            telegramId:telegramId, 
+            items: JSON.stringify(cartSnapshot), 
+            total:total
+         });
         showPreorderReceipt(orderId, name, phone, cartSnapshot, total, preorderTime);
         preorderCart = []; preorderTime = null;
         document.getElementById('preorder-name').value = '';
@@ -1198,7 +1219,7 @@
       async function sendOrderToServer(order) {
     // --- 1. ВСТАВЬТЕ ВАШИ ДАННЫЕ ОТ ТЕЛЕГРАМА ---
     const BOT_TOKEN = '8734501530:AAFavY-eHYRmTUxSy5apoucHvo1GikpZCfA';
-    const CHAT_ID   = 'В-5257876381';
+    const CHAT_ID   = '-5257876381';
 
     // --- 2. ВСТАВЬТЕ ССЫЛКУ ИЗ GOOGLE APPS SCRIPT ---
     const GOOGLE_APP_URL = 'https://script.google.com/macros/s/AKfycbynZHtrZpwXWE1YxYN3QxDXw7Jcld8uhkf2M7Fxo69-Pv6licqL_7-skRri-BTVDirB/exec';
@@ -1222,12 +1243,34 @@
     }
 
     // Текст сообщения для пекарей
-    const tgMessage = 
-        `🚨 НОВЫЙ ЗАКАЗ 🚨\n\n` +
+    let header = "НОВЫЙ ЗАКАЗ (САМОВЫВОЗ)";
+    let icon = "🛍️";
+
+    if (order.orderNumber && order.orderNumber.startsWith("PRE")) {
+        header = "УТРЕННИЙ ПРЕДЗАКАЗ";
+        icon = "🌅";
+    } else if (order.deliveryMethod === "delivery") {
+        header = "НОВАЯ ДОСТАВКА";
+        icon = "🚗";
+    }
+
+    let addressStr = "";
+    if (order.deliveryMethod === "delivery" || (order.address && order.address !== "Самовывоз" && order.address !== "undefined")) {
+        addressStr = `🚗 Адрес: ${order.address || "Не указан"}\n`;
+    } else {
+        addressStr = `📍 Способ: Самовывоз\n`;
+    }
+
+    let timeStr = `🕐 Время: ${order.time || "Как можно быстрее"}\n`;
+
+    const tgMessage =u
+        `${icon} <b>${header}</b> ${icon}\n\n` +
         `👤 Имя: ${order.name}\n` +
         `📞 Телефон: ${order.phone}\n` +
-        `🛒 Состав:${itemsText}\n` +
-        `💰 ИТОГО: ${Number(order.total).toFixed(2)} руб.\n\n` +
+        addressStr +
+        timeStr +
+        `\n🛒 <b>Состав:</b>${itemsText}\n` +
+        `💰 <b>ИТОГО:</b> ${Number(order.total).toFixed(2)} руб.\n\n` +
         `Статус: 🟡 Ожидает`;
 
     const safeId = order.telegramId || 'unknown';
@@ -1238,7 +1281,7 @@
             [{ text: "🚚 Готов к выдаче",   callback_data: `ready_${safeId}`  }]
         ]
     };
-
+    
     try {
         // FIX #1: await + Promise.all — ошибки теперь реально ловятся
         await Promise.all([
