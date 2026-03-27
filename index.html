@@ -1216,35 +1216,127 @@ if(dateInput) {
     }
 
     // ── API ────────────────────────────────────────────────────────────────────
-     async function sendOrderToServer(order) {
-    // URL твоего Google Скрипта (проверь, чтобы он был актуальный)
-    const GOOGLE_APP_URL = 'https://script.google.com/macros/s/AKfycbw38loTslMYrAd914CB0CJwg9X6nugwPi1n6ClHgBipodWaZa4u5yBh_qdpZwQITht_/exec';
+     a async function sendOrderToServer(order) {
+    // --- 1. ВСТАВЬТЕ ВАШИ ДАННЫЕ ОТ ТЕЛЕГРАМА ---
+    const BOT_TOKEN = '8734501530:AAFavY-eHYRmTUxSy5apoucHvo1GikpZCfA';
+    const CHAT_ID   = '-5257876381';
 
-    const btn = document.getElementById('submit-checkout-btn') || document.getElementById('submit-preorder-btn');
+    // --- 2. ВСТАВЬТЕ ССЫЛКУ ИЗ GOOGLE APPS SCRIPT ---
+    const GOOGLE_APP_URL = 'https://script.google.com/macros/s/AKfycbynZHtrZpwXWE1YxYN3QxDXw7Jcld8uhkf2M7Fxo69-Pv6licqL_7-skRri-BTVDirB/exec';
+
+    // Кнопка — переводим в состояние "отправка"
+    const btn = document.getElementById('submit-checkout-btn') 
+             || document.getElementById('submit-preorder-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Отправка...'; }
 
+    // Формируем список товаров
+    let itemsText = '';
     try {
-        // Отправляем данные ТОЛЬКО в Google Script
-        await fetch(GOOGLE_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Это важно для Google Script
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ...order,
-                telegramId: String(telegramId || "0"), // Передаем ID пользователя
-                items: typeof order.items === 'string' ? order.items : JSON.stringify(order.items)
-            })
+        const items = typeof order.items === 'string'
+            ? JSON.parse(order.items)
+            : order.items;
+        items.forEach(item => {
+            itemsText += `\n▫️ ${item.product_name} x${item.quantity} — ${(item.price * item.quantity).toFixed(2)} руб.`;
         });
+    } catch(e) {
+        itemsText = '\n' + order.items;
+    }
 
-        showToast('Заказ принят! Ожидайте уведомления.', '✅');
+    // Текст сообщения для пекарей
+    let header = "НОВЫЙ ЗАКАЗ (САМОВЫВОЗ)";
+    let icon = "🛍️";
+
+    if (order.orderNumber && order.orderNumber.startsWith("PRE")) {
+        header = "УТРЕННИЙ ПРЕДЗАКАЗ";
+        icon = "🌅";
+    } else if (order.deliveryMethod === "delivery") {
+        header = "НОВАЯ ДОСТАВКА";
+        icon = "🚗";
+    }
+
+    let addressStr = "";
+    if (order.deliveryMethod === "delivery" || (order.address && order.address !== "Самовывоз" && order.address !== "undefined")) {
+        addressStr = `🚗 Адрес: ${order.address || "Не указан"}\n`;
+    } else {
+        addressStr = `📍 Способ: Самовывоз\n`;
+    }
+
+    let timeStr = `🕐 Время: ${order.time || "Как можно быстрее"}\n`;
+
+    const tgMessage =
+        `${icon} <b>${header}</b> ${icon}\n\n` +
+        `👤 Имя: ${order.name}\n` +
+        `📞 Телефон: ${order.phone}\n` +
+        addressStr +
+        timeStr +
+        `\n🛒 <b>Состав:</b>${itemsText}\n` +
+        `💰 <b>ИТОГО:</b> ${Number(order.total).toFixed(2)} руб.\n\n` +
+        `Статус: 🟡 Ожидает`;
+
+    const safeId = order.telegramId || 'unknown';
+
+    const replyMarkup = {
+        inline_keyboard: [
+            [{ text: "✅ Принять в работу", callback_data: `accept_${safeId}` }],
+            [{ text: "🚚 Готов к выдаче",   callback_data: `ready_${safeId}`  }]
+        ]
+    };
+    
+    try {
+        // FIX #1: await + Promise.all — ошибки теперь реально ловятся
+        await Promise.all([
+            // 1. Telegram
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id:      CHAT_ID,
+                    text:         tgMessage,
+                    parse_mode:   'HTML',
+                    reply_markup: replyMarkup
+                })
+            }).then(async res => {
+                const data = await res.json();
+                if (!data.ok) console.error('TG ошибка:', data.description);
+                else console.log('✅ Отправлено в Telegram');
+            }),
+
+            // 2. Google Таблица
+            fetch(GOOGLE_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    ...order,
+                    // FIX #5: всегда отправляем строку в таблицу
+                    items: typeof order.items === 'string'
+                        ? order.items
+                        : JSON.stringify(order.items)
+                })
+            }).then(async res => {
+                const text = await res.text();
+                console.log('✅ Отправлено в Google Таблицу:', text);
+            })
+        ]);
+
+        showToast('Заказ успешно отправлен! ✓', '✅');
 
     } catch (error) {
-        console.error('Ошибка:', error);
-        showToast('Ошибка. Позвоните нам!', '⚠️');
+        console.error('❌ Ошибка при отправке:', error);
+        showToast('Ошибка отправки. Позвоните нам!', '⚠️');
+
     } finally {
+        // FIX #4: кнопка всегда возвращается в исходное состояние
         if (btn) {
             btn.disabled = false;
-            btn.textContent = btn.id === 'submit-preorder-btn' ? 'Забронировать' : 'Подтвердить';
+            btn.textContent = btn.id === 'submit-preorder-btn'
+                ? 'Забронировать предзаказ'
+                : 'Подтвердить заказ';
         }
     }
 }
+
+    // ── Start ──────────────────────────────────────────────────────────────────
+    initApp();
+  </script>
+ </body>
+</html>
