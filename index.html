@@ -1217,83 +1217,34 @@ if(dateInput) {
 
     // ── API ────────────────────────────────────────────────────────────────────
      async function sendOrderToServer(order) {
-        const BOT_TOKEN = '8734501530:AAFavY-eHYRmTUxSy5apoucHvo1GikpZCfA';
-        const GOOGLE_APP_URL = 'https://script.google.com/macros/s/AKfycbynZHtrZpwXWE1YxYN3QxDXw7Jcld8uhkf2M7Fxo69-Pv6licqL_7-skRri-BTVDirB/exec';
+    // URL твоего Google Скрипта (проверь, чтобы он был актуальный)
+    const GOOGLE_APP_URL = 'https://script.google.com/macros/s/AKfycbynZHtrZpwXWE1YxYN3QxDXw7Jcld8uhkf2M7Fxo69-Pv6licqL_7-skRri-BTVDirB/exec';
 
-        const btn = document.getElementById('submit-checkout-btn') 
-                 || document.getElementById('submit-preorder-btn');
-        if (btn) { btn.disabled = true; btn.textContent = 'Отправка...'; }
+    const btn = document.getElementById('submit-checkout-btn') || document.getElementById('submit-preorder-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Отправка...'; }
 
-        let itemsText = '';
-        try {
-            const items = typeof order.items === 'string'
-                ? JSON.parse(order.items)
-                : order.items;
-            items.forEach(item => {
-                itemsText += `\n▫️ ${item.product_name} x${item.quantity} — ${(item.price * item.quantity).toFixed(2)} руб.`;
-            });
-        } catch(e) {
-            itemsText = '\n' + order.items;
-        }
+    try {
+        // Отправляем данные ТОЛЬКО в Google Script
+        await fetch(GOOGLE_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Это важно для Google Script
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...order,
+                telegramId: String(telegramId || "0"), // Передаем ID пользователя
+                items: typeof order.items === 'string' ? order.items : JSON.stringify(order.items)
+            })
+        });
 
-        let timeStr = `🕐 Время: ${order.time || "Как можно быстрее"}\n`;
+        showToast('Заказ принят! Ожидайте уведомления.', '✅');
 
-        // === ЧЕК ДЛЯ КЛИЕНТА В ЛИЧКУ ===
-        const customerMessage = 
-            `🍞 <b>Спасибо за заказ в пекарне «Мамин Хлеб»!</b>\n\n` +
-            `🧾 <b>Ваш чек №:</b> ${order.orderNumber || "Не указан"}\n` +
-            timeStr +
-            `\n🛒 <b>Состав заказа:</b>${itemsText}\n` +
-            `💰 <b>ИТОГО:</b> ${Number(order.total).toFixed(2)} руб.\n\n` +
-            `<i>Как только ваш заказ будет собран и готов, мы пришлем вам уведомление!</i> 💛`;
-
-        const safeId = order.telegramId || 'unknown';
-        
-        try {
-            const requests = [
-                // 1. Отправляем заказ ТОЛЬКО в Гугл-Таблицу (а она уже сама напишет админу!)
-                fetch(GOOGLE_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        ...order,
-                        items: typeof order.items === 'string' ? order.items : JSON.stringify(order.items)
-                    })
-                })
-            ];
-
-            // 2. Отправляем чек клиенту в личку
-            if (safeId !== 'unknown') {
-                requests.push(
-                    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: safeId,
-                            text: customerMessage,
-                            parse_mode: 'HTML'
-                        })
-                    })
-                );
-            }
-
-            await Promise.all(requests);
-            showToast('Заказ успешно отправлен! ✓', '✅');
-
-        } catch (error) {
-            console.error('Ошибка отправки:', error);
-            showToast('Ошибка отправки. Позвоните нам!', '⚠️');
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = btn.id === 'submit-preorder-btn'
-                    ? 'Забронировать предзаказ'
-                    : 'Подтвердить заказ';
-            }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        showToast('Ошибка. Позвоните нам!', '⚠️');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = btn.id === 'submit-preorder-btn' ? 'Забронировать' : 'Подтвердить';
         }
     }
-    // ── Start ──────────────────────────────────────────────────────────────────
-    initApp();
-  </script>
- </body>
-</html>
+}
