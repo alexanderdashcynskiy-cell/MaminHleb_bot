@@ -598,6 +598,39 @@
       { id: 'coffee-macchiato', name: 'Макиято', price: 3.30, category: 'buns', image: '☕', description: 'Эспрессо с небольшим количеством молока.', weight: '150ml', bestseller: true, details: 'Концентрированный кофе с каплей молока', ingredients: 'Кофе эспрессо, молоко', nutrition: { calories: 35, protein: 2, fat: 1, carbs: 3 } }
     ];
 
+    // ── Product Images ─────────────────────────────────────────────────────────
+    const productImages = {
+      'new-croissant':       'https://loremflickr.com/300/300/croissant?lock=1',
+      'new-donut':           'https://loremflickr.com/300/300/donut?lock=1',
+      'new-macaron':         'https://loremflickr.com/300/300/macaron?lock=1',
+      'bread-bagette':       'https://loremflickr.com/300/300/baguette?lock=1',
+      'bread-black':         'https://loremflickr.com/300/300/rye,bread?lock=1',
+      'bread-white':         'https://loremflickr.com/300/300/bread?lock=2',
+      'bread-whole':         'https://loremflickr.com/300/300/wholegrain,bread?lock=1',
+      'pie-berry':           'https://loremflickr.com/300/300/berry,pie?lock=1',
+      'pie-chicken':         'https://loremflickr.com/300/300/chicken,pie?lock=1',
+      'pie-apple':           'https://loremflickr.com/300/300/apple,pie?lock=1',
+      'pie-fish':            'https://loremflickr.com/300/300/fish,pie?lock=1',
+      'cake-oreo':           'https://loremflickr.com/300/300/oreo,cake?lock=1',
+      'cake-milk':           'https://loremflickr.com/300/300/cake?lock=2',
+      'cake-chocolate':      'https://loremflickr.com/300/300/chocolate,cake?lock=1',
+      'cake-berry':          'https://loremflickr.com/300/300/berry,cake?lock=1',
+      'pastry-cheese':       'https://loremflickr.com/300/300/cheese,pastry?lock=1',
+      'pastry-sausage':      'https://loremflickr.com/300/300/sausage,bread?lock=1',
+      'pastry-khachapuri':   'https://loremflickr.com/300/300/flatbread,cheese?lock=1',
+      'piroshki-meat':       'https://loremflickr.com/300/300/meat,pie?lock=1',
+      'piroshki-echpochmak': 'https://loremflickr.com/300/300/pastry?lock=3',
+      'pastry-mushroom':     'https://loremflickr.com/300/300/mushroom,pastry?lock=1',
+      'pizza-ham':           'https://loremflickr.com/300/300/pizza?lock=1',
+      'pizza-calzone':       'https://loremflickr.com/300/300/calzone?lock=1',
+      'pizza-pepperoni':     'https://loremflickr.com/300/300/pepperoni,pizza?lock=1',
+      'pizza-veggie':        'https://loremflickr.com/300/300/vegetable,pizza?lock=1',
+      'coffee-cappuccino':   'https://loremflickr.com/300/300/cappuccino?lock=1',
+      'coffee-latte':        'https://loremflickr.com/300/300/latte?lock=1',
+      'coffee-americano':    'https://loremflickr.com/300/300/coffee?lock=1',
+      'coffee-macchiato':    'https://loremflickr.com/300/300/macchiato?lock=1',
+    };
+
     // ── State ──────────────────────────────────────────────────────────────────
     let cart = [];
     let currentCategory = 'all';
@@ -713,7 +746,7 @@ if(dateInput) {
           <div class="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-lg transition-shadow h-full flex flex-col relative ${quantity > 0 ? 'ring-2 ring-gold' : ''}">
             ${!compact && p.isNew ? '<div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">✨ НОВИНКА</div>' : ''}
             <button onclick="showProductDetail('${p.id}')" class="w-full ${compact ? 'aspect-square' : 'aspect-square'} overflow-hidden group/img bg-beige flex-shrink-0">
-              <div class="w-full h-full transition-transform duration-300 group-hover/img:scale-105 flex items-center justify-center ${compact ? 'text-4xl' : 'text-6xl'}">${p.image}</div>
+              <div class="w-full h-full transition-transform duration-300 group-hover/img:scale-105">${productImages[p.id] ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy">` : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-6xl'}">${p.image}</div>`}</div>
             </button>
             <div class="flex-1 px-${compact ? '3' : '4'} pt-3 pb-3 flex flex-col justify-between gap-${compact ? '2' : '4'}">
               <div class="flex-1 min-h-0">
