@@ -621,7 +621,7 @@
         const greetingName = document.getElementById('user-greeting-name');
         if (greetingName) greetingName.textContent = telegramName;
         }
-      renderProducts();
+      selectCategory('all');
       renderBestsellers();
       startCarousel();
       renderReviews();
@@ -682,6 +682,15 @@ if(dateInput) {
       currentCategory = category;
       const titles = { all: 'РЕКОМЕНДУЕМЫЕ', bread: 'ХЛЕБ', pies: 'ПИРОГИ', cakes: 'ТОРТЫ', pastries: 'ПИРОЖКИ', pizza: 'ПИЦЦА', buns: 'КОФЕ' };
       document.getElementById('products-section-title').textContent = titles[category] || 'РЕКОМЕНДУЕМЫЕ';
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        const inner = btn.querySelector('div');
+        const label = btn.querySelector('span:last-child');
+        const isActive = btn.getAttribute('onclick') === `selectCategory('${category}')`;
+        inner.classList.toggle('bg-gold', isActive);
+        inner.classList.toggle('bg-beige', !isActive);
+        label.classList.toggle('text-white', isActive);
+        label.classList.toggle('text-coffee', !isActive);
+      });
       renderProducts();
     }
 
