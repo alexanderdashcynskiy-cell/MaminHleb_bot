@@ -18,9 +18,9 @@ app.use((req, res, next) => {
   next();
 });
 
-const BOT_TOKEN      = process.env.BOT_TOKEN;
-const ADMIN_ID       = process.env.ADMIN_ID;
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+const BOT_TOKEN      = (process.env.BOT_TOKEN      || '').trim();
+const ADMIN_ID       = (process.env.ADMIN_ID       || '').trim();
+const SPREADSHEET_ID = (process.env.SPREADSHEET_ID || '').trim();
 const PORT           = process.env.PORT || 3000;
 
 // ─── Состояние (память + файл) ────────────────────────────────────────────────
