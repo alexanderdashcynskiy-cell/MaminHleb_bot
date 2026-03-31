@@ -717,12 +717,13 @@ if(dateInput) {
       document.getElementById('products-section-title').textContent = titles[category] || 'РЕКОМЕНДУЕМЫЕ';
       document.querySelectorAll('.cat-btn').forEach(btn => {
         const inner = btn.querySelector('div');
-        const label = btn.querySelector('span:last-child');
         const isActive = btn.getAttribute('onclick') === `selectCategory('${category}')`;
-        inner.classList.toggle('bg-gold', isActive);
-        inner.classList.toggle('bg-beige', !isActive);
-        label.classList.toggle('text-white', isActive);
-        label.classList.toggle('text-coffee', !isActive);
+        inner.classList.toggle('border-2', isActive);
+        inner.classList.toggle('border-coffee', isActive);
+        inner.classList.toggle('bg-beige', true);
+        inner.classList.toggle('bg-gold', false);
+        inner.querySelector('span:last-child').classList.remove('text-white');
+        inner.querySelector('span:last-child').classList.add('text-coffee');
       });
       renderProducts();
     }
