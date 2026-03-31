@@ -90,7 +90,7 @@ async function appendRow(values) {
   const sheets = await getSheets();
   const res = await sheets.spreadsheets.values.append({
     spreadsheetId:   SPREADSHEET_ID,
-    range:           'Sheet1!A:M',
+    range:           'A:M',
     valueInputOption: 'USER_ENTERED',
     resource:        { values: [values] }
   });
@@ -105,7 +105,7 @@ async function updateCell(row, col, value) {
   const colLetter = String.fromCharCode(64 + col); // 1=A, 10=J, 12=L
   await sheets.spreadsheets.values.update({
     spreadsheetId:   SPREADSHEET_ID,
-    range:           `Sheet1!${colLetter}${row}`,
+    range:           `${colLetter}${row}`,
     valueInputOption: 'USER_ENTERED',
     resource:        { values: [[value]] }
   });
