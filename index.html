@@ -908,11 +908,9 @@ if(dateInput) {
     function startCheckout() {
       updateCheckoutTotal();
       document.getElementById('checkout-address').value = '';
-      deliveryMethod = 'pickup';
-      document.querySelector('input[name="delivery-method"][value="pickup"]').checked = true;
-      document.getElementById('address-section').classList.add('hidden');
-      document.getElementById('pickup-time-section').classList.add('hidden');
       document.getElementById('checkout-pickup-time').value = '';
+      document.querySelector('input[name="delivery-method"][value="pickup"]').checked = true;
+      updateDeliveryMethod('pickup');
       showScreen('checkout');
     }
 
