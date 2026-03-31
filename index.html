@@ -217,13 +217,13 @@
      <h3 class="font-montserrat font-bold text-coffee mb-3 text-sm">КАТЕГОРИИ</h3>
      <div class="overflow-x-auto hide-scrollbar -mx-4 px-4">
       <div class="flex gap-3 w-min">
-       <button onclick="selectCategory('all')" class="cat-btn flex-shrink-0"><div class="px-6 h-12 rounded-full bg-beige flex items-center justify-center gap-2 hover:bg-caramel/20 transition-colors"><span class="text-xl">✨</span><span class="text-xs font-semibold text-coffee whitespace-nowrap">Новинки</span></div></button>
-       <button onclick="selectCategory('bread')" class="cat-btn flex-shrink-0"><div class="px-6 h-12 rounded-full bg-beige flex items-center justify-center gap-2 hover:bg-caramel/20 transition-colors"><span class="text-xl">🍞</span><span class="text-xs font-semibold text-coffee whitespace-nowrap">Хлеб</span></div></button>
-       <button onclick="selectCategory('pies')" class="cat-btn flex-shrink-0"><div class="px-6 h-12 rounded-full bg-beige flex items-center justify-center gap-2 hover:bg-caramel/20 transition-colors"><span class="text-xl">🥧</span><span class="text-xs font-semibold text-coffee whitespace-nowrap">Пироги</span></div></button>
-       <button onclick="selectCategory('cakes')" class="cat-btn flex-shrink-0"><div class="px-6 h-12 rounded-full bg-beige flex items-center justify-center gap-2 hover:bg-caramel/20 transition-colors"><span class="text-xl">🍰</span><span class="text-xs font-semibold text-coffee whitespace-nowrap">Торты</span></div></button>
-       <button onclick="selectCategory('buns')" class="cat-btn flex-shrink-0"><div class="px-6 h-12 rounded-full bg-beige flex items-center justify-center gap-2 hover:bg-caramel/20 transition-colors"><span class="text-xl">☕</span><span class="text-xs font-semibold text-coffee whitespace-nowrap">Кофе</span></div></button>
-       <button onclick="selectCategory('pastries')" class="cat-btn flex-shrink-0"><div class="px-6 h-12 rounded-full bg-beige flex items-center justify-center gap-2 hover:bg-caramel/20 transition-colors"><span class="text-xl">🥐</span><span class="text-xs font-semibold text-coffee whitespace-nowrap">Пирожки</span></div></button>
-       <button onclick="selectCategory('pizza')" class="cat-btn flex-shrink-0"><div class="px-6 h-12 rounded-full bg-beige flex items-center justify-center gap-2 hover:bg-caramel/20 transition-colors"><span class="text-xl">🍕</span><span class="text-xs font-semibold text-coffee whitespace-nowrap">Пицца</span></div></button>
+       <button onclick="selectCategory('all')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><span class="text-lg">✨</span></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Новинки</span></div></button>
+       <button onclick="selectCategory('bread')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><span class="text-lg">🍞</span></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Хлеб</span></div></button>
+       <button onclick="selectCategory('pies')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><span class="text-lg">🥧</span></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Пироги</span></div></button>
+       <button onclick="selectCategory('cakes')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><span class="text-lg">🍰</span></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Торты</span></div></button>
+       <button onclick="selectCategory('buns')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><span class="text-lg">☕</span></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Кофе</span></div></button>
+       <button onclick="selectCategory('pastries')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><span class="text-lg">🥐</span></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Пирожки</span></div></button>
+       <button onclick="selectCategory('pizza')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><span class="text-lg">🍕</span></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Пицца</span></div></button>
       </div>
      </div>
     </div>
@@ -717,13 +717,12 @@ if(dateInput) {
       document.getElementById('products-section-title').textContent = titles[category] || 'РЕКОМЕНДУЕМЫЕ';
       document.querySelectorAll('.cat-btn').forEach(btn => {
         const inner = btn.querySelector('div');
+        const label = inner.querySelector('span:last-child');
         const isActive = btn.getAttribute('onclick') === `selectCategory('${category}')`;
-        inner.classList.toggle('border-2', isActive);
-        inner.classList.toggle('border-coffee', isActive);
-        inner.classList.toggle('bg-beige', true);
-        inner.classList.toggle('bg-gold', false);
-        inner.querySelector('span:last-child').classList.remove('text-white');
-        inner.querySelector('span:last-child').classList.add('text-coffee');
+        inner.classList.toggle('bg-caramel', isActive);
+        inner.classList.toggle('bg-beige', !isActive);
+        label.classList.toggle('text-white', isActive);
+        label.classList.toggle('text-coffee', !isActive);
       });
       renderProducts();
     }
