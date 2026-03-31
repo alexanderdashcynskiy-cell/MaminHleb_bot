@@ -909,8 +909,10 @@ if(dateInput) {
       updateCheckoutTotal();
       document.getElementById('checkout-address').value = '';
       document.getElementById('checkout-pickup-time').value = '';
-      document.querySelector('input[name="delivery-method"][value="pickup"]').checked = true;
-      updateDeliveryMethod('pickup');
+      document.querySelectorAll('input[name="delivery-method"]').forEach(r => r.checked = false);
+      deliveryMethod = '';
+      document.getElementById('address-section').classList.add('hidden');
+      document.getElementById('pickup-time-section').classList.add('hidden');
       showScreen('checkout');
     }
 
@@ -921,6 +923,7 @@ if(dateInput) {
       const address = deliveryMethod === 'delivery' ? document.getElementById('checkout-address').value.trim() : null;
       const pickupTime = deliveryMethod === 'pickup' ? document.getElementById('checkout-pickup-time').value : null;
       if (!name || !phone) return;
+      if (!deliveryMethod) { showToast('Пожалуйста, выберите способ получения', '⚠️'); return; }
       if (deliveryMethod === 'delivery' && !address) { showToast('Пожалуйста, укажите адрес доставки', '⚠️'); return; }
       if (deliveryMethod === 'pickup' && !pickupTime) { showToast('Пожалуйста, выберите время получения', '⚠️'); return; }
       const btn = document.getElementById('submit-checkout-btn');
