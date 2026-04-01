@@ -489,7 +489,7 @@
     <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
     <h2 class="text-xl font-bold text-coffee">🌅 Утренний предзаказ</h2>
    </header>
-   <div class="flex-1 px-4 py-4 overflow-auto pb-32">
+   <div class="flex-1 px-4 py-4 overflow-y-auto pb-32" style="-webkit-overflow-scrolling: touch;">
     <form onsubmit="submitPreorder(event)" class="space-y-4">
      <div>
       <label class="block text-sm font-semibold text-coffee mb-3">Выберите товары</label>
@@ -693,6 +693,15 @@
     // ── Screen navigation ──────────────────────────────────────────────────────
     function showScreen(screenName) {
       document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+      if (screenName === 'main') {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+      } else {
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+      }
       const screen = document.getElementById(`screen-${screenName}`);
       if (screen) {
         screen.classList.remove('hidden');
