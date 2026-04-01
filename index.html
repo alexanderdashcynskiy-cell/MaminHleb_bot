@@ -295,20 +295,30 @@
    </div>
 
    <!-- Cart Screen -->
-   <div id="screen-cart" class="fixed inset-0 bg-cream z-50 hidden overflow-auto flex flex-col">
-    <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3 flex-shrink-0">
-     <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
-     <h2 class="text-xl font-bold text-coffee">Корзина</h2>
-    </header>
-    <div class="flex-1 px-4 py-4 overflow-auto">
-     <div id="cart-items-full" class="space-y-3"></div>
-     <div id="cart-empty-full" class="text-center py-20 flex flex-col items-center justify-center"><span class="text-6xl mb-4">🥐</span><p class="text-caramel text-lg font-semibold">Корзина пуста</p><p class="text-sm text-coffee/50 mt-2">Добавьте вкусняшки!</p></div>
+   <div id="screen-cart" class="fixed inset-0 z-50 hidden flex flex-col overflow-hidden" style="background:#F5F5F5;">
+    <!-- Header -->
+    <div class="flex-shrink-0 flex items-center px-5 pt-5 pb-3" style="background:#F5F5F5;">
+     <button onclick="showScreen('main')" class="w-10 h-10 rounded-2xl flex items-center justify-center mr-3" style="background:#E8E4DF;">
+      <svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+     </button>
+     <h2 class="font-bold text-coffee" style="font-size:22px;font-family:'Playfair Display',serif;">Корзина</h2>
     </div>
-    <div id="cart-footer" class="hidden border-t border-beige bg-white p-4 flex-shrink-0">
-     <div class="bg-gradient-to-br from-gold/10 to-caramel/10 rounded-2xl p-4 mb-4 border border-gold/30">
-      <div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого:</span><span class="text-2xl font-bold text-gold"><span id="cart-total-full">0.00</span> руб</span></div>
+    <!-- Items -->
+    <div class="flex-1 overflow-y-auto px-4 pb-4" style="-webkit-overflow-scrolling:touch;">
+     <div id="cart-items-full" class="space-y-3 pt-1"></div>
+     <div id="cart-empty-full" class="text-center py-20 flex flex-col items-center justify-center hidden">
+      <span class="text-6xl mb-4">🥐</span>
+      <p class="text-caramel text-lg font-semibold">Корзина пуста</p>
+      <p class="text-sm mt-2" style="color:rgba(107,68,35,0.4);">Добавьте вкусняшки!</p>
      </div>
-     <button onclick="startCheckout()" class="w-full bg-gradient-to-r from-coffee to-caramel text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all active:scale-95">Оформить заказ</button>
+    </div>
+    <!-- Footer -->
+    <div id="cart-footer" class="hidden flex-shrink-0 px-4 pb-6 pt-3" style="background:#F5F5F5;border-top:1px solid rgba(0,0,0,0.06);">
+     <div class="flex items-center justify-between mb-4 px-1">
+      <span class="font-semibold text-coffee" style="font-size:15px;">Итого</span>
+      <span class="font-bold" style="font-size:20px;color:#C9A227;"><span id="cart-total-full">0.00</span> руб</span>
+     </div>
+     <button onclick="startCheckout()" class="w-full text-white font-bold hover:opacity-90 transition-all active:scale-95" style="background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 32px;font-size:17px;">Оформить заказ</button>
     </div>
    </div>
 
@@ -949,20 +959,36 @@ if(dateInput) {
       emptyState.classList.add('hidden'); footer.classList.remove('hidden');
       itemsContainer.innerHTML = cart.map(item => {
         const product = products.find(p => p.id === item.product_id);
+        const sizeOrWeight = item.selected_size || product?.weight || '';
+        const imgHTML = product && productImages[product.id]
+          ? `<img src="${productImages[product.id]}" class="w-full h-full object-cover" alt="${item.product_name}">`
+          : `<span style="font-size:2rem;">${product ? product.image : '🍞'}</span>`;
         return `
-          <div class="bg-white rounded-2xl p-4 border border-beige flex items-center gap-3">
-            <div class="w-16 h-16 rounded-xl flex-shrink-0 bg-beige flex items-center justify-center text-3xl">${product ? product.image : '🍞'}</div>
-            <div class="flex-1 min-w-0">
-              <h4 class="font-semibold text-coffee text-sm truncate">${item.product_name}</h4>
-              ${item.selected_size ? `<p class="text-xs text-caramel/60">${item.selected_size}</p>` : (product?.weight ? `<p class="text-xs text-caramel/60">${product.weight}</p>` : '')}
-              <p class="text-caramel text-sm">${item.price.toFixed(2)} руб</p>
+          <div class="bg-white rounded-3xl p-4 flex gap-4 relative" style="box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+            <!-- Image -->
+            <div class="flex-shrink-0 rounded-2xl overflow-hidden bg-beige flex items-center justify-center" style="width:88px;height:88px;">
+              ${imgHTML}
             </div>
-            <div class="flex items-center gap-2">
-              <button onclick="updateQuantity('${item.product_id}', -1)" class="w-8 h-8 bg-beige rounded-lg flex items-center justify-center text-coffee font-bold hover:bg-caramel/30">−</button>
-              <span class="w-6 text-center font-semibold text-coffee text-sm">${item.quantity}</span>
-              <button onclick="updateQuantity('${item.product_id}', 1)" class="w-8 h-8 bg-beige rounded-lg flex items-center justify-center text-coffee font-bold hover:bg-caramel/30">+</button>
+            <!-- Info -->
+            <div class="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+              <div class="pr-8">
+                <h4 class="font-bold text-coffee leading-tight" style="font-size:15px;font-family:'Playfair Display',serif;">${item.product_name}</h4>
+                ${sizeOrWeight ? `<span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium" style="background:rgba(245,230,211,0.7);color:rgba(107,68,35,0.6);">${sizeOrWeight}</span>` : ''}
+              </div>
+              <!-- Qty + price row -->
+              <div class="flex items-center justify-between mt-2">
+                <div class="flex items-center gap-2">
+                  <button onclick="updateQuantity('${item.product_id}', -1)" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm transition-transform active:scale-90" style="background:linear-gradient(135deg,#C9A227,#D4A574);">−</button>
+                  <span class="font-bold text-coffee" style="font-size:17px;min-width:18px;text-align:center;">${item.quantity}</span>
+                  <button onclick="updateQuantity('${item.product_id}', 1)" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm transition-transform active:scale-90" style="background:linear-gradient(135deg,#C9A227,#D4A574);">+</button>
+                </div>
+                <span class="font-bold rounded-2xl px-3 py-1.5" style="font-size:15px;color:#C9A227;background:rgba(201,162,39,0.08);">${(item.price * item.quantity).toFixed(2)} руб</span>
+              </div>
             </div>
-            <button onclick="removeFromCart('${item.product_id}')" class="text-red-400 hover:text-red-500">✕</button>
+            <!-- Delete -->
+            <button onclick="removeFromCart('${item.product_id}')" class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-90" style="background:rgba(212,165,116,0.18);">
+              <svg class="w-4 h-4" style="color:#D4A574;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
           </div>`;
       }).join('');
     }
