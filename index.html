@@ -424,46 +424,43 @@
 
     <!-- Bottom sheet -->
     <div class="flex-1 flex flex-col overflow-hidden" style="background:#FFFDF9;border-radius:28px 28px 0 0;margin-top:-26px;box-shadow:0 -4px 30px rgba(0,0,0,0.15);">
-     <div class="flex-1 overflow-y-auto" style="-webkit-overflow-scrolling:touch;padding:22px 20px 20px;">
+     <div class="flex-1 overflow-y-auto" style="-webkit-overflow-scrolling:touch;padding:20px 20px 16px;">
 
-      <!-- Ingredient tags -->
-      <div id="detail-ingredient-tags" class="flex gap-2 flex-wrap rounded-2xl mb-6" style="background:rgba(245,230,211,0.5);padding:14px;"></div>
+      <!-- Nutrition compact — вместо тегов -->
+      <div class="grid grid-cols-4 gap-2 mb-6">
+       <div class="rounded-2xl text-center border flex flex-col items-center justify-center" style="background:linear-gradient(135deg,rgba(201,162,39,0.08),rgba(212,165,116,0.12));border-color:rgba(201,162,39,0.18);padding:11px 4px;">
+        <p class="font-bold text-coffee" style="font-size:clamp(18px,4.5vw,24px);line-height:1;" id="detail-calories">0</p>
+        <p class="mt-1" style="font-size:10px;color:rgba(212,165,116,0.9);">ккал</p>
+       </div>
+       <div class="rounded-2xl text-center border flex flex-col items-center justify-center" style="background:linear-gradient(135deg,rgba(201,162,39,0.08),rgba(212,165,116,0.12));border-color:rgba(201,162,39,0.18);padding:11px 4px;">
+        <p class="font-bold text-coffee" style="font-size:clamp(18px,4.5vw,24px);line-height:1;" id="detail-protein">0</p>
+        <p class="mt-1" style="font-size:10px;color:rgba(212,165,116,0.9);">белки</p>
+       </div>
+       <div class="rounded-2xl text-center border flex flex-col items-center justify-center" style="background:linear-gradient(135deg,rgba(201,162,39,0.08),rgba(212,165,116,0.12));border-color:rgba(201,162,39,0.18);padding:11px 4px;">
+        <p class="font-bold text-coffee" style="font-size:clamp(18px,4.5vw,24px);line-height:1;" id="detail-fat">0</p>
+        <p class="mt-1" style="font-size:10px;color:rgba(212,165,116,0.9);">жиры</p>
+       </div>
+       <div class="rounded-2xl text-center border flex flex-col items-center justify-center" style="background:linear-gradient(135deg,rgba(201,162,39,0.08),rgba(212,165,116,0.12));border-color:rgba(201,162,39,0.18);padding:11px 4px;">
+        <p class="font-bold text-coffee" style="font-size:clamp(18px,4.5vw,24px);line-height:1;" id="detail-carbs">0</p>
+        <p class="mt-1" style="font-size:10px;color:rgba(212,165,116,0.9);">углев.</p>
+       </div>
+      </div>
 
       <!-- Size section -->
-      <div id="detail-size-section" class="mb-6 hidden">
+      <div id="detail-size-section" class="mb-5 hidden">
        <h3 class="font-bold text-coffee mb-3" style="font-size:17px;">Размер</h3>
        <div id="detail-size-buttons" class="flex gap-3 flex-wrap"></div>
       </div>
 
-      <!-- About -->
+      <!-- About + состав -->
       <h3 class="font-bold text-coffee mb-2" style="font-size:18px;">О продукте</h3>
-      <p id="detail-description" class="leading-relaxed mb-6" style="font-size:15px;color:rgba(107,68,35,0.65);"></p>
-
-      <!-- Nutrition -->
-      <p class="font-bold uppercase tracking-wider mb-4" style="font-size:11px;color:rgba(212,165,116,0.9);">Питательная ценность · 100г</p>
-      <div class="grid grid-cols-4 gap-3 mb-4">
-       <div class="rounded-2xl text-center border flex flex-col items-center justify-center" style="background:linear-gradient(135deg,rgba(201,162,39,0.08),rgba(212,165,116,0.12));border-color:rgba(201,162,39,0.18);padding:14px 6px;">
-        <p class="font-bold text-coffee" style="font-size:clamp(20px,5vw,28px);line-height:1;" id="detail-calories">0</p>
-        <p class="mt-1" style="font-size:11px;color:rgba(212,165,116,0.9);">ккал</p>
-       </div>
-       <div class="rounded-2xl text-center border flex flex-col items-center justify-center" style="background:linear-gradient(135deg,rgba(201,162,39,0.08),rgba(212,165,116,0.12));border-color:rgba(201,162,39,0.18);padding:14px 6px;">
-        <p class="font-bold text-coffee" style="font-size:clamp(20px,5vw,28px);line-height:1;" id="detail-protein">0</p>
-        <p class="mt-1" style="font-size:11px;color:rgba(212,165,116,0.9);">белки</p>
-       </div>
-       <div class="rounded-2xl text-center border flex flex-col items-center justify-center" style="background:linear-gradient(135deg,rgba(201,162,39,0.08),rgba(212,165,116,0.12));border-color:rgba(201,162,39,0.18);padding:14px 6px;">
-        <p class="font-bold text-coffee" style="font-size:clamp(20px,5vw,28px);line-height:1;" id="detail-fat">0</p>
-        <p class="mt-1" style="font-size:11px;color:rgba(212,165,116,0.9);">жиры</p>
-       </div>
-       <div class="rounded-2xl text-center border flex flex-col items-center justify-center" style="background:linear-gradient(135deg,rgba(201,162,39,0.08),rgba(212,165,116,0.12));border-color:rgba(201,162,39,0.18);padding:14px 6px;">
-        <p class="font-bold text-coffee" style="font-size:clamp(20px,5vw,28px);line-height:1;" id="detail-carbs">0</p>
-        <p class="mt-1" style="font-size:11px;color:rgba(212,165,116,0.9);">углев.</p>
-       </div>
-      </div>
+      <p id="detail-description" class="leading-relaxed mb-3" style="font-size:15px;color:rgba(107,68,35,0.65);"></p>
+      <p id="detail-ingredients-text" class="leading-relaxed" style="font-size:13px;color:rgba(107,68,35,0.45);"></p>
 
      </div>
-     <!-- Add to cart — pinned bottom -->
-     <div class="flex-shrink-0" style="padding:12px 20px 24px;background:#FFFDF9;border-top:1px solid rgba(245,230,211,0.7);">
-      <button id="detail-add-btn" onclick="addProductFromDetail()" class="w-full text-white font-bold flex items-center justify-between hover:opacity-90 transition-all active:scale-95" style="background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:20px;padding:18px 28px;">
+     <!-- Add to cart — pinned bottom, pill shape -->
+     <div class="flex-shrink-0" style="padding:12px 20px 28px;background:#FFFDF9;border-top:1px solid rgba(245,230,211,0.7);">
+      <button id="detail-add-btn" onclick="addProductFromDetail()" class="w-full text-white font-bold flex items-center justify-between hover:opacity-90 transition-all active:scale-95" style="background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:19px 32px;">
        <span style="font-size:17px;">В корзину</span>
        <span style="width:1px;height:22px;background:rgba(255,255,255,0.35);"></span>
        <span style="font-size:17px;font-weight:700;"><span id="detail-card-price">0.00</span> руб</span>
@@ -795,10 +792,6 @@ if(dateInput) {
           <div class="bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow h-full flex flex-col ${quantity > 0 ? 'ring-2 ring-caramel' : ''}">
             <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl ${compact ? 'aspect-square' : 'aspect-square'} group/img">
               <div class="w-full h-full transition-transform duration-300 group-hover/img:scale-105">${imgHTML}</div>
-              <div class="absolute top-2.5 right-2.5 flex items-center gap-0.5 rounded-full px-2 py-1 shadow-md" style="background:rgba(212,165,116,0.92);backdrop-filter:blur(4px);">
-                <svg class="w-2.5 h-2.5 fill-white" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                <span class="text-white font-bold" style="font-size:10px;">4.8</span>
-              </div>
               ${!compact && p.isNew ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
             </button>
             <div class="flex-1 px-3 pt-2.5 pb-3 flex flex-col justify-between gap-1.5">
@@ -860,14 +853,9 @@ if(dateInput) {
       } else {
         imgEl.innerHTML = `<span style="font-size:6rem;">${product.image}</span>`;
       }
-      // Ingredient tags
-      const tagsEl = document.getElementById('detail-ingredient-tags');
-      const tagColors = ['#D4A574','#C9A227','#6B4423','#8B6914','#A07040'];
-      tagsEl.innerHTML = (product.ingredients || '').split(',').map((ing, i) => {
-        const color = tagColors[i % tagColors.length];
-        return `<span class="flex items-center gap-2 rounded-full font-semibold" style="background:rgba(255,253,249,0.95);color:${color};border:1.5px solid rgba(212,165,116,0.28);padding:8px 16px;font-size:13px;">
-          <span style="width:7px;height:7px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block;"></span>${ing.trim()}</span>`;
-      }).join('');
+      // Ingredients as text under description
+      const ingEl = document.getElementById('detail-ingredients-text');
+      if (ingEl) ingEl.textContent = product.ingredients ? 'Состав: ' + product.ingredients : '';
       // Add btn
       document.getElementById('detail-add-btn').dataset.productId = productId;
       document.getElementById('detail-add-btn').dataset.price = product.price;
