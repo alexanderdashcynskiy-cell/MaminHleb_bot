@@ -766,30 +766,36 @@ if(dateInput) {
       else if (p.weight) weightInfo = p.weight;
       const cartItem = cart.find(item => item.product_id === p.id);
       const quantity = cartItem ? cartItem.quantity : 0;
+      const imgHTML = productImages[p.id]
+        ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy">`
+        : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
+      const shortDesc = p.description ? (p.description.length > 28 ? p.description.slice(0, 28) + '…' : p.description) : weightInfo;
       return `
         <div class="animate-fade ${compact ? 'flex-shrink-0 w-40' : ''}">
-          <div class="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-lg transition-shadow h-full flex flex-col relative ${quantity > 0 ? 'ring-2 ring-gold' : ''}">
-            ${!compact && p.isNew ? '<div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">✨ НОВИНКА</div>' : ''}
-            <button onclick="showProductDetail('${p.id}')" class="w-full ${compact ? 'aspect-square' : 'aspect-square'} overflow-hidden group/img bg-beige flex-shrink-0">
-              <div class="w-full h-full transition-transform duration-300 group-hover/img:scale-105">${productImages[p.id] ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy">` : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-6xl'}">${p.image}</div>`}</div>
-            </button>
-            <div class="flex-1 px-${compact ? '3' : '4'} pt-3 pb-3 flex flex-col justify-between gap-${compact ? '2' : '4'}">
-              <div class="flex-1 min-h-0">
-                <h3 class="font-bold text-coffee text-${compact ? 'xs' : 'sm'}" style="font-family:'Playfair Display',serif;line-height:1.3;">${p.name}</h3>
-                ${weightInfo ? `<p class="text-xs text-caramel/60 mt-${compact ? '1' : '2'}">${weightInfo}</p>` : ''}
+          <div class="bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow h-full flex flex-col ${quantity > 0 ? 'ring-2 ring-caramel' : ''}">
+            <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl ${compact ? 'aspect-square' : 'aspect-square'} group/img">
+              <div class="w-full h-full transition-transform duration-300 group-hover/img:scale-105">${imgHTML}</div>
+              <div class="absolute top-2.5 right-2.5 flex items-center gap-0.5 rounded-full px-2 py-1 shadow-md" style="background:rgba(212,165,116,0.92);backdrop-filter:blur(4px);">
+                <svg class="w-2.5 h-2.5 fill-white" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <span class="text-white font-bold" style="font-size:10px;">4.8</span>
               </div>
-              <div class="compact-card-controls flex items-center justify-between gap-2 min-w-0 flex-shrink-0">
-                <div class="px-${compact ? '2' : '4'} py-${compact ? '1' : '2'} rounded-full bg-gradient-to-br from-gold/20 to-caramel/20 border border-gold/20 flex items-center justify-center flex-shrink-0 whitespace-nowrap">
-                  <span class="font-bold text-${compact ? '[10pt]' : 'xs'}" style="font-family:'Montserrat',sans-serif;color:#D4A574;">${p.price.toFixed(2)} р</span>
-                </div>
+              ${!compact && p.isNew ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
+            </button>
+            <div class="flex-1 px-3 pt-2.5 pb-3 flex flex-col justify-between gap-1.5">
+              <div>
+                <h3 class="font-bold text-coffee leading-tight ${compact ? 'text-xs' : 'text-sm'}" style="font-family:'Playfair Display',serif;">${p.name}</h3>
+                <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${shortDesc}</p>
+              </div>
+              <div class="flex items-center justify-between gap-2 mt-1">
+                <span class="font-bold text-coffee ${compact ? 'text-sm' : 'text-base'}" style="font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} <span style="font-size:11px;font-weight:600;color:#D4A574;">руб</span></span>
                 ${quantity > 0 ? `
-                  <div class="flex items-center gap-0.5 bg-gold/10 px-1 py-0.5 rounded-full flex-shrink-0">
-                    <button onclick="updateQuantity('${p.id}', -1)" class="w-${compact ? '5' : '6'} h-${compact ? '5' : '6'} rounded-full bg-caramel/30 text-coffee flex items-center justify-center font-bold text-xs hover:bg-caramel/50 transition-colors">−</button>
-                    <span class="w-${compact ? '4' : '5'} text-center font-bold text-coffee text-xs">${quantity}</span>
-                    <button onclick="updateQuantity('${p.id}', 1)" class="w-${compact ? '5' : '6'} h-${compact ? '5' : '6'} rounded-full bg-gold text-white flex items-center justify-center font-bold text-xs hover:bg-gold/90 transition-colors">+</button>
+                  <div class="flex items-center gap-1 rounded-full px-1.5 py-1" style="background:rgba(212,165,116,0.12);">
+                    <button onclick="updateQuantity('${p.id}', -1)" class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm transition-colors" style="background:rgba(212,165,116,0.3);color:#6B4423;">−</button>
+                    <span class="w-4 text-center font-bold text-coffee text-xs">${quantity}</span>
+                    <button onclick="updateQuantity('${p.id}', 1)" class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm text-white transition-colors" style="background:linear-gradient(135deg,#C9A227,#D4A574);">+</button>
                   </div>
                 ` : `
-                  <button onclick="addToCart('${p.id}')" class="w-${compact ? '6' : '9'} h-${compact ? '6' : '9'} rounded-full bg-gradient-to-br from-caramel to-gold text-white flex items-center justify-center font-bold ${compact ? 'text-xs' : 'text-lg'} hover:scale-110 transition-transform flex-shrink-0">+</button>
+                  <button onclick="addToCart('${p.id}')" class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xl hover:scale-110 transition-transform flex-shrink-0 shadow-md" style="background:linear-gradient(135deg,#C9A227,#D4A574);">+</button>
                 `}
               </div>
             </div>
