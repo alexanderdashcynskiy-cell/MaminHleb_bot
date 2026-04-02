@@ -165,7 +165,8 @@ async function handleOrder(body) {
     itemsText,
     totalStr,
     deliveryInfo,
-    '', '', '🟡 Новый', ''
+    '', '', '🟡 Новый', '',
+    noteStr || ''
   ]);
 
   if (!newRow) { console.error('appendRow: failed to get row number'); return; }
@@ -173,6 +174,9 @@ async function handleOrder(body) {
   const orderNum = newRow - 1;
 
   // Тексты
+  const noteStr = (body.note || '').trim();
+  const noteLine = noteStr ? `━━━━━━━━━━━━━━━━━━━━\n💬 *Примечание:* ${noteStr}\n` : '';
+
   const receiptBase =
     `🧾 *${isPreorder ? 'ВАШ ПРЕДЗАКАЗ' : 'ВАШ ЗАКАЗ'} №${orderNum}*\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
@@ -182,7 +186,8 @@ async function handleOrder(body) {
     `━━━━━━━━━━━━━━━━━━━━\n` +
     `🧺 *Состав:*\n${itemsText}\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `💰 *Итого:* ${totalStr}`;
+    `💰 *Итого:* ${totalStr}\n` +
+    noteLine;
 
   const adminBase =
     `🛒 *${isPreorder ? 'ПРЕДЗАКАЗ' : 'НОВЫЙ ЗАКАЗ'} №${orderNum}*\n` +
@@ -194,7 +199,8 @@ async function handleOrder(body) {
     `━━━━━━━━━━━━━━━━━━━━\n` +
     `🧺 *Состав:*\n${itemsText}\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `💰 *Итого:* ${totalStr}`;
+    `💰 *Итого:* ${totalStr}\n` +
+    noteLine;
 
   setProp(`receipt_base_${newRow}`, receiptBase);
   setProp(`admin_base_${newRow}`,   adminBase);
