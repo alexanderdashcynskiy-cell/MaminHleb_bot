@@ -413,75 +413,82 @@
    </div>
 
    <!-- Product Detail Screen -->
-   <div id="screen-product" class="fixed inset-0 z-50 hidden flex flex-col overflow-hidden" style="background:#1a0e05;">
-    <!-- Hero image -->
-    <div class="relative flex-shrink-0" style="height:48vh;min-height:280px;max-height:420px;">
-     <div id="detail-image" class="w-full h-full bg-beige overflow-hidden flex items-center justify-center" style="font-size:7rem;"></div>
-     <div class="absolute inset-x-0 bottom-0 pointer-events-none" style="height:60%;background:linear-gradient(to top,rgba(15,7,0,0.85) 0%,transparent 100%);"></div>
-     <!-- Back button -->
-     <button onclick="showScreen('main')" class="absolute left-5 top-5 w-11 h-11 rounded-full flex items-center justify-center z-10" style="background:rgba(0,0,0,0.32);backdrop-filter:blur(8px);touch-action:manipulation;">
-      <svg class="w-5 h-5 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+   <div id="screen-product" class="fixed inset-0 z-50 hidden" style="display:none;flex-direction:column;background:#000;overflow:hidden;">
+
+    <!-- Фото — занимает верхние ~55% экрана -->
+    <div style="position:relative;flex-shrink:0;height:55vh;min-height:300px;max-height:440px;">
+     <div id="detail-image" style="width:100%;height:100%;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:6rem;"></div>
+     <!-- тёмный градиент снизу фото -->
+     <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.72) 0%,rgba(0,0,0,0) 55%);pointer-events:none;"></div>
+     <!-- кнопка назад -->
+     <button onclick="showScreen('main')" style="position:absolute;top:18px;left:18px;width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,0.35);border:none;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);touch-action:manipulation;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:2;">
+      <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
      </button>
-     <!-- Name + weight -->
-     <div class="absolute left-5 right-5 flex items-end justify-between gap-3" style="bottom:80px;">
-      <div class="flex-1 min-w-0">
-       <h2 id="detail-card-name" class="text-white font-bold leading-tight drop-shadow-lg" style="font-family:'Playfair Display',serif;font-size:clamp(22px,6vw,30px);"></h2>
-       <p id="detail-card-weight" class="mt-1" style="color:rgba(255,255,255,0.55);font-size:13px;"></p>
-      </div>
+     <!-- название и вес — над белой карточкой -->
+     <div style="position:absolute;bottom:52px;left:20px;right:20px;">
+      <h2 id="detail-card-name" style="margin:0;color:#fff;font-family:'Playfair Display',serif;font-size:clamp(22px,6vw,30px);font-weight:700;line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,0.4);"></h2>
+      <p id="detail-card-weight" style="margin:4px 0 0;color:rgba(255,255,255,0.6);font-size:13px;"></p>
      </div>
     </div>
 
-    <!-- Bottom sheet -->
-    <div class="flex-1 flex flex-col overflow-hidden" style="background:#FFFDF9;border-radius:52px 52px 0 0;margin-top:-56px;box-shadow:0 -10px 50px rgba(0,0,0,0.22);">
-     <!-- Handle bar -->
-     <div class="flex justify-center pt-4 pb-2 flex-shrink-0">
-      <div style="width:40px;height:4px;border-radius:2px;background:rgba(212,165,116,0.35);"></div>
+    <!-- Белая карточка — накладывается на фото снизу -->
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#FFFDF9;border-radius:36px 36px 0 0;margin-top:-36px;position:relative;z-index:1;box-shadow:0 -6px 32px rgba(0,0,0,0.18);">
+     <!-- ручка -->
+     <div style="display:flex;justify-content:center;padding:12px 0 8px;flex-shrink:0;">
+      <div style="width:36px;height:4px;border-radius:2px;background:rgba(212,165,116,0.3);"></div>
      </div>
-     <div class="flex-1 overflow-y-auto" style="-webkit-overflow-scrolling:touch;padding:14px 22px 16px;">
-      <!-- Nutrition pill -->
-      <div class="flex items-center mb-5" style="background:rgba(245,230,211,0.8);border:1.5px solid rgba(212,165,116,0.28);border-radius:50px;padding:11px 20px;">
-       <span class="flex flex-col items-center flex-1 pointer-events-none">
-        <span id="detail-calories" style="font-weight:800;font-size:16px;color:#C9A227;line-height:1;">0</span>
-        <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:2px;">ккал</span>
-       </span>
-       <span style="width:1px;height:28px;background:rgba(212,165,116,0.35);flex-shrink:0;"></span>
-       <span class="flex flex-col items-center flex-1 pointer-events-none">
-        <span id="detail-protein" style="font-weight:800;font-size:16px;color:#C9A227;line-height:1;">0</span>
-        <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:2px;">белки</span>
-       </span>
-       <span style="width:1px;height:28px;background:rgba(212,165,116,0.35);flex-shrink:0;"></span>
-       <span class="flex flex-col items-center flex-1 pointer-events-none">
-        <span id="detail-fat" style="font-weight:800;font-size:16px;color:#C9A227;line-height:1;">0</span>
-        <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:2px;">жиры</span>
-       </span>
-       <span style="width:1px;height:28px;background:rgba(212,165,116,0.35);flex-shrink:0;"></span>
-       <span class="flex flex-col items-center flex-1 pointer-events-none">
-        <span id="detail-carbs" style="font-weight:800;font-size:16px;color:#C9A227;line-height:1;">0</span>
-        <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:2px;">углев.</span>
-       </span>
+
+     <!-- скролл-контент -->
+     <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 16px;">
+
+      <!-- КБЖУ — один овал, симметричный -->
+      <div style="display:flex;align-items:center;background:rgba(245,230,211,0.75);border:1.5px solid rgba(212,165,116,0.25);border-radius:50px;padding:12px 16px;margin-bottom:20px;">
+       <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+        <span id="detail-calories" style="font-size:17px;font-weight:800;color:#C9A227;line-height:1;">0</span>
+        <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:3px;">ккал</span>
+       </div>
+       <div style="width:1px;height:30px;background:rgba(212,165,116,0.3);flex-shrink:0;"></div>
+       <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+        <span id="detail-protein" style="font-size:17px;font-weight:800;color:#C9A227;line-height:1;">0</span>
+        <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:3px;">белки</span>
+       </div>
+       <div style="width:1px;height:30px;background:rgba(212,165,116,0.3);flex-shrink:0;"></div>
+       <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+        <span id="detail-fat" style="font-size:17px;font-weight:800;color:#C9A227;line-height:1;">0</span>
+        <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:3px;">жиры</span>
+       </div>
+       <div style="width:1px;height:30px;background:rgba(212,165,116,0.3);flex-shrink:0;"></div>
+       <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+        <span id="detail-carbs" style="font-size:17px;font-weight:800;color:#C9A227;line-height:1;">0</span>
+        <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:3px;">углев.</span>
+       </div>
       </div>
-      <!-- Size section -->
-      <div id="detail-size-section" class="mb-5 hidden">
-       <h3 class="font-bold text-coffee mb-3" style="font-size:17px;">Размер</h3>
-       <div id="detail-size-buttons" class="flex gap-3 flex-wrap"></div>
+
+      <!-- Размер -->
+      <div id="detail-size-section" style="display:none;margin-bottom:20px;">
+       <p style="font-size:17px;font-weight:700;color:#6B4423;margin:0 0 12px;">Размер</p>
+       <div id="detail-size-buttons" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
       </div>
-      <!-- About -->
-      <h3 class="font-bold text-coffee mb-2" style="font-size:18px;">О продукте</h3>
-      <p id="detail-description" class="leading-relaxed mb-3" style="font-size:15px;color:rgba(107,68,35,0.65);"></p>
-      <p id="detail-ingredients-text" class="leading-relaxed" style="font-size:13px;color:rgba(107,68,35,0.45);"></p>
+
+      <!-- О продукте -->
+      <p style="font-size:18px;font-weight:700;color:#6B4423;margin:0 0 8px;">О продукте</p>
+      <p id="detail-description" style="font-size:15px;color:rgba(107,68,35,0.65);line-height:1.6;margin:0 0 10px;"></p>
+      <p id="detail-ingredients-text" style="font-size:13px;color:rgba(107,68,35,0.4);line-height:1.5;margin:0;"></p>
      </div>
-     <!-- В корзину — narrower, symmetric, pointer-events fix -->
-     <div class="flex-shrink-0" style="padding:10px 24px 30px;background:#FFFDF9;border-top:1px solid rgba(245,230,211,0.7);">
+
+     <!-- Кнопка В корзину — зафиксирована снизу -->
+     <div style="flex-shrink:0;padding:10px 20px 28px;background:#FFFDF9;border-top:1px solid rgba(245,230,211,0.6);">
       <button id="detail-add-btn"
         onclick="addProductFromDetail()"
         ontouchend="event.preventDefault();addProductFromDetail();"
-        style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 28px;touch-action:manipulation;display:flex;align-items:center;justify-content:center;gap:16px;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">
-       <span style="font-size:16px;font-weight:700;color:#fff;pointer-events:none;">В корзину</span>
-       <span style="width:1px;height:20px;background:rgba(255,255,255,0.35);flex-shrink:0;pointer-events:none;display:inline-block;"></span>
-       <span style="font-size:16px;font-weight:700;color:#fff;pointer-events:none;"><span id="detail-card-price">0.00</span> р</span>
+        style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:14px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+       <span style="font-size:17px;font-weight:700;color:#fff;pointer-events:none;">В корзину</span>
+       <span style="width:1px;height:22px;background:rgba(255,255,255,0.4);flex-shrink:0;pointer-events:none;"></span>
+       <span style="font-size:17px;font-weight:700;color:#fff;pointer-events:none;"><span id="detail-card-price">0.00</span> р</span>
       </button>
      </div>
     </div>
+
    </div>
 
   <!-- Toast -->
@@ -740,7 +747,10 @@
 
     // ── Screen navigation ──────────────────────────────────────────────────────
     function showScreen(screenName) {
-      document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+      document.querySelectorAll('[id^="screen-"]').forEach(s => {
+        s.classList.add('hidden');
+        s.style.display = 'none';
+      });
       if (screenName === 'main') {
         document.body.style.overflow = '';
       } else {
@@ -749,6 +759,7 @@
       const screen = document.getElementById(`screen-${screenName}`);
       if (screen) {
         screen.classList.remove('hidden');
+        screen.style.display = (screenName === 'product') ? 'flex' : '';
         if (screenName === 'preorder') {
           preorderCart = [];
           preorderTime = null;
