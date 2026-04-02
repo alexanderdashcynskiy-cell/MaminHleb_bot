@@ -298,11 +298,14 @@ async function handleCallback(cb) {
     return;
   }
 
-  const rowNum    = parseInt(parts[1]);
-  const clientId  = parts[2];
-  const orderNum  = getProp(`order_num_${rowNum}`) || String(rowNum - 1);
-  const adminInfo = JSON.parse(getProp(`admin_msg_${rowNum}`) || 'null');
-  const adminBase = getProp(`admin_base_${rowNum}`) || '';
+  const rowNum   = parseInt(parts[1]);
+  const clientId = parts[2];
+  const orderNum = getProp(`order_num_${rowNum}`) || String(rowNum - 1);
+
+  // Берём chat_id и message_id прямо из объекта сообщения — не зависим от state
+  const adminChatId = cb.message?.chat?.id || ADMIN_ID;
+  const adminMsgId  = cb.message?.message_id;
+  const adminBase   = getProp(`admin_base_${rowNum}`) || cb.message?.text || '';
 
   // ── Принять заказ ─────────────────────────────────────────────────────────
   if (action === 'accept') {
@@ -312,9 +315,9 @@ async function handleCallback(cb) {
     const calls = [];
     let   acceptMsgIdx = -1;
 
-    if (adminInfo) calls.push(['editMessageText', {
-      chat_id:      adminInfo.chatId,
-      message_id:   adminInfo.msgId,
+    calls.push(['editMessageText', {
+      chat_id:      adminChatId,
+      message_id:   adminMsgId,
       text:         adminBase + '\n\nСтатус: ✅ Принят',
       parse_mode:   'Markdown',
       reply_markup: { inline_keyboard: [[
@@ -334,14 +337,12 @@ async function handleCallback(cb) {
       }]);
     }
 
-    if (calls.length > 0) {
-      const responses = await tgAll(calls);
-      if (acceptMsgIdx >= 0 && responses[acceptMsgIdx]?.ok) {
-        setProp(`accept_msg_${rowNum}`, JSON.stringify({
-          chatId: String(clientId),
-          msgId:  responses[acceptMsgIdx].result.message_id
-        }));
-      }
+    const responses = await tgAll(calls);
+    if (acceptMsgIdx >= 0 && responses[acceptMsgIdx]?.ok) {
+      setProp(`accept_msg_${rowNum}`, JSON.stringify({
+        chatId: String(clientId),
+        msgId:  responses[acceptMsgIdx].result.message_id
+      }));
     }
 
     await updateCell(rowNum, 12, '✅ Принят');
@@ -355,9 +356,9 @@ async function handleCallback(cb) {
     const calls = [];
     let   clientMsgIdx = -1;
 
-    if (adminInfo) calls.push(['editMessageText', {
-      chat_id:      adminInfo.chatId,
-      message_id:   adminInfo.msgId,
+    calls.push(['editMessageText', {
+      chat_id:      adminChatId,
+      message_id:   adminMsgId,
       text:         adminBase + '\n\nСтатус: ❌ Отклонён',
       parse_mode:   'Markdown',
       reply_markup: { inline_keyboard: [[
@@ -373,14 +374,12 @@ async function handleCallback(cb) {
       }]);
     }
 
-    if (calls.length > 0) {
-      const responses = await tgAll(calls);
-      if (clientMsgIdx >= 0 && responses[clientMsgIdx]?.ok) {
-        setProp(`decline_msg_${rowNum}`, JSON.stringify({
-          chatId: String(clientId),
-          msgId:  responses[clientMsgIdx].result.message_id
-        }));
-      }
+    const responses = await tgAll(calls);
+    if (clientMsgIdx >= 0 && responses[clientMsgIdx]?.ok) {
+      setProp(`decline_msg_${rowNum}`, JSON.stringify({
+        chatId: String(clientId),
+        msgId:  responses[clientMsgIdx].result.message_id
+      }));
     }
 
     await updateCell(rowNum, 12, '❌ Отклонён');
@@ -393,9 +392,9 @@ async function handleCallback(cb) {
     const calls        = [];
     let   clientMsgIdx = -1;
 
-    if (adminInfo) calls.push(['editMessageText', {
-      chat_id:      adminInfo.chatId,
-      message_id:   adminInfo.msgId,
+    calls.push(['editMessageText', {
+      chat_id:      adminChatId,
+      message_id:   adminMsgId,
       text:         adminBase + '\n\nСтатус: 🟡 Новый',
       parse_mode:   'Markdown',
       reply_markup: { inline_keyboard: [[
@@ -414,14 +413,12 @@ async function handleCallback(cb) {
       }]);
     }
 
-    if (calls.length > 0) {
-      const responses = await tgAll(calls);
-      if (clientMsgIdx >= 0 && responses[clientMsgIdx]?.ok) {
-        setProp(`restore_msg_${rowNum}`, JSON.stringify({
-          chatId: String(clientId),
-          msgId:  responses[clientMsgIdx].result.message_id
-        }));
-      }
+    const responses = await tgAll(calls);
+    if (clientMsgIdx >= 0 && responses[clientMsgIdx]?.ok) {
+      setProp(`restore_msg_${rowNum}`, JSON.stringify({
+        chatId: String(clientId),
+        msgId:  responses[clientMsgIdx].result.message_id
+      }));
     }
 
     await updateCell(rowNum, 12, '🟡 Новый');
@@ -434,14 +431,13 @@ async function handleCallback(cb) {
     const acceptInfo = JSON.parse(getProp(`accept_msg_${rowNum}`) || 'null');
     const calls      = [];
 
-    if (adminInfo) calls.push(['editMessageText', {
-      chat_id:      adminInfo.chatId,
-      message_id:   adminInfo.msgId,
+    calls.push(['editMessageText', {
+      chat_id:      adminChatId,
+      message_id:   adminMsgId,
       text:         adminBase + '\n\nСтатус: 🍞 Готов',
       parse_mode:   'Markdown',
       reply_markup: { inline_keyboard: [] }
     }]);
-    // Удаляем уведомление "принят" у клиента
     if (acceptInfo) calls.push(['deleteMessage',
       { chat_id: acceptInfo.chatId, message_id: acceptInfo.msgId }]);
     if (clientId && clientId !== '0') calls.push(['sendMessage', {
@@ -457,7 +453,7 @@ async function handleCallback(cb) {
       ]]}
     }]);
 
-    if (calls.length > 0) await tgAll(calls);
+    await tgAll(calls);
     await updateCell(rowNum, 12, '🍞 Готов');
     delProp(`accept_msg_${rowNum}`);
   }
