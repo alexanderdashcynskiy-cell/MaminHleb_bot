@@ -883,14 +883,14 @@ if(dateInput) {
       document.getElementById('detail-add-btn').dataset.price = product.price;
       const sizeSection = document.getElementById('detail-size-section');
       if (product.sizes && product.sizes.length > 0) {
-        sizeSection.classList.remove('hidden');
+        sizeSection.style.display = 'block';
         document.getElementById('detail-size-buttons').innerHTML = product.sizes.map((sizeOpt, i) => `
-          <button type="button" onclick="selectDetailSize('${sizeOpt.size}', event)" class="px-5 py-2 rounded-full font-semibold text-sm transition-all detail-size-btn ${i === 0 ? 'text-white' : 'text-coffee border-2 border-beige'}" style="${i === 0 ? 'background:linear-gradient(90deg,#C9A227,#D4A574);' : ''}">${sizeOpt.size}</button>
+          <button type="button" onclick="selectDetailSize('${sizeOpt.size}', event)" class="detail-size-btn" style="padding:10px 20px;border-radius:50px;font-size:14px;font-weight:600;border:2px solid ${i === 0 ? 'transparent' : 'rgba(212,165,116,0.4)'};background:${i === 0 ? 'linear-gradient(90deg,#C9A227,#D4A574)' : 'transparent'};color:${i === 0 ? '#fff' : '#6B4423'};cursor:pointer;touch-action:manipulation;">${sizeOpt.size}</button>
         `).join('');
         document.getElementById('detail-add-btn').dataset.selectedSize = product.sizes[0].size;
         document.getElementById('detail-add-btn').dataset.price = product.sizes[0].price;
       } else {
-        sizeSection.classList.add('hidden');
+        sizeSection.style.display = 'none';
         delete document.getElementById('detail-add-btn').dataset.selectedSize;
       }
       showScreen('product');
@@ -899,13 +899,14 @@ if(dateInput) {
     // FIX #6: event передаётся явно
     function selectDetailSize(size, event) {
       document.querySelectorAll('.detail-size-btn').forEach(btn => {
-        btn.style.background = '';
-        btn.classList.remove('text-white');
-        btn.classList.add('text-coffee', 'border-2', 'border-beige');
+        btn.style.background = 'transparent';
+        btn.style.color = '#6B4423';
+        btn.style.borderColor = 'rgba(212,165,116,0.4)';
       });
-      event.target.style.background = 'linear-gradient(90deg,#C9A227,#D4A574)';
-      event.target.classList.add('text-white');
-      event.target.classList.remove('text-coffee', 'border-2', 'border-beige');
+      const btn = event.target.closest('.detail-size-btn') || event.target;
+      btn.style.background = 'linear-gradient(90deg,#C9A227,#D4A574)';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'transparent';
       const productId = document.getElementById('detail-add-btn').dataset.productId;
       const product = products.find(p => p.id === productId);
       if (!product || !product.sizes) return;
