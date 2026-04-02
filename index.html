@@ -480,9 +480,9 @@
       <div style="display:flex;align-items:center;gap:12px;">
        <!-- Qty controls: white pill, shown only after adding to cart -->
        <div id="detail-qty-controls" style="display:none;align-items:center;gap:10px;background:#fff;border-radius:50px;padding:7px 10px;box-shadow:0 2px 12px rgba(0,0,0,0.10);flex-shrink:0;">
-        <button ontouchend="event.preventDefault();changeDetailQty(-1);" onclick="changeDetailQty(-1);" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;color:#fff;font-size:22px;font-weight:700;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;"><span style="pointer-events:none;line-height:1;">−</span></button>
-        <span id="detail-qty-display" style="min-width:22px;text-align:center;font-size:18px;font-weight:800;color:#3D2B1F;">1</span>
-        <button ontouchend="event.preventDefault();changeDetailQty(1);" onclick="changeDetailQty(1);" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;color:#fff;font-size:22px;font-weight:700;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;"><span style="pointer-events:none;line-height:1;">+</span></button>
+        <button onclick="changeDetailQty(-1)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;color:#fff;font-size:22px;font-weight:700;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;user-select:none;"><span style="pointer-events:none;line-height:1;">−</span></button>
+        <span id="detail-qty-display" style="min-width:22px;text-align:center;font-size:18px;font-weight:800;color:#3D2B1F;user-select:none;">1</span>
+        <button onclick="changeDetailQty(1)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;color:#fff;font-size:22px;font-weight:700;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;user-select:none;"><span style="pointer-events:none;line-height:1;">+</span></button>
        </div>
        <!-- В корзину button -->
        <button id="detail-add-btn"
@@ -927,7 +927,11 @@ if(dateInput) {
       showScreen('product');
     }
 
+    let _detailQtyBusy = false;
     function changeDetailQty(delta) {
+      if (_detailQtyBusy) return;
+      _detailQtyBusy = true;
+      setTimeout(() => { _detailQtyBusy = false; }, 300);
       const btn = document.getElementById('detail-add-btn');
       const productId = btn.dataset.productId;
       const selectedSize = btn.dataset.selectedSize;
