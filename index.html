@@ -1099,8 +1099,11 @@ if(dateInput) {
       showScreen('checkout');
     }
 
+    let _checkoutLock = false;
     function submitCheckout(event) {
       event.preventDefault();
+      if (_checkoutLock) return;
+      _checkoutLock = true;
       const name = document.getElementById('checkout-name').value.trim();
       const phone = document.getElementById('checkout-phone').value.trim();
       const note = document.getElementById('checkout-note').value.trim();
@@ -1141,6 +1144,7 @@ if(dateInput) {
         document.getElementById('checkout-addres').value='';
         document.getElementById('checkout-note').value='';
         btn.disabled = false; btn.textContent = 'Подтвердить заказ';
+        _checkoutLock = false;
       }, 1500);
     }
 
@@ -1277,8 +1281,11 @@ if(dateInput) {
       document.getElementById('preorder-total').textContent = preorderCart.reduce((s, i) => s + i.price * i.quantity, 0).toFixed(2);
     }
 
+    let _preorderLock = false;
     function submitPreorder(event) {
       event.preventDefault();
+      if (_preorderLock) return;
+      _preorderLock = true;
       const dateVal=document.getElementById('preorder-date')?.value;
       const timeVal=document.getElementById('preorder-time')?.value;
       if(!dateVal || !timeVal) {showToast('Пожалуйста выберете дату и время', '⚠️' ); return;}
@@ -1312,6 +1319,7 @@ if(dateInput) {
         document.getElementById('preorder-phone').value = '';
         document.getElementById('preorder-note').value = '';
         btn.disabled = false; btn.textContent = 'Забронировать предзаказ';
+        _preorderLock = false;
       }, 1500);
     }
 

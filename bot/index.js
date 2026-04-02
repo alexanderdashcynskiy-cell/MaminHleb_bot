@@ -90,7 +90,7 @@ async function appendRow(values) {
   const sheets = await getSheets();
   const res = await sheets.spreadsheets.values.append({
     spreadsheetId:   SPREADSHEET_ID,
-    range:           'A:M',
+    range:           'A:N',
     valueInputOption: 'USER_ENTERED',
     resource:        { values: [values] }
   });
@@ -111,8 +111,22 @@ async function updateCell(row, col, value) {
   });
 }
 
+// ─── Дедупликация заказов (защита от двойной отправки) ───────────────────────
+const recentOrders = new Map();
+function isDuplicateOrder(body) {
+  const key = `${body.phone}_${body.total}_${String(body.items || '').slice(0, 60)}`;
+  const now = Date.now();
+  if (recentOrders.has(key) && now - recentOrders.get(key) < 15000) return true;
+  recentOrders.set(key, now);
+  if (recentOrders.size > 500) {
+    for (const [k, t] of recentOrders) if (now - t > 60000) recentOrders.delete(k);
+  }
+  return false;
+}
+
 // ─── Обработка заказа ─────────────────────────────────────────────────────────
 async function handleOrder(body) {
+  if (isDuplicateOrder(body)) { console.log('Duplicate order ignored'); return; }
   const isPreorder = body.type === 'Предзаказ';
   const clientId   = String(body.telegramId || '0');
   const clientName = body.name || 'Гость';
