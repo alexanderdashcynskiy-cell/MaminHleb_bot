@@ -318,7 +318,10 @@
       <span class="font-semibold text-coffee" style="font-size:15px;">Итого</span>
       <span class="font-bold" style="font-size:20px;color:#C9A227;"><span id="cart-total-full">0.00</span> р</span>
      </div>
-     <button onclick="startCheckout()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:17px 32px;font-size:17px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;display:block;">Оформить заказ</button>
+     <button
+       onclick="startCheckout()"
+       ontouchend="event.preventDefault();startCheckout();"
+       style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:17px 32px;font-size:17px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;display:block;-webkit-tap-highlight-color:transparent;">Оформить заказ</button>
     </div>
    </div>
 
@@ -420,7 +423,7 @@
       <svg class="w-5 h-5 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
      </button>
      <!-- Name + weight -->
-     <div class="absolute left-5 right-5 flex items-end justify-between gap-3" style="bottom:68px;">
+     <div class="absolute left-5 right-5 flex items-end justify-between gap-3" style="bottom:80px;">
       <div class="flex-1 min-w-0">
        <h2 id="detail-card-name" class="text-white font-bold leading-tight drop-shadow-lg" style="font-family:'Playfair Display',serif;font-size:clamp(22px,6vw,30px);"></h2>
        <p id="detail-card-weight" class="mt-1" style="color:rgba(255,255,255,0.55);font-size:13px;"></p>
@@ -428,13 +431,13 @@
      </div>
     </div>
 
-    <!-- Bottom sheet — large oval top corners, clear separation from image -->
-    <div class="flex-1 flex flex-col overflow-hidden" style="background:#FFFDF9;border-radius:40px 40px 0 0;margin-top:-44px;box-shadow:0 -8px 40px rgba(0,0,0,0.18);">
+    <!-- Bottom sheet -->
+    <div class="flex-1 flex flex-col overflow-hidden" style="background:#FFFDF9;border-radius:52px 52px 0 0;margin-top:-56px;box-shadow:0 -10px 50px rgba(0,0,0,0.22);">
      <!-- Handle bar -->
-     <div class="flex justify-center pt-3 pb-1 flex-shrink-0">
-      <div style="width:36px;height:4px;border-radius:2px;background:rgba(212,165,116,0.3);"></div>
+     <div class="flex justify-center pt-4 pb-2 flex-shrink-0">
+      <div style="width:40px;height:4px;border-radius:2px;background:rgba(212,165,116,0.35);"></div>
      </div>
-     <div class="flex-1 overflow-y-auto" style="-webkit-overflow-scrolling:touch;padding:16px 20px 16px;">
+     <div class="flex-1 overflow-y-auto" style="-webkit-overflow-scrolling:touch;padding:14px 22px 16px;">
       <!-- Nutrition pill -->
       <div class="flex items-center mb-5" style="background:rgba(245,230,211,0.8);border:1.5px solid rgba(212,165,116,0.28);border-radius:50px;padding:11px 20px;">
        <span class="flex flex-col items-center flex-1 pointer-events-none">
@@ -469,9 +472,12 @@
      </div>
      <!-- В корзину — narrower, symmetric, pointer-events fix -->
      <div class="flex-shrink-0" style="padding:10px 24px 30px;background:#FFFDF9;border-top:1px solid rgba(245,230,211,0.7);">
-      <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 28px;touch-action:manipulation;display:flex;align-items:center;justify-content:center;gap:16px;border:none;cursor:pointer;">
+      <button id="detail-add-btn"
+        onclick="addProductFromDetail()"
+        ontouchend="event.preventDefault();addProductFromDetail();"
+        style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 28px;touch-action:manipulation;display:flex;align-items:center;justify-content:center;gap:16px;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">
        <span style="font-size:16px;font-weight:700;color:#fff;pointer-events:none;">В корзину</span>
-       <span style="width:1px;height:20px;background:rgba(255,255,255,0.35);flex-shrink:0;pointer-events:none;"></span>
+       <span style="width:1px;height:20px;background:rgba(255,255,255,0.35);flex-shrink:0;pointer-events:none;display:inline-block;"></span>
        <span style="font-size:16px;font-weight:700;color:#fff;pointer-events:none;"><span id="detail-card-price">0.00</span> р</span>
       </button>
      </div>
@@ -737,12 +743,8 @@
       document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
       if (screenName === 'main') {
         document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
       } else {
         document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.width = '100%';
       }
       const screen = document.getElementById(`screen-${screenName}`);
       if (screen) {
