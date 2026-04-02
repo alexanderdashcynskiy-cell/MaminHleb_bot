@@ -1103,6 +1103,7 @@ if(dateInput) {
       event.preventDefault();
       const name = document.getElementById('checkout-name').value.trim();
       const phone = document.getElementById('checkout-phone').value.trim();
+      const note = document.getElementById('checkout-note').value.trim();
       const address = deliveryMethod === 'delivery' ? document.getElementById('checkout-address').value.trim() : null;
       const pickupTime = deliveryMethod === 'pickup' ? document.getElementById('checkout-pickup-time').value : null;
       if (!name || !phone) return;
@@ -1128,6 +1129,7 @@ if(dateInput) {
             time: pickupTime ||"Как можно быстрее",
             items: JSON.stringify(cartSnapshot),
             total: total,
+            note: note || "",
         });
         showReceipt(orderId, name, phone, cartSnapshot, total, deliveryMethod, address, pickupTime);
         cart = [];
@@ -1284,6 +1286,7 @@ if(dateInput) {
       if (preorderCart.length === 0) { showToast('Пожалуйста, выберите хотя бы один товар', '⚠️'); return; }
       const name = document.getElementById('preorder-name').value.trim();
       const phone = document.getElementById('preorder-phone').value.trim();
+      const note = document.getElementById('preorder-note').value.trim();
       if (!name || !phone) return;
       const btn = document.getElementById('submit-preorder-btn');
       btn.disabled = true; btn.textContent = 'Обработка...';
@@ -1292,15 +1295,16 @@ if(dateInput) {
       const total = cartSnapshot.reduce((s, i) => s + i.price * i.quantity, 0);
       setTimeout(() => {
         const orderId = 'PRE' + Date.now();
-        sendOrderToServer({ 
-            orderNumber: orderId, 
+        sendOrderToServer({
+            orderNumber: orderId,
             type:"Предзаказ",
             time: preorderTime,
-            name:name, 
-            phone:phone, 
-            telegramId:telegramId, 
-            items: JSON.stringify(cartSnapshot), 
-            total:total
+            name:name,
+            phone:phone,
+            telegramId:telegramId,
+            items: JSON.stringify(cartSnapshot),
+            total:total,
+            note: note || "",
          });
         showPreorderReceipt(orderId, name, phone, cartSnapshot, total, preorderTime);
         preorderCart = []; preorderTime = null;
@@ -1422,11 +1426,12 @@ if(dateInput) {
                     type: order.type,
                     name: order.name,
                     phone: order.phone,
-                    telegramId: String(telegramId || "0"), // ID того, кто заказывает
+                    telegramId: String(telegramId || "0"),
                     address: order.address || "Самовывоз",
                     time: order.time || "Как можно быстрее",
                     items: typeof order.items === 'string' ? order.items : JSON.stringify(order.items),
-                    total: order.total
+                    total: order.total,
+                    note: order.note || ""
                 })
             });
 
