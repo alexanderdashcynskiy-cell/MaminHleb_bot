@@ -487,7 +487,6 @@
        <!-- В корзину button -->
        <button id="detail-add-btn"
          onclick="addProductFromDetail()"
-         ontouchend="event.preventDefault();addProductFromDetail();"
          style="flex:1;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:15px 18px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
         <span style="font-size:15px;font-weight:700;color:#fff;pointer-events:none;">В корзину</span>
         <span style="width:1px;height:18px;background:rgba(255,255,255,0.4);flex-shrink:0;pointer-events:none;"></span>
@@ -927,11 +926,7 @@ if(dateInput) {
       showScreen('product');
     }
 
-    let _detailQtyBusy = false;
     function changeDetailQty(delta) {
-      if (_detailQtyBusy) return;
-      _detailQtyBusy = true;
-      setTimeout(() => { _detailQtyBusy = false; }, 300);
       const btn = document.getElementById('detail-add-btn');
       const productId = btn.dataset.productId;
       const selectedSize = btn.dataset.selectedSize;
@@ -945,7 +940,8 @@ if(dateInput) {
         if (existing) existing.quantity = detailQty;
       }
       document.getElementById('detail-qty-display').textContent = detailQty;
-      updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId);
+      // Defer heavy DOM updates so iOS touch chain isn't disrupted mid-event
+      setTimeout(() => { updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId); }, 0);
     }
 
     // FIX #6: event передаётся явно
@@ -1000,7 +996,7 @@ if(dateInput) {
       }
       document.getElementById('detail-qty-display').textContent = detailQty;
       document.getElementById('detail-qty-controls').style.display = 'flex';
-      updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId);
+      setTimeout(() => { updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId); }, 0);
       showToast(`${product.name} добавлен в корзину ✓`, '✓');
     }
 
