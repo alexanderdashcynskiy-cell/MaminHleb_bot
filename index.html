@@ -313,15 +313,14 @@
      </div>
     </div>
     <!-- Footer -->
-    <div id="cart-footer" class="hidden flex-shrink-0 px-4 pb-6 pt-3" style="background:#F5F5F5;border-top:1px solid rgba(0,0,0,0.06);">
-     <div class="flex items-center justify-between mb-4 px-1">
-      <span class="font-semibold text-coffee" style="font-size:15px;">Итого</span>
-      <span class="font-bold" style="font-size:20px;color:#C9A227;"><span id="cart-total-full">0.00</span> р</span>
+    <div id="cart-footer" class="hidden flex-shrink-0" style="background:#F5F5F5;border-top:1px solid rgba(0,0,0,0.06);padding:12px 16px 24px;">
+     <div style="display:flex;align-items:center;gap:12px;">
+      <button onclick="startCheckout()" style="flex:1;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:15px 20px;font-size:16px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">Оформить заказ</button>
+      <div style="flex-shrink:0;text-align:right;">
+       <div style="font-size:10px;color:rgba(107,68,35,0.45);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Итого</div>
+       <div style="font-size:19px;font-weight:800;color:#C9A227;line-height:1.1;"><span id="cart-total-full">0.00</span> р</div>
+      </div>
      </div>
-     <button
-       onclick="startCheckout()"
-       ontouchend="event.preventDefault();startCheckout();"
-       style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:17px 32px;font-size:17px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;display:block;-webkit-tap-highlight-color:transparent;">Оформить заказ</button>
     </div>
    </div>
 
@@ -544,11 +543,11 @@
     <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
     <h2 class="text-xl font-bold text-coffee">🌅 Утренний предзаказ</h2>
    </header>
-   <div class="flex-1 px-4 py-4 overflow-y-auto pb-32" style="-webkit-overflow-scrolling: touch;">
+   <div class="flex-1 px-4 py-4 overflow-y-auto pb-32" style="-webkit-overflow-scrolling:touch;overflow-x:hidden;width:100%;">
     <form onsubmit="submitPreorder(event)" class="space-y-4">
      <div>
       <label class="block text-sm font-semibold text-coffee mb-3">Выберите товары</label>
-      <div id="preorder-products" class="grid grid-cols-2 gap-3"></div>
+      <div id="preorder-products" class="grid grid-cols-2 gap-3" style="overflow-x:hidden;width:100%;"></div>
      </div>
      <!-- FIX #4: добавлен блок выбора времени -->
      <div>
@@ -808,34 +807,50 @@ if(dateInput) {
       const imgHTML = productImages[p.id]
         ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy">`
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
-      const shortDesc = weightInfo;
       return `
-        <div class="animate-fade ${compact ? 'flex-shrink-0 w-40' : ''}">
-          <div class="bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow h-full flex flex-col ${quantity > 0 ? 'ring-2 ring-caramel' : ''}">
-            <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl ${compact ? 'aspect-square' : 'aspect-square'} group/img">
-              <div class="w-full h-full transition-transform duration-300 group-hover/img:scale-105">${imgHTML}</div>
+        <div class="animate-fade ${compact ? 'flex-shrink-0 w-40' : ''}" data-pid="${p.id}">
+          <div class="bg-white rounded-3xl shadow-sm h-full flex flex-col ${quantity > 0 ? 'ring-2 ring-caramel' : ''}">
+            <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square group/img">
+              <div class="w-full h-full">${imgHTML}</div>
               ${!compact && p.isNew ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
             </button>
             <div class="flex-1 px-3 pt-2.5 pb-3 flex flex-col justify-between gap-1.5">
               <div>
                 <h3 class="font-bold text-coffee leading-tight ${compact ? 'text-xs' : 'text-sm'}" style="font-family:'Playfair Display',serif;">${p.name}</h3>
-                <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${shortDesc}</p>
+                <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${weightInfo}</p>
               </div>
-              <div class="flex items-center justify-between gap-2 mt-1">
+              <div class="flex items-center justify-between gap-2 mt-1 card-btn-zone" data-pid="${p.id}">
                 <span class="font-bold text-coffee ${compact ? 'text-sm' : 'text-base'}" style="font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} <span style="font-size:11px;font-weight:600;color:#D4A574;">р</span></span>
-                ${quantity > 0 ? `
-                  <div class="flex items-center gap-1 rounded-full px-1.5 py-1" style="background:rgba(212,165,116,0.12);">
-                    <button onclick="updateQuantity('${p.id}', -1)" class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm transition-colors" style="background:rgba(212,165,116,0.3);color:#6B4423;">−</button>
-                    <span class="w-4 text-center font-bold text-coffee text-xs">${quantity}</span>
-                    <button onclick="updateQuantity('${p.id}', 1)" class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm text-white transition-colors" style="background:linear-gradient(135deg,#C9A227,#D4A574);">+</button>
-                  </div>
-                ` : `
-                  <button onclick="addToCart('${p.id}')" class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-md" style="background:linear-gradient(135deg,#C9A227,#D4A574);touch-action:manipulation;">+</button>
-                `}
+                ${cardBtnHTML(p.id, quantity, compact)}
               </div>
             </div>
           </div>
         </div>`;
+    }
+
+    function cardBtnHTML(pid, quantity, compact = false) {
+      if (quantity > 0) return `
+        <div class="flex items-center gap-1 rounded-full px-1.5 py-1" style="background:rgba(212,165,116,0.12);">
+          <button onclick="updateQuantity('${pid}',-1)" class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm" style="background:rgba(212,165,116,0.3);color:#6B4423;touch-action:manipulation;">−</button>
+          <span class="w-4 text-center font-bold text-coffee text-xs">${quantity}</span>
+          <button onclick="updateQuantity('${pid}',1)" class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm text-white" style="background:linear-gradient(135deg,#C9A227,#D4A574);touch-action:manipulation;">+</button>
+        </div>`;
+      return `<button onclick="addToCart('${pid}')" class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-md" style="background:linear-gradient(135deg,#C9A227,#D4A574);touch-action:manipulation;">+</button>`;
+    }
+
+    function updateProductCardButtons(productId) {
+      const cartItem = cart.find(i => i.product_id === productId);
+      const qty = cartItem ? cartItem.quantity : 0;
+      document.querySelectorAll(`.card-btn-zone[data-pid="${productId}"]`).forEach(zone => {
+        const compact = zone.closest('[data-pid]')?.classList.contains('flex-shrink-0');
+        const btn = zone.querySelector('button, div.flex');
+        if (btn) btn.outerHTML = cardBtnHTML(productId, qty, compact);
+        const card = zone.closest('[data-pid]')?.querySelector('.rounded-3xl');
+        if (card) {
+          card.classList.toggle('ring-2', qty > 0);
+          card.classList.toggle('ring-caramel', qty > 0);
+        }
+      });
     }
 
     function renderBestsellers() {
@@ -926,7 +941,7 @@ if(dateInput) {
       if (existing) { existing.quantity++; } else {
         cart.push({ product_id: productId, product_name: product.name, price: product.price, quantity: 1 });
       }
-      updateCartUI(); updateFloatingCart(); renderProducts(); renderBestsellers();
+      updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId);
     }
 
     function addProductFromDetail() {
@@ -951,7 +966,7 @@ if(dateInput) {
       if (!item) return;
       item.quantity += delta;
       if (item.quantity <= 0) cart = cart.filter(i => i !== item);
-      updateCartUI(); updateFloatingCart(); renderProducts(); renderBestsellers();
+      updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId);
     }
 
     function removeFromCart(productId) {
@@ -986,7 +1001,7 @@ if(dateInput) {
             <div class="flex-1 min-w-0 flex flex-col justify-between py-0.5">
               <div class="pr-8">
                 <h4 class="font-bold text-coffee leading-tight" style="font-size:15px;font-family:'Playfair Display',serif;">${item.product_name}</h4>
-                ${sizeOrWeight ? `<span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium" style="background:rgba(245,230,211,0.7);color:rgba(107,68,35,0.6);">${sizeOrWeight}</span>` : ''}
+                ${sizeOrWeight ? `<div class="flex items-center gap-1.5 mt-1.5"><span style="font-size:11px;color:rgba(107,68,35,0.45);font-weight:500;">Вес:</span><span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:rgba(245,230,211,0.8);color:rgba(107,68,35,0.65);">${sizeOrWeight}</span></div>` : ''}
               </div>
               <!-- Qty + price row -->
               <div class="flex items-center justify-between mt-2">
