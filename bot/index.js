@@ -151,6 +151,10 @@ async function handleOrder(body) {
     deliveryInfo = '📍 Самовывоз';
   }
 
+  // Тексты
+  const noteStr  = (body.note || '').trim();
+  const noteLine = noteStr ? `━━━━━━━━━━━━━━━━━━━━\n💬 *Примечание:* ${noteStr}\n` : '';
+
   // Запись в Google Sheets
   const now     = new Date();
   const dateStr = now.toLocaleString('ru-RU', { timeZone: 'Europe/Kyiv' });
@@ -166,16 +170,12 @@ async function handleOrder(body) {
     totalStr,
     deliveryInfo,
     '', '', '🟡 Новый', '',
-    noteStr || ''
+    noteStr
   ]);
 
   if (!newRow) { console.error('appendRow: failed to get row number'); return; }
 
   const orderNum = newRow - 1;
-
-  // Тексты
-  const noteStr = (body.note || '').trim();
-  const noteLine = noteStr ? `━━━━━━━━━━━━━━━━━━━━\n💬 *Примечание:* ${noteStr}\n` : '';
 
   const receiptBase =
     `🧾 *${isPreorder ? 'ВАШ ПРЕДЗАКАЗ' : 'ВАШ ЗАКАЗ'} №${orderNum}*\n` +
