@@ -477,14 +477,23 @@
 
      <!-- Кнопка В корзину — зафиксирована снизу -->
      <div style="flex-shrink:0;padding:10px 20px 28px;background:#FFFDF9;border-top:1px solid rgba(245,230,211,0.6);">
-      <button id="detail-add-btn"
-        onclick="addProductFromDetail()"
-        ontouchend="event.preventDefault();addProductFromDetail();"
-        style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:14px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
-       <span style="font-size:17px;font-weight:700;color:#fff;pointer-events:none;">В корзину</span>
-       <span style="width:1px;height:22px;background:rgba(255,255,255,0.4);flex-shrink:0;pointer-events:none;"></span>
-       <span style="font-size:17px;font-weight:700;color:#fff;pointer-events:none;"><span id="detail-card-price">0.00</span> р</span>
-      </button>
+      <div style="display:flex;align-items:center;gap:12px;">
+       <!-- Qty controls: white pill -->
+       <div style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:50px;padding:7px 10px;box-shadow:0 2px 12px rgba(0,0,0,0.10);flex-shrink:0;">
+        <button onclick="changeDetailQty(-1)" ontouchend="event.preventDefault();changeDetailQty(-1);" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;color:#fff;font-size:22px;font-weight:700;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;"><span style="pointer-events:none;line-height:1;">−</span></button>
+        <span id="detail-qty-display" style="min-width:22px;text-align:center;font-size:18px;font-weight:800;color:#3D2B1F;">1</span>
+        <button onclick="changeDetailQty(1)" ontouchend="event.preventDefault();changeDetailQty(1);" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;color:#fff;font-size:22px;font-weight:700;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;"><span style="pointer-events:none;line-height:1;">+</span></button>
+       </div>
+       <!-- В корзину button -->
+       <button id="detail-add-btn"
+         onclick="addProductFromDetail()"
+         ontouchend="event.preventDefault();addProductFromDetail();"
+         style="flex:1;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:15px 18px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+        <span style="font-size:15px;font-weight:700;color:#fff;pointer-events:none;">В корзину</span>
+        <span style="width:1px;height:18px;background:rgba(255,255,255,0.4);flex-shrink:0;pointer-events:none;"></span>
+        <span style="font-size:15px;font-weight:700;color:#fff;pointer-events:none;"><span id="detail-card-price">0.00</span> р</span>
+       </button>
+      </div>
      </div>
     </div>
 
@@ -688,6 +697,7 @@
     // ── State ──────────────────────────────────────────────────────────────────
     let cart = [];
     let currentCategory = 'all';
+    let detailQty = 1;
     // FIX #1: correct slide count = 3
     const TOTAL_SLIDES = 3;
     let currentSlide = 0;
@@ -908,7 +918,16 @@ if(dateInput) {
         sizeSection.style.display = 'none';
         delete document.getElementById('detail-add-btn').dataset.selectedSize;
       }
+      // Init qty from cart
+      const cartItem = cart.find(i => i.product_id === productId && ((!product.sizes?.length && !i.selected_size) || i.selected_size === (product.sizes?.[0]?.size)));
+      detailQty = cartItem ? cartItem.quantity : 1;
+      document.getElementById('detail-qty-display').textContent = detailQty;
       showScreen('product');
+    }
+
+    function changeDetailQty(delta) {
+      detailQty = Math.max(1, detailQty + delta);
+      document.getElementById('detail-qty-display').textContent = detailQty;
     }
 
     // FIX #6: event передаётся явно
@@ -952,12 +971,12 @@ if(dateInput) {
       const selectedSize = btn.dataset.selectedSize;
       const price = parseFloat(btn.dataset.price);
       const existing = cart.find(i => i.product_id === productId && ((!selectedSize && !i.selected_size) || i.selected_size === selectedSize));
-      if (existing) { existing.quantity++; } else {
-        const item = { product_id: productId, product_name: product.name, price, quantity: 1 };
+      if (existing) { existing.quantity = detailQty; } else {
+        const item = { product_id: productId, product_name: product.name, price, quantity: detailQty };
         if (selectedSize) item.selected_size = selectedSize;
         cart.push(item);
       }
-      updateCartUI(); updateFloatingCart();
+      updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId);
       showToast(`${product.name} добавлен в корзину ✓`, '✓');
     }
 
