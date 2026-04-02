@@ -314,11 +314,11 @@
     </div>
     <!-- Footer -->
     <div id="cart-footer" class="hidden flex-shrink-0" style="background:#F5F5F5;border-top:1px solid rgba(0,0,0,0.06);padding:12px 16px 24px;">
-     <div style="display:flex;align-items:center;gap:12px;">
-      <button onclick="startCheckout()" style="flex:1;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:15px 20px;font-size:16px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">Оформить заказ</button>
+     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <button onclick="startCheckout()" ontouchend="event.preventDefault();startCheckout();" style="background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:14px 28px;font-size:15px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;">Оформить заказ</button>
       <div style="flex-shrink:0;text-align:right;">
        <div style="font-size:10px;color:rgba(107,68,35,0.45);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Итого</div>
-       <div style="font-size:19px;font-weight:800;color:#C9A227;line-height:1.1;"><span id="cart-total-full">0.00</span> р</div>
+       <div style="font-size:20px;font-weight:800;color:#C9A227;line-height:1.1;"><span id="cart-total-full">0.00</span> р</div>
       </div>
      </div>
     </div>
@@ -497,7 +497,7 @@
 
   <!-- Floating Cart Button -->
   <div id="floating-cart-btn" class="fixed right-6 bottom-6 z-40 transform scale-0 transition-transform duration-300 origin-center">
-   <button onclick="toggleFloatingCart()" class="relative w-16 h-16 rounded-full bg-gradient-to-br from-gold to-caramel text-white shadow-2xl hover:shadow-xl active:scale-95 transition-all flex items-center justify-center group">
+   <button onclick="showScreen('cart')" ontouchend="event.preventDefault();showScreen('cart');" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;" class="relative w-16 h-16 rounded-full bg-gradient-to-br from-gold to-caramel text-white shadow-2xl hover:shadow-xl active:scale-95 transition-all flex items-center justify-center group">
     <svg class="w-8 h-8 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24"><path d="M7 4V3c0-.6.4-1 1-1h2c.6 0 1 .4 1 1v1h2V3c0-.6.4-1 1-1h2c.6 0 1 .4 1 1v1h2c1.1 0 2 .9 2 2v2h1c.6 0 1 .4 1 1s-.4 1-1 1h-1v6h1c.6 0 1 .4 1 1s-.4 1-1 1h-1v2c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h2zm0 2H5v12h14V6h-2v1c0 .6-.4 1-1 1s-1-.4-1-1V6h-2v1c0 .6-.4 1-1 1s-1-.4-1-1V6H9v1c0 .6-.4 1-1 1s-1-.4-1-1V6H7V6z" /></svg>
     <span id="float-cart-badge" class="absolute -top-3 -right-3 w-7 h-7 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center hidden animate-pulse"><span id="float-cart-badge-count">0</span></span>
    </button>
