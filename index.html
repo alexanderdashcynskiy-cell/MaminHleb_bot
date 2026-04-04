@@ -429,10 +429,10 @@
     </div>
 
     <!-- Белая карточка — накладывается на фото снизу -->
-    <div id="detail-card-sheet" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#FFFDF9;border-radius:36px 36px 0 0;margin-top:-60px;position:relative;z-index:1;box-shadow:0 -6px 32px rgba(0,0,0,0.18);transition:margin-top 0.3s ease;">
-     <!-- ручка — зона перетаскивания -->
-     <div id="detail-card-handle" style="display:flex;justify-content:center;padding:14px 0 10px;flex-shrink:0;cursor:grab;">
-      <div style="width:40px;height:4px;border-radius:2px;background:rgba(212,165,116,0.5);pointer-events:none;"></div>
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#FFFDF9;border-radius:36px 36px 0 0;margin-top:-60px;position:relative;z-index:1;box-shadow:0 -6px 32px rgba(0,0,0,0.18);">
+     <!-- ручка -->
+     <div style="display:flex;justify-content:center;padding:12px 0 8px;flex-shrink:0;">
+      <div style="width:36px;height:4px;border-radius:2px;background:rgba(212,165,116,0.3);"></div>
      </div>
 
      <!-- скролл-контент -->
@@ -706,7 +706,6 @@
       setupSwipeBack();
       setupKeyboardDismiss();
       setupButtonPressAnim();
-      setupCardDrag();
     }
 
     // ── Swipe-back (left edge → right) ────────────────────────────────────────
@@ -732,41 +731,6 @@
           }
         }, { passive: true });
       });
-    }
-
-    // ── Перетаскивание белой карточки товара ──────────────────────────────────
-    function setupCardDrag() {
-      const sheet = document.getElementById('detail-card-sheet');
-      const handle = document.getElementById('detail-card-handle');
-      if (!sheet || !handle) return;
-
-      const SNAP_UP   = -60;  // позиция по умолчанию (карточка высоко)
-      const SNAP_DOWN =  60;  // опущена (видно больше фото)
-      let startY = 0, startMargin = SNAP_UP, currentMargin = SNAP_UP, dragging = false;
-
-      handle.addEventListener('touchstart', e => {
-        dragging = true;
-        startY = e.touches[0].clientY;
-        startMargin = parseInt(sheet.style.marginTop) || SNAP_UP;
-        sheet.style.transition = 'none';
-      }, { passive: true });
-
-      handle.addEventListener('touchmove', e => {
-        if (!dragging) return;
-        const dy = e.touches[0].clientY - startY;
-        currentMargin = Math.min(SNAP_DOWN, Math.max(SNAP_UP, startMargin + dy));
-        sheet.style.marginTop = currentMargin + 'px';
-      }, { passive: true });
-
-      handle.addEventListener('touchend', () => {
-        if (!dragging) return;
-        dragging = false;
-        sheet.style.transition = 'margin-top 0.35s cubic-bezier(0.25,0.46,0.45,0.94)';
-        // Снап: если прошли больше трети пути — фиксируем в крайней точке
-        const mid = (SNAP_UP + SNAP_DOWN) / 2;
-        currentMargin = currentMargin > mid ? SNAP_DOWN : SNAP_UP;
-        sheet.style.marginTop = currentMargin + 'px';
-      }, { passive: true });
     }
 
     // ── Press animation for bottom action buttons ─────────────────────────────
@@ -988,9 +952,6 @@ if(dateInput) {
         sizeSection.style.display = 'none';
         delete document.getElementById('detail-add-btn').dataset.selectedSize;
       }
-      // сброс позиции карточки при каждом открытии
-      const sheet = document.getElementById('detail-card-sheet');
-      if (sheet) { sheet.style.transition = 'none'; sheet.style.marginTop = '-60px'; }
       showScreen('product');
     }
 
