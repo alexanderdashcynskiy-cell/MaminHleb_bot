@@ -307,7 +307,7 @@
     <div class="flex-1 overflow-y-auto px-4" style="padding-bottom:120px;">
 
      <!-- Переключатель доставка/самовывоз -->
-     <div style="background:#fff;border-radius:16px;padding:4px;display:flex;gap:3px;margin-bottom:12px;">
+     <div id="cart-delivery-toggle" style="background:#fff;border-radius:16px;padding:4px;display:flex;gap:3px;margin-bottom:12px;">
       <button id="cart-delivery-tab" onclick="setCartDelivery('delivery')" style="flex:1;padding:11px;border-radius:13px;border:none;font-size:15px;font-weight:600;cursor:pointer;touch-action:manipulation;transition:all 0.2s;background:transparent;color:rgba(107,68,35,0.5);">Доставка</button>
       <button id="cart-pickup-tab" onclick="setCartDelivery('pickup')" style="flex:1;padding:11px;border-radius:13px;border:none;font-size:15px;font-weight:600;cursor:pointer;touch-action:manipulation;transition:all 0.2s;background:linear-gradient(90deg,#C9A227,#D4A574);color:#fff;">Самовывоз</button>
      </div>
@@ -1055,9 +1055,13 @@ if(dateInput) {
         emptyState.classList.remove('hidden');
         footer.classList.add('hidden');
         summary.classList.add('hidden');
+        document.getElementById('cart-delivery-toggle').style.display = 'none';
+        document.getElementById('cart-pickup-info').style.display = 'none';
         return;
       }
       emptyState.classList.add('hidden');
+      document.getElementById('cart-delivery-toggle').style.display = 'flex';
+      document.getElementById('cart-pickup-info').style.display = deliveryMethod === 'pickup' ? 'flex' : 'none';
       footer.classList.remove('hidden');
       summary.classList.remove('hidden');
       document.getElementById('cart-items-count').textContent = count;
