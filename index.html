@@ -67,7 +67,7 @@
       <div class="w-10 h-10 rounded-full bg-gradient-to-br from-caramel to-gold flex items-center justify-center text-lg flex-shrink-0">👤</div>
       <div class="flex-1 min-w-0">
        <p class="text-xs font-semibold text-coffee">Привет!</p>
-       <p id = "user-greeting-name" class="text-xs text-caramel truncate">Алексей</p>
+       <p id="user-greeting-name" class="text-xs text-caramel truncate">Алексей</p>
       </div>
      </div>
      <button onclick="showScreen('locations')" class="flex flex-col items-center flex-1 mx-2">
@@ -1091,8 +1091,6 @@ if(dateInput) {
       document.getElementById('cart-badge-count').textContent = count;
       document.getElementById('cart-badge-dot').classList.toggle('hidden', count === 0);
       document.getElementById('cart-total-full').textContent = total.toFixed(2);
-      const checkoutTotal = document.getElementById('cart-checkout-total');
-      if (checkoutTotal) checkoutTotal.textContent = total.toFixed(2);
       const itemsContainer = document.getElementById('cart-items-full');
       const emptyState = document.getElementById('cart-empty-full');
       const footer = document.getElementById('cart-footer');
@@ -1199,9 +1197,9 @@ if(dateInput) {
       const note = document.getElementById('checkout-note').value.trim();
       const address = deliveryMethod === 'delivery' ? document.getElementById('checkout-address').value.trim() : null;
       const pickupTime = deliveryMethod === 'pickup' ? document.getElementById('checkout-pickup-time').value : null;
-      if (!name || !phone) return;
-      if (deliveryMethod === 'delivery' && !address) { showToast('Пожалуйста, укажите адрес доставки', '⚠️'); return; }
-      if (deliveryMethod === 'pickup' && !pickupTime) { showToast('Пожалуйста, выберите время получения', '⚠️'); return; }
+      if (!name || !phone) { _checkoutLock = false; return; }
+      if (deliveryMethod === 'delivery' && !address) { _checkoutLock = false; showToast('Пожалуйста, укажите адрес доставки', '⚠️'); return; }
+      if (deliveryMethod === 'pickup' && !pickupTime) { _checkoutLock = false; showToast('Пожалуйста, выберите время получения', '⚠️'); return; }
       const btn = document.getElementById('submit-checkout-btn');
       btn.disabled = true; btn.textContent = 'Обработка...';
       // FIX #3: сохраняем копию корзины ДО очистки
