@@ -304,7 +304,7 @@
      <h2 class="font-bold text-coffee" style="font-size:22px;font-family:'Playfair Display',serif;">Корзина</h2>
     </div>
     <!-- Scroll area -->
-    <div class="flex-1 overflow-y-auto px-4" style="padding-bottom:120px;">
+    <div class="flex-1 overflow-y-auto px-4" style="padding-bottom:220px;">
 
      <!-- Переключатель доставка/самовывоз -->
      <div id="cart-delivery-toggle" style="background:#fff;border-radius:16px;padding:4px;display:none;gap:3px;margin-bottom:12px;">
@@ -326,8 +326,12 @@
       <p class="text-sm mt-2" style="color:rgba(107,68,35,0.4);">Добавьте вкусняшки!</p>
      </div>
 
+    </div>
+
+    <!-- Фиксированный блок: итог + кнопка -->
+    <div id="cart-footer" class="hidden" style="position:fixed;bottom:32px;left:0;right:0;z-index:60;padding:0 16px;">
      <!-- Итоговый блок -->
-     <div id="cart-summary" class="hidden" style="background:#fff;border-radius:16px;padding:16px 18px;margin-top:12px;">
+     <div id="cart-summary" style="background:#fff;border-radius:16px;padding:16px 18px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
        <span style="font-size:14px;color:#aaa;">Товары в заказе <span id="cart-items-count">0</span> шт.</span>
        <span style="font-size:14px;color:#555;" id="cart-subtotal-display">0.00 р</span>
@@ -342,10 +346,7 @@
        <span style="font-size:22px;font-weight:800;color:#C9A227;"><span id="cart-total-full">0.00</span> р</span>
       </div>
      </div>
-
-    </div>
-    <!-- Кнопка -->
-    <div id="cart-footer" class="hidden" style="position:fixed;bottom:30px;left:0;right:0;z-index:60;padding:0 16px;">
+     <!-- Кнопка -->
      <button id="cart-checkout-btn" onclick="startCheckout()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:16px;padding:20px 0;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:18px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;">Оформить заказ</button>
     </div>
    </div>
@@ -1060,12 +1061,10 @@ if(dateInput) {
       const itemsContainer = document.getElementById('cart-items-full');
       const emptyState = document.getElementById('cart-empty-full');
       const footer = document.getElementById('cart-footer');
-      const summary = document.getElementById('cart-summary');
       if (cart.length === 0) {
         itemsContainer.innerHTML = '';
         emptyState.classList.remove('hidden');
         footer.classList.add('hidden');
-        summary.classList.add('hidden');
         document.getElementById('cart-delivery-toggle').style.display = 'none';
         document.getElementById('cart-pickup-info').style.display = 'none';
         return;
@@ -1074,7 +1073,6 @@ if(dateInput) {
       document.getElementById('cart-delivery-toggle').style.display = 'flex';
       document.getElementById('cart-pickup-info').style.display = deliveryMethod === 'pickup' ? 'flex' : 'none';
       footer.classList.remove('hidden');
-      summary.classList.remove('hidden');
       document.getElementById('cart-items-count').textContent = count;
       document.getElementById('cart-subtotal-display').textContent = subtotal.toFixed(2) + ' р';
       itemsContainer.innerHTML = cart.map(item => {
