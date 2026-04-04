@@ -111,16 +111,14 @@ async function updateCell(row, col, value) {
   });
 }
 
-// ─── Дедупликация заказов (защита от двойной отправки) ───────────────────────
-const recentOrders = new Map();
+// ─── Дедупликация заказов (файловое хранилище — работает между экземплярами) ──
 function isDuplicateOrder(body) {
-  const key = `${body.phone}_${body.total}_${String(body.items || '').slice(0, 60)}`;
+  const raw = String(body.items || '').replace(/\s+/g, '').slice(0, 80);
+  const key = `dup_${body.phone}_${String(body.total)}_${raw}`;
   const now = Date.now();
-  if (recentOrders.has(key) && now - recentOrders.get(key) < 15000) return true;
-  recentOrders.set(key, now);
-  if (recentOrders.size > 500) {
-    for (const [k, t] of recentOrders) if (now - t > 60000) recentOrders.delete(k);
-  }
+  const last = parseInt(getProp(key) || '0');
+  if (last && now - last < 20000) return true;
+  setProp(key, String(now));
   return false;
 }
 
