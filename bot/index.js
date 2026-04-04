@@ -124,7 +124,7 @@ async function appendRow(values) {
     spreadsheetId: SPREADSHEET_ID,
     range:         'A:A'
   });
-  const rowCount = meta.data.values ? meta.data.values.length : null;
+  const rowCount = meta.data.values ? meta.data.values.length : 0;
   console.log('appendRow rowCount:', rowCount);
   return rowCount;
 }

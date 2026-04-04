@@ -508,7 +508,7 @@
     <span style="flex:1;text-align:center;font-size:18px;font-weight:700;color:#fff;pointer-events:none;"><span id="detail-card-price">0.00</span> р</span>
    </button>
    <!-- Счётчик −/+ — появляется когда товар уже в корзине -->
-   <div id="detail-qty-controls" style="display:none;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:10px 20px;display:none;align-items:center;justify-content:space-between;">
+   <div id="detail-qty-controls" style="display:none;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:10px 20px;align-items:center;justify-content:space-between;">
     <button onclick="detailChangeQty(-1)" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.25);border:none;cursor:pointer;touch-action:manipulation;font-size:22px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;">−</button>
     <span id="detail-qty-count" style="font-size:20px;font-weight:700;color:#fff;min-width:32px;text-align:center;pointer-events:none;">1</span>
     <button onclick="detailChangeQty(1)" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.25);border:none;cursor:pointer;touch-action:manipulation;font-size:22px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;">+</button>
@@ -574,21 +574,20 @@
       <label class="block text-sm font-semibold text-coffee mb-3">Выберите товары</label>
       <div id="preorder-products" class="grid grid-cols-2 gap-3" style="overflow-x:hidden;width:100%;"></div>
      </div>
-     <!-- FIX #4: добавлен блок выбора времени -->
+     <!-- Блок выбора времени -->
      <div>
-        <div="flex gap-3 mb-4">
-            <div class="flex-1">
-                <label class="bloc-text-sm font-semibold text-coffe mb-2">Дата получения*</label>
-                <input type="date" id="preorder-date" class="w-full px-4 py-3 border-2 border-beige rounded-x1 focus:outline-none focus:border-purple-400 transition-colors required">
-</div>
-<div class="flex-1">
-    <label class="block text-sm font-semibold text-coffee mb-2">Время(07:00-09:00)*</label>
-    <input type="time" id="preorder-time" min="07:00" max="09:00" class="w-full px-4 py-3 border-2 border-beige rounded-x1 focus: outline-none focus: border-purple-400 transition-colors" required>
-</div>'
-</div>
-
+      <div class="flex gap-3 mb-4">
+       <div class="flex-1">
+        <label class="block text-sm font-semibold text-coffee mb-2">Дата получения*</label>
+        <input type="date" id="preorder-date" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required>
+       </div>
+       <div class="flex-1">
+        <label class="block text-sm font-semibold text-coffee mb-2">Время (07:00–09:00)*</label>
+        <input type="time" id="preorder-time" min="07:00" max="09:00" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required>
+       </div>
+      </div>
       <input type="hidden" id="preorder-time-input" value="">
-     </div=>
+     </div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Ваше имя*</label><input type="text" id="preorder-name" placeholder="Введите имя" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Номер телефона*</label><input type="tel" id="preorder-phone" placeholder="+375 (XX) XXX-XX-XX" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="preorder-note" placeholder="Ваши пожелания..." rows="2" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none"></textarea></div>
@@ -823,6 +822,8 @@
     }
 
     // ── Screen navigation ──────────────────────────────────────────────────────
+    function closeSizeSelect() { showScreen('main'); }
+
     function showScreen(screenName) {
       document.querySelectorAll('[id^="screen-"]').forEach(s => {
         s.classList.add('hidden');
@@ -1200,7 +1201,6 @@ if(dateInput) {
       const pickupTime = deliveryMethod === 'pickup' ? document.getElementById('checkout-pickup-time').value : null;
       if (!name || !phone) return;
       if (deliveryMethod === 'delivery' && !address) { showToast('Пожалуйста, укажите адрес доставки', '⚠️'); return; }
-      if (deliveryMethod === 'pickup' && !pickupTime) { showToast('Пожалуйста, выберите время получения', '⚠️'); return; }
       if (deliveryMethod === 'pickup' && !pickupTime) { showToast('Пожалуйста, выберите время получения', '⚠️'); return; }
       const btn = document.getElementById('submit-checkout-btn');
       btn.disabled = true; btn.textContent = 'Обработка...';
