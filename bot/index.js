@@ -95,17 +95,20 @@ async function getSheets() {
 
 async function appendRow(values) {
   const sheets = await getSheets();
-  const res = await sheets.spreadsheets.values.append({
-    spreadsheetId:   SPREADSHEET_ID,
-    range:           'A:N',
+  await sheets.spreadsheets.values.append({
+    spreadsheetId:    SPREADSHEET_ID,
+    range:            'A:N',
     valueInputOption: 'USER_ENTERED',
-    resource:        { values: [values] }
+    resource:         { values: [values] }
   });
-  // updatedRange вида "Sheet1!A5:N5" → берём последние цифры = номер строки
-  const range = res.data?.updates?.updatedRange || '';
-  console.log('appendRow updatedRange:', range);
-  const match = range.match(/(\d+)$/);
-  return match ? parseInt(match[1]) : null;
+  // Надёжно: считаем реальное количество строк в колонке A
+  const meta = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range:         'A:A'
+  });
+  const rowCount = meta.data.values ? meta.data.values.length : null;
+  console.log('appendRow rowCount:', rowCount);
+  return rowCount;
 }
 
 async function updateCell(row, col, value) {
