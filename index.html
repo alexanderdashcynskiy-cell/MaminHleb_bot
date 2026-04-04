@@ -417,19 +417,6 @@
     </div>
    </div>
 
-   <!-- Size Select Screen -->
-   <div id="screen-size-select" class="fixed inset-0 bg-cream z-50 hidden overflow-auto flex flex-col">
-    <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3 flex-shrink-0">
-     <button onclick="closeSizeSelect()" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
-     <h2 id="size-select-title" class="text-xl font-bold text-coffee">Выберите размер</h2>
-    </header>
-    <div class="flex-1 px-4 py-4 pb-32 flex flex-col">
-     <div id="size-select-image" class="w-full h-64 bg-beige rounded-3xl mb-6 overflow-hidden"><div class="w-full h-full flex items-center justify-center text-6xl"></div></div>
-     <p id="size-select-description" class="text-coffee text-sm leading-relaxed mb-6 text-center"></p>
-     <div id="size-select-options" class="space-y-3"></div>
-    </div>
-   </div>
-
    <!-- Product Detail Screen -->
    <div id="screen-product" class="fixed inset-0 z-50 hidden" style="display:none;flex-direction:column;background:#000;overflow:hidden;">
 
@@ -1038,6 +1025,7 @@
 
     function addProductFromDetail() {
       const btn = document.getElementById('detail-add-btn');
+      if (!btn) return;
       const productId = btn.dataset.productId;
       const product = products.find(p => p.id === productId);
       if (!product) return;
@@ -1071,6 +1059,7 @@
 
     function detailChangeQty(delta) {
       const btn = document.getElementById('detail-add-btn');
+      if (!btn) return;
       const productId = btn.dataset.productId;
       const selectedSize = btn.dataset.selectedSize;
       const idx = cart.findIndex(i => i.product_id === productId && ((!selectedSize && !i.selected_size) || i.selected_size === selectedSize));
@@ -1208,7 +1197,7 @@
       const address = deliveryMethod === 'delivery' ? document.getElementById('checkout-address').value.trim() : null;
       const pickupTime = deliveryMethod === 'pickup' ? document.getElementById('checkout-pickup-time').value : null;
       if (cart.length === 0) { _checkoutLock = false; showToast('Корзина пуста', '⚠️'); return; }
-      if (!name || !phone) { _checkoutLock = false; return; }
+      if (!name || !phone) { _checkoutLock = false; showToast('Пожалуйста, укажите имя и телефон', '⚠️'); return; }
       if (deliveryMethod === 'delivery' && !address) { _checkoutLock = false; showToast('Пожалуйста, укажите адрес доставки', '⚠️'); return; }
       if (deliveryMethod === 'pickup' && !pickupTime) { _checkoutLock = false; showToast('Пожалуйста, выберите время получения', '⚠️'); return; }
       const btn = document.getElementById('submit-checkout-btn');
@@ -1388,7 +1377,7 @@
       const name = document.getElementById('preorder-name').value.trim();
       const phone = document.getElementById('preorder-phone').value.trim();
       const note = document.getElementById('preorder-note').value.trim();
-      if (!name || !phone) { _preorderLock = false; return; }
+      if (!name || !phone) { _preorderLock = false; showToast('Пожалуйста, укажите имя и телефон', '⚠️'); return; }
       const btn = document.getElementById('submit-preorder-btn');
       btn.disabled = true; btn.textContent = 'Обработка...';
       // FIX #3 applied here too: snapshot before clearing
@@ -1470,7 +1459,7 @@
       const name = document.getElementById('review-name').value.trim();
       const text = document.getElementById('review-text').value.trim();
       const rating = parseInt(document.getElementById('review-rating').value) || 5;
-      if (!name || !text) return;
+      if (!name || !text) { showToast('Пожалуйста, укажите имя и текст отзыва', '⚠️'); return; }
       reviews.unshift({ name, rating, text });
       renderReviews();
       showToast(`Спасибо, ${name}! Ваш отзыв получен 🙏`, '✓');
