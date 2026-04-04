@@ -50,6 +50,13 @@ function getProp(key)        { return store.get(key) || null; }
 function setProp(key, value) { store.set(key, value); saveState(); }
 function delProp(key)        { store.delete(key); saveState(); }
 
+// Атомарный счётчик заказов (синхронный — без гонок в event loop Node.js)
+function getNextOrderNum() {
+  const n = parseInt(getProp('order_counter') || '0') + 1;
+  setProp('order_counter', String(n));
+  return n;
+}
+
 // ─── Telegram API ─────────────────────────────────────────────────────────────
 const TG_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
@@ -187,7 +194,7 @@ async function handleOrder(body) {
 
   if (!newRow) { console.error('appendRow: failed to get row number'); return; }
 
-  const orderNum = newRow - 1;
+  const orderNum = getNextOrderNum();
 
   const receiptBase =
     `🧾 *${isPreorder ? 'ВАШ ПРЕДЗАКАЗ' : 'ВАШ ЗАКАЗ'} №${orderNum}*\n` +
