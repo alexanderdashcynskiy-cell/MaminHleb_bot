@@ -363,7 +363,7 @@
       <div id="pickup-time-section" class="hidden"><label class="block text-sm font-semibold text-coffee mb-3">Время получения</label><div id="pickup-times" class="space-y-2" style="max-height:220px;overflow-y:scroll;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;"></div><input type="hidden" id="checkout-pickup-time" value=""></div>
       <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="checkout-note" placeholder="Ваши пожелания..." rows="3" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none"></textarea></div>
       <div class="bg-gradient-to-br from-gold/10 to-caramel/10 rounded-2xl p-4 border border-gold/30 mt-6"><div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого к оплате:</span><span class="text-2xl font-bold text-gold"><span id="checkout-total">0.00</span> р</span></div></div>
-      <button type="submit" id="submit-checkout-btn" class="w-full bg-gradient-to-r from-coffee to-caramel text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all active:scale-95">Подтвердить заказ</button>
+      <button type="submit" id="submit-checkout-btn" class="w-full bg-gradient-to-r from-coffee to-caramel text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all" style="touch-action:manipulation;">Подтвердить заказ</button>
      </form>
     </div>
    </div>
@@ -592,7 +592,7 @@
      <div><label class="block text-sm font-semibold text-coffee mb-2">Номер телефона*</label><input type="tel" id="preorder-phone" placeholder="+375 (XX) XXX-XX-XX" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="preorder-note" placeholder="Ваши пожелания..." rows="2" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none"></textarea></div>
      <div class="bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl p-4 border-2 border-purple-300"><div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого:</span><span class="text-2xl font-bold text-purple-600"><span id="preorder-total">0.00</span> р</span></div></div>
-     <button type="submit" id="submit-preorder-btn" class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all active:scale-95">Забронировать предзаказ</button>
+     <button type="submit" id="submit-preorder-btn" class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all" style="touch-action:manipulation;">Забронировать предзаказ</button>
     </form>
    </div>
   </div>
@@ -1071,8 +1071,8 @@ if(dateInput) {
       updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId); updateDetailQtyControls();
     }
 
-    function updateQuantity(productId, delta) {
-      const item = cart.find(i => i.product_id === productId);
+    function updateQuantity(productId, delta, selectedSize) {
+      const item = cart.find(i => i.product_id === productId && ((!selectedSize && !i.selected_size) || i.selected_size === selectedSize));
       if (!item) return;
       item.quantity += delta;
       if (item.quantity <= 0) cart = cart.filter(i => i !== item);
@@ -1125,9 +1125,9 @@ if(dateInput) {
               <div style="font-weight:700;font-size:16px;color:#2D2D2D;">${(item.price * item.quantity).toFixed(2)} р</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-              <button onclick="updateQuantity('${item.product_id}', -1)" style="width:34px;height:34px;border-radius:50%;background:#F2F2F2;border:none;font-size:20px;font-weight:500;color:#555;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;line-height:1;">−</button>
+              <button onclick="updateQuantity('${item.product_id}', -1, '${item.selected_size || ''}')" style="width:34px;height:34px;border-radius:50%;background:#F2F2F2;border:none;font-size:20px;font-weight:500;color:#555;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;line-height:1;">−</button>
               <span style="font-weight:700;font-size:16px;min-width:18px;text-align:center;color:#2D2D2D;">${item.quantity}</span>
-              <button onclick="updateQuantity('${item.product_id}', 1)" style="width:34px;height:34px;border-radius:50%;background:#F2F2F2;border:none;font-size:20px;font-weight:500;color:#555;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>
+              <button onclick="updateQuantity('${item.product_id}', 1, '${item.selected_size || ''}')" style="width:34px;height:34px;border-radius:50%;background:#F2F2F2;border:none;font-size:20px;font-weight:500;color:#555;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>
             </div>
           </div>`;
       }).join('');
@@ -1294,8 +1294,8 @@ if(dateInput) {
               <p class="text-xs text-caramel">${item.price.toFixed(2)} р × ${item.quantity}</p>
             </div>
             <div class="flex items-center gap-1">
-              <button onclick="updateQuantity('${item.product_id}', -1)" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">−</button>
-              <button onclick="updateQuantity('${item.product_id}', 1)" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">+</button>
+              <button onclick="updateQuantity('${item.product_id}', -1, '${item.selected_size || ''}')" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">−</button>
+              <button onclick="updateQuantity('${item.product_id}', 1, '${item.selected_size || ''}')" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">+</button>
             </div>
           </div>`;
       }).join('');
@@ -1354,6 +1354,7 @@ if(dateInput) {
 
     function addPreorderItem(productId, price) {
       const product = products.find(p => p.id === productId);
+      if (!product) return;
       const existing = preorderCart.find(i => i.product_id === productId);
       if (existing) { existing.quantity++; } else {
         preorderCart.push({ product_id: productId, product_name: product.name, price, quantity: 1 });
@@ -1495,32 +1496,23 @@ if(dateInput) {
     }
 
     // ── Toast ──────────────────────────────────────────────────────────────────
+    let _toastTimer = null;
     function showToast(message, icon = '✓') {
       const toast = document.getElementById('toast');
       document.getElementById('toast-text').textContent = message;
       document.getElementById('toast-icon').textContent = icon;
       toast.classList.remove('translate-y-20', 'opacity-0');
-      setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2500);
+      if (_toastTimer) clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); _toastTimer = null; }, 2500);
     }
 
     // ── API ────────────────────────────────────────────────────────────────────
     async function sendOrderToServer(order) {
-        // --- 1. ТВОЙ URL ИЗ GOOGLE ---
         const GOOGLE_APP_URL = 'https://maminhlebbot-production.up.railway.app/order';
-
-        // Ищем кнопку, чтобы показать статус "Отправка"
-        const btn = document.getElementById('submit-checkout-btn') || document.getElementById('submit-preorder-btn');
-        if (btn) { 
-            btn.disabled = true; 
-            btn.textContent = 'Отправка...'; 
-        }
-
         try {
-            // МЫ ОТПРАВЛЯЕМ ДАННЫЕ В GOOGLE SCRIPT. 
-            // Он сам запишет в таблицу И сам отправит сообщение админу в Телеграм.
             await fetch(GOOGLE_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Чтобы не было ошибок безопасности браузера
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     type: order.type,
@@ -1534,17 +1526,10 @@ if(dateInput) {
                     note: order.note || ""
                 })
             });
-
             showToast('Заказ успешно отправлен! ✓', '✅');
-
         } catch (error) {
             console.error('Ошибка:', error);
             showToast('Ошибка связи. Но заказ может быть принят!', '⚠️');
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = (btn.id === 'submit-preorder-btn') ? 'Забронировать предзаказ' : 'Подтвердить заказ';
-            }
         }
     }
     // ── Start ──────────────────────────────────────────────────────────────────
