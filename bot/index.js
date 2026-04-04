@@ -101,9 +101,10 @@ async function appendRow(values) {
     valueInputOption: 'USER_ENTERED',
     resource:        { values: [values] }
   });
-  // Извлекаем номер строки из updatedRange (например "Sheet1!A5:M5" → 5)
-  const range = res.data.updates.updatedRange || '';
-  const match = range.match(/(\d+)[:\d]*$/);
+  // updatedRange вида "Sheet1!A5:N5" → берём последние цифры = номер строки
+  const range = res.data?.updates?.updatedRange || '';
+  console.log('appendRow updatedRange:', range);
+  const match = range.match(/(\d+)$/);
   return match ? parseInt(match[1]) : null;
 }
 
@@ -194,7 +195,7 @@ async function handleOrder(body) {
 
   if (!newRow) { console.error('appendRow: failed to get row number'); return; }
 
-  const orderNum = getNextOrderNum();
+  const orderNum = newRow - 1; // строка в Sheets минус заголовок → порядковый номер заказа
 
   const receiptBase =
     `🧾 *${isPreorder ? 'ВАШ ПРЕДЗАКАЗ' : 'ВАШ ЗАКАЗ'} №${orderNum}*\n` +
