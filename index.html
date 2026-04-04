@@ -845,11 +845,15 @@
           preorderTime = null;
           renderPreorderProducts();
           updatePreorderTotal();
-const dateInput=document.getElementById('preorder-date');
-if(dateInput) {
-    const today=new Date().toISOString().split('T') [0];
-    dateInput.min = today;
-           } 
+          const dateInput = document.getElementById('preorder-date');
+          const timeInput = document.getElementById('preorder-time');
+          if (dateInput) {
+            const now = new Date();
+            const localDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            dateInput.min = localDate;
+            dateInput.value = '';
+          }
+          if (timeInput) timeInput.value = '';
         }
       }
       updateFloatingCart();
@@ -1013,6 +1017,7 @@ if(dateInput) {
         document.getElementById('detail-card-price').textContent = sizeOpt.price.toFixed(2);
         document.getElementById('detail-add-btn').dataset.selectedSize = size;
         document.getElementById('detail-add-btn').dataset.price = sizeOpt.price;
+        updateDetailQtyControls();
       }
     }
 
@@ -1411,6 +1416,8 @@ if(dateInput) {
         document.getElementById('preorder-name').value = '';
         document.getElementById('preorder-phone').value = '';
         document.getElementById('preorder-note').value = '';
+        document.getElementById('preorder-date').value = '';
+        document.getElementById('preorder-time').value = '';
         btn.disabled = false; btn.textContent = 'Забронировать предзаказ';
         _preorderLock = false;
       }, 1500);
@@ -1471,7 +1478,11 @@ if(dateInput) {
     // ── Referral ───────────────────────────────────────────────────────────────
     function copyReferralCode() {
       const code = document.getElementById('referral-code').textContent;
-      navigator.clipboard.writeText(code).then(() => showToast(`Код скопирован: ${code}`, '📋'));
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => showToast(`Код скопирован: ${code}`, '📋')).catch(() => showToast(`Код: ${code}`, '📋'));
+      } else {
+        showToast(`Код: ${code}`, '📋');
+      }
     }
     // FIX #2: убраны обращения к несуществующим DOM-элементам
     function updateCoffeeBalance() {
