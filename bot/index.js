@@ -295,8 +295,7 @@ async function handleCallback(cb) {
   if (cbSeen.has(cb.id)) return;
   cbSeen.add(cb.id);
   if (cbSeen.size > 10000) {
-    const it = cbSeen.values();
-    for (let i = 0; i < 1000; i++) cbSeen.delete(it.next().value);
+    Array.from(cbSeen).slice(0, 1000).forEach(id => cbSeen.delete(id));
   }
 
   const parts    = cb.data.split('_');

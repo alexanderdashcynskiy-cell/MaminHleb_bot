@@ -1197,6 +1197,7 @@ if(dateInput) {
       const note = document.getElementById('checkout-note').value.trim();
       const address = deliveryMethod === 'delivery' ? document.getElementById('checkout-address').value.trim() : null;
       const pickupTime = deliveryMethod === 'pickup' ? document.getElementById('checkout-pickup-time').value : null;
+      if (cart.length === 0) { _checkoutLock = false; showToast('Корзина пуста', '⚠️'); return; }
       if (!name || !phone) { _checkoutLock = false; return; }
       if (deliveryMethod === 'delivery' && !address) { _checkoutLock = false; showToast('Пожалуйста, укажите адрес доставки', '⚠️'); return; }
       if (deliveryMethod === 'pickup' && !pickupTime) { _checkoutLock = false; showToast('Пожалуйста, выберите время получения', '⚠️'); return; }
@@ -1379,13 +1380,13 @@ if(dateInput) {
       _preorderLock = true;
       const dateVal=document.getElementById('preorder-date')?.value;
       const timeVal=document.getElementById('preorder-time')?.value;
-      if(!dateVal || !timeVal) {showToast('Пожалуйста выберете дату и время', '⚠️' ); return;}
+      if(!dateVal || !timeVal) { _preorderLock = false; showToast('Пожалуйста выберете дату и время', '⚠️'); return; }
       preorderTime = `${dateVal} в ${timeVal}`;
-      if (preorderCart.length === 0) { showToast('Пожалуйста, выберите хотя бы один товар', '⚠️'); return; }
+      if (preorderCart.length === 0) { _preorderLock = false; showToast('Пожалуйста, выберите хотя бы один товар', '⚠️'); return; }
       const name = document.getElementById('preorder-name').value.trim();
       const phone = document.getElementById('preorder-phone').value.trim();
       const note = document.getElementById('preorder-note').value.trim();
-      if (!name || !phone) return;
+      if (!name || !phone) { _preorderLock = false; return; }
       const btn = document.getElementById('submit-preorder-btn');
       btn.disabled = true; btn.textContent = 'Обработка...';
       // FIX #3 applied here too: snapshot before clearing
