@@ -318,7 +318,9 @@
       <span style="font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:rgba(107,68,35,0.55);">Итого</span>
       <span style="font-size:26px;font-weight:800;color:#C9A227;letter-spacing:-0.3px;"><span id="cart-total-full">0.00</span> р</span>
      </div>
-     <button onclick="startCheckout()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 28px;font-size:16px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">Оформить заказ</button>
+     <form onsubmit="startCheckout();return false;" style="margin:0;">
+      <button type="submit" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 28px;font-size:16px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;">Оформить заказ</button>
+     </form>
     </div>
    </div>
 
