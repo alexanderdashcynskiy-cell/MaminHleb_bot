@@ -332,7 +332,7 @@
        <span style="font-size:14px;color:#aaa;">Товары в заказе <span id="cart-items-count">0</span> шт.</span>
        <span style="font-size:14px;color:#555;" id="cart-subtotal-display">0.00 р</span>
       </div>
-      <div id="cart-delivery-cost-row" class="hidden" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div id="cart-delivery-cost-row" style="display:none;justify-content:space-between;align-items:center;margin-bottom:10px;">
        <span style="font-size:14px;color:#aaa;">Доставка</span>
        <span style="font-size:14px;color:#555;">+3.50 р</span>
       </div>
@@ -1103,7 +1103,8 @@ if(dateInput) {
       pTab.style.color = isDelivery ? 'rgba(107,68,35,0.5)' : '#fff';
       const pickupInfo = document.getElementById('cart-pickup-info');
       if (pickupInfo) pickupInfo.style.display = isDelivery ? 'none' : 'flex';
-      document.getElementById('cart-delivery-cost-row')?.classList.toggle('hidden', !isDelivery);
+      const costRow = document.getElementById('cart-delivery-cost-row');
+      if (costRow) costRow.style.display = isDelivery ? 'flex' : 'none';
       updateCartUI();
     }
 
