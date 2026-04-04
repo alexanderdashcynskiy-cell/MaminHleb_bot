@@ -303,22 +303,22 @@
      </button>
      <h2 class="font-bold text-coffee" style="font-size:22px;font-family:'Playfair Display',serif;">Корзина</h2>
     </div>
-    <!-- Items + sticky footer в одном scroll-контейнере -->
-    <div class="flex-1 overflow-y-auto px-4">
+    <!-- Items -->
+    <div class="flex-1 overflow-y-auto px-4" style="padding-bottom:160px;">
      <div id="cart-items-full" class="space-y-3 pt-1"></div>
      <div id="cart-empty-full" class="text-center py-20 flex flex-col items-center justify-center hidden">
       <span class="text-6xl mb-4">🥐</span>
       <p class="text-caramel text-lg font-semibold">Корзина пуста</p>
       <p class="text-sm mt-2" style="color:rgba(107,68,35,0.4);">Добавьте вкусняшки!</p>
      </div>
-     <!-- Footer — sticky внутри scroll, не снаружи -->
-     <div id="cart-footer" class="hidden" style="position:sticky;bottom:0;background:#F5F5F5;border-top:1px solid rgba(0,0,0,0.06);margin:8px -16px 0;padding:14px 16px 28px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:16px;padding:12px 18px;margin-bottom:12px;">
-       <span style="font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:rgba(107,68,35,0.55);">Итого</span>
-       <span style="font-size:26px;font-weight:800;color:#C9A227;letter-spacing:-0.3px;"><span id="cart-total-full">0.00</span> р</span>
-      </div>
-      <button id="cart-checkout-btn" onclick="startCheckout()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 28px;font-size:16px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 0.15s ease;">Оформить заказ</button>
+    </div>
+    <!-- Footer — fixed, полностью вне scroll layer -->
+    <div id="cart-footer" class="hidden" style="position:fixed;bottom:0;left:0;right:0;z-index:60;background:#F5F5F5;border-top:1px solid rgba(0,0,0,0.06);padding:14px 16px env(safe-area-inset-bottom,20px);">
+     <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:16px;padding:12px 18px;margin-bottom:12px;">
+      <span style="font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:rgba(107,68,35,0.55);">Итого</span>
+      <span style="font-size:26px;font-weight:800;color:#C9A227;letter-spacing:-0.3px;"><span id="cart-total-full">0.00</span> р</span>
      </div>
+     <button id="cart-checkout-btn" onclick="startCheckout()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 28px;font-size:16px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 0.15s ease;">Оформить заказ</button>
     </div>
    </div>
 
@@ -470,14 +470,14 @@
       <!-- О продукте -->
       <p style="font-size:18px;font-weight:700;color:#6B4423;margin:0 0 8px;">О продукте</p>
       <p id="detail-description" style="font-size:15px;color:rgba(107,68,35,0.65);line-height:1.6;margin:0 0 10px;"></p>
-      <p id="detail-ingredients-text" style="font-size:13px;color:rgba(107,68,35,0.4);line-height:1.5;margin:0;"></p>
-
-      <!-- Кнопка В корзину — sticky внутри scroll, не снаружи -->
-      <div style="position:sticky;bottom:0;margin:16px -20px 0;padding:10px 20px 28px;background:#FFFDF9;border-top:1px solid rgba(245,230,211,0.6);">
-       <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;">В корзину — <span id="detail-card-price" style="pointer-events:none;">0.00</span> р</button>
-      </div>
+      <p id="detail-ingredients-text" style="font-size:13px;color:rgba(107,68,35,0.4);line-height:1.5;margin:0;padding-bottom:100px;"></p>
+     </div>
+     <!-- Кнопка В корзину — fixed, полностью вне scroll layer -->
+     <div style="position:fixed;bottom:0;left:0;right:0;z-index:60;padding:10px 20px env(safe-area-inset-bottom,20px);background:#FFFDF9;border-top:1px solid rgba(245,230,211,0.6);">
+      <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;">В корзину — <span id="detail-card-price" style="pointer-events:none;">0.00</span> р</button>
      </div>
     </div>
+   </div>
 
    </div>
 
