@@ -303,21 +303,49 @@
      </button>
      <h2 class="font-bold text-coffee" style="font-size:22px;font-family:'Playfair Display',serif;">Корзина</h2>
     </div>
-    <!-- Items -->
-    <div class="flex-1 overflow-y-auto px-4" style="padding-bottom:160px;">
-     <div id="cart-items-full" class="space-y-3 pt-1"></div>
+    <!-- Scroll area -->
+    <div class="flex-1 overflow-y-auto px-4" style="padding-bottom:120px;">
+
+     <!-- Переключатель доставка/самовывоз -->
+     <div style="background:#fff;border-radius:16px;padding:4px;display:flex;gap:3px;margin-bottom:12px;">
+      <button id="cart-delivery-tab" onclick="setCartDelivery('delivery')" style="flex:1;padding:11px;border-radius:13px;border:none;font-size:15px;font-weight:600;cursor:pointer;touch-action:manipulation;transition:all 0.2s;background:transparent;color:rgba(107,68,35,0.5);">Доставка</button>
+      <button id="cart-pickup-tab" onclick="setCartDelivery('pickup')" style="flex:1;padding:11px;border-radius:13px;border:none;font-size:15px;font-weight:600;cursor:pointer;touch-action:manipulation;transition:all 0.2s;background:linear-gradient(90deg,#C9A227,#D4A574);color:#fff;">Самовывоз</button>
+     </div>
+
+     <!-- Поле адреса (только доставка) -->
+     <div id="cart-address-section" class="hidden" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+      <svg width="18" height="18" fill="none" stroke="#C9A227" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <input id="cart-delivery-address" type="text" placeholder="Введите адрес доставки" style="flex:1;border:none;outline:none;font-size:15px;color:#333;background:transparent;">
+     </div>
+
+     <!-- Товары -->
+     <div id="cart-items-full" class="space-y-3"></div>
      <div id="cart-empty-full" class="text-center py-20 flex flex-col items-center justify-center hidden">
       <span class="text-6xl mb-4">🥐</span>
       <p class="text-caramel text-lg font-semibold">Корзина пуста</p>
       <p class="text-sm mt-2" style="color:rgba(107,68,35,0.4);">Добавьте вкусняшки!</p>
      </div>
-    </div>
-    <!-- Footer — fixed, полностью вне scroll layer -->
-    <div id="cart-footer" class="hidden" style="position:fixed;bottom:0;left:0;right:0;z-index:60;background:#F5F5F5;border-top:1px solid rgba(0,0,0,0.06);padding:14px 16px calc(32px + env(safe-area-inset-bottom,16px));">
-     <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:16px;padding:12px 18px;margin-bottom:12px;">
-      <span style="font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:rgba(107,68,35,0.55);">Итого</span>
-      <span style="font-size:26px;font-weight:800;color:#C9A227;letter-spacing:-0.3px;"><span id="cart-total-full">0.00</span> р</span>
+
+     <!-- Итоговый блок -->
+     <div id="cart-summary" class="hidden" style="background:#fff;border-radius:16px;padding:16px 18px;margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+       <span style="font-size:14px;color:#aaa;">Товары в заказе <span id="cart-items-count">0</span> шт.</span>
+       <span style="font-size:14px;color:#555;" id="cart-subtotal-display">0.00 р</span>
+      </div>
+      <div id="cart-delivery-cost-row" class="hidden" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+       <span style="font-size:14px;color:#aaa;">Доставка</span>
+       <span style="font-size:14px;color:#555;">+3.50 р</span>
+      </div>
+      <div style="height:1px;background:#F0F0F0;margin-bottom:14px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+       <span style="font-size:17px;font-weight:700;color:#2D2D2D;">Итого</span>
+       <span style="font-size:22px;font-weight:800;color:#C9A227;"><span id="cart-total-full">0.00</span> р</span>
+      </div>
      </div>
+
+    </div>
+    <!-- Кнопка -->
+    <div id="cart-footer" class="hidden" style="position:fixed;bottom:0;left:0;right:0;z-index:60;background:#F5F5F5;padding:12px 16px calc(32px + env(safe-area-inset-bottom,16px));">
      <button id="cart-checkout-btn" onclick="startCheckout()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 28px;font-size:16px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 0.15s ease;">Оформить заказ</button>
     </div>
    </div>
@@ -332,14 +360,6 @@
      <form onsubmit="submitCheckout(event)" class="space-y-4">
       <div><label class="block text-sm font-semibold text-coffee mb-2">Ваше имя*</label><input type="text" id="checkout-name" placeholder="Введите ваше имя" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
       <div><label class="block text-sm font-semibold text-coffee mb-2">Номер телефона*</label><input type="tel" id="checkout-phone" placeholder="+375 (XX) XXX-XX-XX" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
-      <div>
-       <label class="block text-sm font-semibold text-coffee mb-3">Способ получения</label>
-       <div class="space-y-2">
-        <label class="flex items-center gap-3 p-4 border-2 border-beige rounded-xl hover:border-gold/30 cursor-pointer transition-colors"><input type="radio" name="delivery-method" value="pickup" onchange="updateDeliveryMethod('pickup')" class="w-5 h-5 accent-gold"><div class="flex-1"><p class="font-semibold text-coffee text-sm">📍 Самовывоз</p><p class="text-xs text-caramel/70">г. Витебск, ул. Ленина 74</p></div><p class="font-bold text-gold text-sm">Бесплатно</p></label>
-        <label class="flex items-center gap-3 p-4 border-2 border-beige rounded-xl hover:border-gold/30 cursor-pointer transition-colors"><input type="radio" name="delivery-method" value="delivery" onchange="updateDeliveryMethod('delivery')" class="w-5 h-5 accent-gold"><div class="flex-1"><p class="font-semibold text-coffee text-sm">🚗 Доставка на дом</p><p class="text-xs text-caramel/70">30-40 минут по городу</p></div><p class="font-bold text-gold text-sm" id="delivery-price">+3.50 р</p></label>
-       </div>
-      </div>
-      <div id="address-section" class="hidden"><label class="block text-sm font-semibold text-coffee mb-2">Адрес доставки</label><input type="text" id="checkout-address" placeholder="Введите адрес" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors"></div>
       <div id="pickup-time-section" class="hidden"><label class="block text-sm font-semibold text-coffee mb-3">Время получения</label><div id="pickup-times" class="space-y-2 max-h-48 overflow-y-auto"></div><input type="hidden" id="checkout-pickup-time" value=""></div>
       <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="checkout-note" placeholder="Ваши пожелания..." rows="3" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none"></textarea></div>
       <div class="bg-gradient-to-br from-gold/10 to-caramel/10 rounded-2xl p-4 border border-gold/30 mt-6"><div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого к оплате:</span><span class="text-2xl font-bold text-gold"><span id="checkout-total">0.00</span> р</span></div></div>
@@ -1020,63 +1040,80 @@ if(dateInput) {
 
     function updateCartUI() {
       const count = cart.reduce((s, i) => s + i.quantity, 0);
-      const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+      const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+      const total = subtotal + (deliveryMethod === 'delivery' ? DELIVERY_COST : 0);
       document.getElementById('cart-badge-count').textContent = count;
       document.getElementById('cart-badge-dot').classList.toggle('hidden', count === 0);
       document.getElementById('cart-total-full').textContent = total.toFixed(2);
       const itemsContainer = document.getElementById('cart-items-full');
       const emptyState = document.getElementById('cart-empty-full');
       const footer = document.getElementById('cart-footer');
-      if (cart.length === 0) { itemsContainer.innerHTML = ''; emptyState.classList.remove('hidden'); footer.classList.add('hidden'); return; }
-      emptyState.classList.add('hidden'); footer.classList.remove('hidden');
+      const summary = document.getElementById('cart-summary');
+      if (cart.length === 0) {
+        itemsContainer.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        footer.classList.add('hidden');
+        summary.classList.add('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+      footer.classList.remove('hidden');
+      summary.classList.remove('hidden');
+      document.getElementById('cart-items-count').textContent = count;
+      document.getElementById('cart-subtotal-display').textContent = subtotal.toFixed(2) + ' р';
       itemsContainer.innerHTML = cart.map(item => {
         const product = products.find(p => p.id === item.product_id);
         const sizeOrWeight = item.selected_size || product?.weight || '';
         const imgHTML = product && productImages[product.id]
-          ? `<img src="${productImages[product.id]}" class="w-full h-full object-cover" alt="${item.product_name}">`
-          : `<span style="font-size:2rem;">${product ? product.image : '🍞'}</span>`;
+          ? `<img src="${productImages[product.id]}" style="width:100%;height:100%;object-fit:cover;" alt="${item.product_name}">`
+          : `<span style="font-size:2.2rem;">${product ? product.image : '🍞'}</span>`;
         return `
-          <div class="bg-white rounded-3xl overflow-hidden flex relative" style="box-shadow:0 2px 12px rgba(0,0,0,0.06);min-height:96px;">
-            <!-- Image edge-to-edge left -->
-            <div class="flex-shrink-0 bg-beige flex items-center justify-center overflow-hidden" style="width:104px;">
+          <div style="background:#fff;border-radius:16px;padding:12px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+            <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;background:#F5E6D3;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
               ${imgHTML}
             </div>
-            <!-- Info -->
-            <div class="flex-1 min-w-0 flex flex-col justify-between p-3 pr-10">
-              <h4 class="font-bold text-coffee leading-tight" style="font-size:15px;font-family:'Playfair Display',serif;">${item.product_name}</h4>
-              ${sizeOrWeight ? `<div class="flex items-center gap-1.5 mt-1"><span style="font-size:11px;color:rgba(107,68,35,0.45);font-weight:500;">Вес:</span><span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:rgba(245,230,211,0.8);color:rgba(107,68,35,0.65);">${sizeOrWeight}</span></div>` : ''}
-              <!-- Qty + price row -->
-              <div class="flex items-center justify-between mt-2">
-                <div class="flex items-center gap-2">
-                  <button onclick="updateQuantity('${item.product_id}', -1)" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm" style="background:linear-gradient(135deg,#C9A227,#D4A574);touch-action:manipulation;">−</button>
-                  <span class="font-bold text-coffee" style="font-size:17px;min-width:18px;text-align:center;">${item.quantity}</span>
-                  <button onclick="updateQuantity('${item.product_id}', 1)" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm" style="background:linear-gradient(135deg,#C9A227,#D4A574);touch-action:manipulation;">+</button>
-                </div>
-                <span class="font-bold rounded-2xl px-3 py-1.5" style="font-size:15px;color:#C9A227;background:rgba(201,162,39,0.08);">${(item.price * item.quantity).toFixed(2)} р</span>
-              </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:700;color:#2D2D2D;font-size:15px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.product_name}</div>
+              ${sizeOrWeight ? `<div style="color:#aaa;font-size:13px;margin-bottom:6px;">${sizeOrWeight}</div>` : '<div style="margin-bottom:6px;"></div>'}
+              <div style="font-weight:700;font-size:16px;color:#2D2D2D;">${(item.price * item.quantity).toFixed(2)} р</div>
             </div>
-            <!-- Delete -->
-            <button onclick="removeFromCart('${item.product_id}')" class="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-90" style="background:rgba(212,165,116,0.18);touch-action:manipulation;">
-              <svg class="w-4 h-4" style="color:#D4A574;pointer-events:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </button>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <button onclick="updateQuantity('${item.product_id}', -1)" style="width:34px;height:34px;border-radius:50%;background:#F2F2F2;border:none;font-size:20px;font-weight:500;color:#555;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;line-height:1;">−</button>
+              <span style="font-weight:700;font-size:16px;min-width:18px;text-align:center;color:#2D2D2D;">${item.quantity}</span>
+              <button onclick="updateQuantity('${item.product_id}', 1)" style="width:34px;height:34px;border-radius:50%;background:#F2F2F2;border:none;font-size:20px;font-weight:500;color:#555;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>
+            </div>
           </div>`;
       }).join('');
     }
 
     // ── Checkout ───────────────────────────────────────────────────────────────
-    let deliveryMethod = 'pickup';
+    let deliveryMethod = 'pickup'; // используется в submitCheckout
     const DELIVERY_COST = 3.50;
+
+    // ── Переключатель доставки в корзине ──────────────────────────────────────
+    function setCartDelivery(method) {
+      deliveryMethod = method;
+      const isDelivery = method === 'delivery';
+      const dTab = document.getElementById('cart-delivery-tab');
+      const pTab = document.getElementById('cart-pickup-tab');
+      const active = 'background:linear-gradient(90deg,#C9A227,#D4A574);color:#fff;';
+      const inactive = 'background:transparent;color:rgba(107,68,35,0.5);';
+      dTab.style.cssText += isDelivery ? active : inactive;
+      pTab.style.cssText += isDelivery ? inactive : active;
+      const addrSection = document.getElementById('cart-address-section');
+      addrSection.classList.toggle('hidden', !isDelivery);
+      if (isDelivery) addrSection.style.display = 'flex'; else addrSection.style.display = '';
+      document.getElementById('cart-delivery-cost-row')?.classList.toggle('hidden', !isDelivery);
+      updateCartUI();
+    }
 
     function generatePickupTimes() {
       return [10, 15, 20, 25, 30, 35, 40, 45].map(m => `${m} мин`);
     }
 
-    function updateDeliveryMethod(method) {
-      deliveryMethod = method;
-      document.getElementById('address-section').classList.toggle('hidden', method !== 'delivery');
-      document.getElementById('pickup-time-section').classList.toggle('hidden', method !== 'pickup');
-      if (method === 'pickup') { document.getElementById('checkout-pickup-time').value = ''; renderPickupTimes(); }
-      updateCheckoutTotal();
+    function updateCheckoutTotal() {
+      const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+      document.getElementById('checkout-total').textContent = (subtotal + (deliveryMethod === 'delivery' ? DELIVERY_COST : 0)).toFixed(2);
     }
 
     function renderPickupTimes() {
@@ -1093,19 +1130,13 @@ if(dateInput) {
       renderPickupTimes();
     }
 
-    function updateCheckoutTotal() {
-      const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
-      document.getElementById('checkout-total').textContent = (subtotal + (deliveryMethod === 'delivery' ? DELIVERY_COST : 0)).toFixed(2);
-    }
-
     function startCheckout() {
       updateCheckoutTotal();
-      document.getElementById('checkout-address').value = '';
       document.getElementById('checkout-pickup-time').value = '';
-      document.querySelectorAll('input[name="delivery-method"]').forEach(r => r.checked = false);
-      deliveryMethod = '';
-      document.getElementById('address-section').classList.add('hidden');
-      document.getElementById('pickup-time-section').classList.add('hidden');
+      // pickup time section — только для самовывоза
+      const pickupSection = document.getElementById('pickup-time-section');
+      pickupSection.classList.toggle('hidden', deliveryMethod !== 'pickup');
+      if (deliveryMethod === 'pickup') renderPickupTimes();
       showScreen('checkout');
     }
 
@@ -1117,11 +1148,11 @@ if(dateInput) {
       const name = document.getElementById('checkout-name').value.trim();
       const phone = document.getElementById('checkout-phone').value.trim();
       const note = document.getElementById('checkout-note').value.trim();
-      const address = deliveryMethod === 'delivery' ? document.getElementById('checkout-address').value.trim() : null;
+      const address = deliveryMethod === 'delivery' ? (document.getElementById('cart-delivery-address')?.value.trim() || '') : null;
       const pickupTime = deliveryMethod === 'pickup' ? document.getElementById('checkout-pickup-time').value : null;
       if (!name || !phone) return;
-      if (!deliveryMethod) { showToast('Пожалуйста, выберите способ получения', '⚠️'); return; }
-      if (deliveryMethod === 'delivery' && !address) { showToast('Пожалуйста, укажите адрес доставки', '⚠️'); return; }
+      if (deliveryMethod === 'delivery' && !address) { showToast('Пожалуйста, укажите адрес доставки в корзине', '⚠️'); showScreen('cart'); return; }
+      if (deliveryMethod === 'pickup' && !pickupTime) { showToast('Пожалуйста, выберите время получения', '⚠️'); return; }
       if (deliveryMethod === 'pickup' && !pickupTime) { showToast('Пожалуйста, выберите время получения', '⚠️'); return; }
       const btn = document.getElementById('submit-checkout-btn');
       btn.disabled = true; btn.textContent = 'Обработка...';
@@ -1151,8 +1182,9 @@ if(dateInput) {
 
         document.getElementById('checkout-name').value='';
         document.getElementById('checkout-phone').value='';
-        document.getElementById('checkout-addres').value='';
         document.getElementById('checkout-note').value='';
+        const addrInput = document.getElementById('cart-delivery-address');
+        if (addrInput) addrInput.value = '';
         btn.disabled = false; btn.textContent = 'Подтвердить заказ';
         _checkoutLock = false;
       }, 1500);
