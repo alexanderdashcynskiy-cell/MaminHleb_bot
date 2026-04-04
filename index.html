@@ -303,29 +303,27 @@
      </button>
      <h2 class="font-bold text-coffee" style="font-size:22px;font-family:'Playfair Display',serif;">Корзина</h2>
     </div>
-    <!-- Scroll area -->
-    <div class="flex-1 overflow-y-auto px-4" style="padding-bottom:16px;min-height:0;">
-
-     <!-- Переключатель доставка/самовывоз -->
+    <!-- Переключатель доставка/самовывоз — вне скролла -->
+    <div class="flex-shrink-0 px-4">
      <div id="cart-delivery-toggle" style="background:#fff;border-radius:16px;padding:4px;display:none;gap:3px;margin-bottom:12px;">
       <button id="cart-delivery-tab" onclick="setCartDelivery('delivery')" style="flex:1;padding:11px;border-radius:13px;border:none;font-size:15px;font-weight:600;cursor:pointer;touch-action:manipulation;transition:all 0.2s;background:transparent;color:rgba(107,68,35,0.5);">Доставка</button>
       <button id="cart-pickup-tab" onclick="setCartDelivery('pickup')" style="flex:1;padding:11px;border-radius:13px;border:none;font-size:15px;font-weight:600;cursor:pointer;touch-action:manipulation;transition:all 0.2s;background:linear-gradient(90deg,#C9A227,#D4A574);color:#fff;">Самовывоз</button>
      </div>
-
-     <!-- Адрес самовывоза (только самовывоз) -->
+     <!-- Адрес самовывоза — вне скролла -->
      <div id="cart-pickup-info" style="background:#fff;border-radius:16px;padding:12px 16px;margin-bottom:12px;display:none;align-items:center;gap:10px;">
       <svg width="16" height="16" fill="none" stroke="#C9A227" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span style="font-size:14px;color:#555;">г. Витебск, ул. Ленина 74</span>
      </div>
+    </div>
 
-     <!-- Товары -->
+    <!-- Scroll area — только товары -->
+    <div class="flex-1 overflow-y-auto px-4" style="padding-bottom:16px;min-height:0;">
      <div id="cart-items-full" class="space-y-3"></div>
      <div id="cart-empty-full" class="text-center py-20 flex flex-col items-center justify-center hidden">
       <span class="text-6xl mb-4">🥐</span>
       <p class="text-caramel text-lg font-semibold">Корзина пуста</p>
       <p class="text-sm mt-2" style="color:rgba(107,68,35,0.4);">Добавьте вкусняшки!</p>
      </div>
-
     </div>
 
     <!-- Фиксированный блок: итог + кнопка -->
