@@ -457,7 +457,7 @@
      </div>
 
      <!-- скролл-контент -->
-     <div style="flex:1;overflow-y:auto;padding:4px 20px calc(100px + env(safe-area-inset-bottom,16px));">
+     <div style="flex:1;overflow-y:auto;padding:4px 20px 24px;">
 
       <!-- КБЖУ — один овал, симметричный -->
       <div style="display:flex;align-items:center;background:rgba(245,230,211,0.75);border:1.5px solid rgba(212,165,116,0.25);border-radius:50px;padding:12px 16px;margin-bottom:20px;">
@@ -494,11 +494,11 @@
       <p id="detail-ingredients-text" style="font-size:13px;color:rgba(107,68,35,0.4);line-height:1.5;margin:0 0 24px;"></p>
 
      </div>
-    </div>
 
-    <!-- Кнопка В корзину — position:fixed, вне скролл-слоя iOS -->
-    <div style="position:fixed;bottom:0;left:0;right:0;z-index:60;padding:12px 20px calc(20px + env(safe-area-inset-bottom,16px));background:linear-gradient(to top,#FFFDF9 70%,transparent);">
-     <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;">В корзину — <span id="detail-card-price" style="pointer-events:none;">0.00</span> р</button>
+     <!-- Кнопка В корзину — flex-shrink:0, вне скролл-контейнера, в нормальном потоке -->
+     <div style="flex-shrink:0;padding:12px 20px calc(20px + env(safe-area-inset-bottom,16px));">
+      <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;">В корзину — <span id="detail-card-price" style="pointer-events:none;">0.00</span> р</button>
+     </div>
     </div>
    </div>
 
