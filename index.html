@@ -232,6 +232,7 @@
     <div class="px-4 pt-6 pb-2">
      <div class="flex items-center justify-between mb-4">
       <h3 class="font-montserrat font-bold text-coffee text-sm">🔥 ХИТ ПРОДАЖ</h3>
+      <button onclick="showScreen('bestsellers')" class="text-xs font-semibold text-caramel">Все →</button>
      </div>
      <div class="relative">
       <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar -mx-4 px-4 pb-4">
@@ -839,6 +840,10 @@
       if (screen) {
         screen.classList.remove('hidden');
         screen.style.display = (screenName === 'product') ? 'flex' : '';
+        if (screenName === 'bestsellers') {
+          const grid = document.getElementById('bestsellers-grid');
+          if (grid) grid.innerHTML = products.filter(p => p.bestseller).map(p => productCardHTML(p, false)).join('');
+        }
         if (screenName === 'preorder') {
           preorderCart = [];
           preorderTime = null;
@@ -890,7 +895,7 @@
       const cartItem = cart.find(item => item.product_id === p.id);
       const quantity = cartItem ? cartItem.quantity : 0;
       const imgHTML = productImages[p.id]
-        ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy">`
+        ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige\\'>${p.image}</div>'">`
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
       return `
         <div class="animate-fade ${compact ? 'flex-shrink-0 w-40' : ''}" data-pid="${p.id}">
@@ -971,7 +976,7 @@
       // Image
       const imgEl = document.getElementById('detail-image');
       if (productImages[productId]) {
-        imgEl.innerHTML = `<img src="${productImages[productId]}" class="w-full h-full object-cover" alt="${product.name}">`;
+        imgEl.innerHTML = `<img src="${productImages[productId]}" class="w-full h-full object-cover" alt="${product.name}" onerror="this.parentNode.innerHTML='<span style=\\'font-size:6rem;\\'>${product.image}</span>'">`;
       } else {
         imgEl.innerHTML = `<span style="font-size:6rem;">${product.image}</span>`;
       }
@@ -1115,9 +1120,10 @@
       itemsContainer.innerHTML = cart.map(item => {
         const product = products.find(p => p.id === item.product_id);
         const sizeOrWeight = item.selected_size || product?.weight || '';
+        const fallbackEmoji = product ? product.image : '🍞';
         const imgHTML = product && productImages[product.id]
-          ? `<img src="${productImages[product.id]}" style="width:100%;height:100%;object-fit:cover;" alt="${item.product_name}">`
-          : `<span style="font-size:2.2rem;">${product ? product.image : '🍞'}</span>`;
+          ? `<img src="${productImages[product.id]}" style="width:100%;height:100%;object-fit:cover;" alt="${item.product_name}" onerror="this.outerHTML='<span style=\\'font-size:2.2rem;\\'>${fallbackEmoji}</span>'">`
+          : `<span style="font-size:2.2rem;">${fallbackEmoji}</span>`;
         return `
           <div style="background:#fff;border-radius:16px;padding:12px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
             <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;background:#F5E6D3;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
@@ -1226,19 +1232,18 @@
             total: total,
             note: note || "",
         });
-        showReceipt(orderId, name, phone, cartSnapshot, total, deliveryMethod, address, pickupTime);
         cart = [];
         updateCartUI();
         updateFloatingCart();
         renderProducts();
         renderBestsellers();
-
         document.getElementById('checkout-name').value='';
         document.getElementById('checkout-phone').value='';
         document.getElementById('checkout-address').value='';
         document.getElementById('checkout-note').value='';
         btn.disabled = false; btn.textContent = 'Подтвердить заказ';
         _checkoutLock = false;
+        showReceipt(orderId, name, phone, cartSnapshot, total, deliveryMethod, address, pickupTime);
       }, 1500);
     }
 
@@ -1402,7 +1407,7 @@
             total:total,
             note: note || "",
          });
-        showPreorderReceipt(orderId, name, phone, cartSnapshot, total, preorderTime);
+        const savedPreorderTime = preorderTime;
         preorderCart = []; preorderTime = null;
         document.getElementById('preorder-name').value = '';
         document.getElementById('preorder-phone').value = '';
@@ -1411,6 +1416,7 @@
         document.getElementById('preorder-time').value = '';
         btn.disabled = false; btn.textContent = 'Забронировать предзаказ';
         _preorderLock = false;
+        showPreorderReceipt(orderId, name, phone, cartSnapshot, total, savedPreorderTime);
       }, 1500);
     }
 
