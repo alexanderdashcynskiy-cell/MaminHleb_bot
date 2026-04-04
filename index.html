@@ -494,7 +494,7 @@
       <p id="detail-ingredients-text" style="font-size:13px;color:rgba(107,68,35,0.4);line-height:1.5;margin:0 0 24px;"></p>
 
       <!-- Кнопка В корзину — внутри скролл-контента карточки -->
-      <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;">В корзину — <span id="detail-card-price" style="pointer-events:none;">0.00</span> р</button>
+      <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;margin-top:75px;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;">В корзину — <span id="detail-card-price" style="pointer-events:none;">0.00</span> р</button>
      </div>
     </div>
    </div>
@@ -1023,7 +1023,6 @@ if(dateInput) {
         cart.push(item);
       }
       setTimeout(() => { updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId); }, 0);
-      showToast(`${product.name} добавлен в корзину ✓`, '✓');
     }
 
     function updateQuantity(productId, delta) {
@@ -1226,7 +1225,9 @@ if(dateInput) {
       const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
       const onMain = document.getElementById('screen-main')?.style.display !== 'none'
                   && !document.getElementById('screen-main')?.classList.contains('hidden');
-      if (count === 0 || !onMain) {
+      const onProduct = document.getElementById('screen-product')?.style.display !== 'none'
+                  && !document.getElementById('screen-product')?.classList.contains('hidden');
+      if (count === 0 || (!onMain && !onProduct)) {
         floatingCartBtn.style.transform = 'scale(0)';
         itemsContainer.innerHTML = '';
         emptyState.classList.remove('hidden');
