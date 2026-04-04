@@ -495,14 +495,15 @@
 
      </div>
 
-     <!-- Кнопка В корзину — flex-shrink:0, вне скролл-контейнера, в нормальном потоке -->
-     <div style="flex-shrink:0;padding:12px 20px calc(20px + env(safe-area-inset-bottom,16px));">
-      <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;">В корзину — <span id="detail-card-price" style="pointer-events:none;">0.00</span> р</button>
-     </div>
     </div>
    </div>
 
    </div>
+
+  <!-- В корзину — независимая кнопка на уровне body, вне любых блоков -->
+  <div id="detail-add-wrap" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;padding:12px 20px calc(20px + env(safe-area-inset-bottom,16px));">
+   <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;">В корзину — <span id="detail-card-price" style="pointer-events:none;">0.00</span> р</button>
+  </div>
 
   <!-- Toast -->
   <div id="toast" class="fixed bottom-28 left-4 right-4 bg-coffee text-white px-4 py-3 rounded-xl shadow-xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3">
@@ -822,6 +823,8 @@
       } else {
         document.body.style.overflow = 'hidden';
       }
+      const addWrap = document.getElementById('detail-add-wrap');
+      if (addWrap) addWrap.style.display = (screenName === 'product') ? 'block' : 'none';
       const screen = document.getElementById(`screen-${screenName}`);
       if (screen) {
         screen.classList.remove('hidden');
