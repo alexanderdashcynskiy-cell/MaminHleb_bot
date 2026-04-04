@@ -304,7 +304,7 @@
      <h2 class="font-bold text-coffee" style="font-size:22px;font-family:'Playfair Display',serif;">Корзина</h2>
     </div>
     <!-- Scroll area -->
-    <div class="flex-1 overflow-y-auto px-4" style="padding-bottom:220px;">
+    <div class="flex-1 overflow-y-auto px-4" style="padding-bottom:16px;">
 
      <!-- Переключатель доставка/самовывоз -->
      <div id="cart-delivery-toggle" style="background:#fff;border-radius:16px;padding:4px;display:none;gap:3px;margin-bottom:12px;">
@@ -329,7 +329,7 @@
     </div>
 
     <!-- Фиксированный блок: итог + кнопка -->
-    <div id="cart-footer" class="hidden" style="position:fixed;bottom:35px;left:0;right:0;z-index:60;padding:0 16px;">
+    <div id="cart-footer" class="hidden" style="flex-shrink:0;padding:8px 16px calc(35px + env(safe-area-inset-bottom,16px));background:#F5F5F5;">
      <!-- Итоговый блок -->
      <div id="cart-summary" style="background:#fff;border-radius:16px;padding:16px 18px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
