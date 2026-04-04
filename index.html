@@ -304,7 +304,7 @@
      <h2 class="font-bold text-coffee" style="font-size:22px;font-family:'Playfair Display',serif;">Корзина</h2>
     </div>
     <!-- Items -->
-    <div class="flex-1 overflow-y-auto px-4 pb-4" style="-webkit-overflow-scrolling:touch;">
+    <div class="flex-1 overflow-y-auto px-4 pb-4">
      <div id="cart-items-full" class="space-y-3 pt-1"></div>
      <div id="cart-empty-full" class="text-center py-20 flex flex-col items-center justify-center hidden">
       <span class="text-6xl mb-4">🥐</span>
@@ -318,7 +318,7 @@
       <span style="font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:rgba(107,68,35,0.55);">Итого</span>
       <span style="font-size:26px;font-weight:800;color:#C9A227;letter-spacing:-0.3px;"><span id="cart-total-full">0.00</span> р</span>
      </div>
-     <button ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform='scale(1)';event.preventDefault();startCheckout()" ontouchcancel="this.style.transform='scale(1)'" onclick="startCheckout()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 28px;font-size:16px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 0.15s ease;position:relative;z-index:1;">Оформить заказ</button>
+     <button id="cart-checkout-btn" onclick="startCheckout()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 28px;font-size:16px;font-weight:700;color:#fff;touch-action:manipulation;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 0.15s ease;position:relative;z-index:1;">Оформить заказ</button>
     </div>
    </div>
 
@@ -436,7 +436,7 @@
      </div>
 
      <!-- скролл-контент -->
-     <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 16px;">
+     <div style="flex:1;overflow-y:auto;padding:4px 20px 16px;">
 
       <!-- КБЖУ — один овал, симметричный -->
       <div style="display:flex;align-items:center;background:rgba(245,230,211,0.75);border:1.5px solid rgba(212,165,116,0.25);border-radius:50px;padding:12px 16px;margin-bottom:20px;">
@@ -475,7 +475,7 @@
 
      <!-- Кнопка В корзину — зафиксирована снизу -->
      <div style="flex-shrink:0;padding:10px 20px 28px;background:#FFFDF9;border-top:1px solid rgba(245,230,211,0.6);position:relative;z-index:10;">
-      <button id="detail-add-btn" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform='scale(1)';event.preventDefault();addProductFromDetail()" ontouchcancel="this.style.transform='scale(1)'" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;position:relative;z-index:1;">В корзину — <span id="detail-card-price" style="pointer-events:none;">0.00</span> р</button>
+      <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 24px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px;transition:transform 0.15s ease;position:relative;z-index:1;">В корзину — <span id="detail-card-price" style="pointer-events:none;">0.00</span> р</button>
      </div>
     </div>
 
@@ -706,6 +706,7 @@
       updateCoffeeBalance();
       setupSwipeBack();
       setupKeyboardDismiss();
+      setupButtonPressAnim();
     }
 
     // ── Swipe-back (left edge → right) ────────────────────────────────────────
@@ -730,6 +731,19 @@
             showScreen(back);
           }
         }, { passive: true });
+      });
+    }
+
+    // ── Press animation for bottom action buttons ─────────────────────────────
+    function setupButtonPressAnim() {
+      ['detail-add-btn', 'cart-checkout-btn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.addEventListener('pointerdown', () => { btn.style.transform = 'scale(0.95)'; }, { passive: true });
+        const reset = () => { btn.style.transform = 'scale(1)'; };
+        btn.addEventListener('pointerup', reset, { passive: true });
+        btn.addEventListener('pointercancel', reset, { passive: true });
+        btn.addEventListener('pointerleave', reset, { passive: true });
       });
     }
 
