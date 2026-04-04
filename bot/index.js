@@ -57,6 +57,24 @@ function getNextOrderNum() {
   return n;
 }
 
+// Инициализация счётчика из Google Sheets при старте (если state.json пуст/сброшен)
+async function initOrderCounter() {
+  if (parseInt(getProp('order_counter') || '0') > 0) return;
+  try {
+    const sheets = await getSheets();
+    const meta = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'A:A'
+    });
+    const rowCount = meta.data.values ? meta.data.values.length : 0;
+    const orderCount = Math.max(0, rowCount - 1); // минус строка заголовка
+    setProp('order_counter', String(orderCount));
+    console.log(`Order counter initialized from Sheets: ${orderCount}`);
+  } catch(e) {
+    console.error('initOrderCounter:', e.message);
+  }
+}
+
 // ─── Telegram API ─────────────────────────────────────────────────────────────
 const TG_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
@@ -198,7 +216,7 @@ async function handleOrder(body) {
 
   if (!newRow) { console.error('appendRow: failed to get row number'); return; }
 
-  const orderNum = newRow - 1; // строка в Sheets минус заголовок → порядковый номер заказа
+  const orderNum = getNextOrderNum();
 
   const receiptBase =
     `🧾 *${isPreorder ? 'ВАШ ПРЕДЗАКАЗ' : 'ВАШ ЗАКАЗ'} №${orderNum}*\n` +
@@ -582,5 +600,6 @@ async function setWebhook() {
 loadState();
 app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
+  await initOrderCounter();
   await setWebhook();
 });
