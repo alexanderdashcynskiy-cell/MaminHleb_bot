@@ -363,7 +363,21 @@
      <form onsubmit="submitCheckout(event)" class="space-y-4">
       <div><label class="block text-sm font-semibold text-coffee mb-2">Ваше имя*</label><input type="text" id="checkout-name" placeholder="Введите ваше имя" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
       <div><label class="block text-sm font-semibold text-coffee mb-2">Номер телефона*</label><input type="tel" id="checkout-phone" placeholder="+375 (XX) XXX-XX-XX" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" oninput="formatPhone(this)" maxlength="19" required></div>
-      <div id="address-section" class="hidden" style="position:relative;"><label class="block text-sm font-semibold text-coffee mb-2">Адрес доставки*</label><input type="text" id="checkout-address" placeholder="Введите адрес доставки" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" oninput="filterAddressSuggestions(this.value)" onfocus="filterAddressSuggestions(this.value)"><div id="address-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border:2px solid #e8ddd0;border-top:none;border-radius:0 0 12px 12px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.12);"></div></div>
+      <div id="address-section" class="hidden">
+       <label class="block text-sm font-semibold text-coffee mb-2">Адрес доставки*</label>
+       <div style="position:relative;margin-bottom:10px;">
+        <input type="text" id="checkout-address" placeholder="Улица и номер дома*" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" oninput="filterAddressSuggestions(this.value)" onfocus="filterAddressSuggestions(this.value)">
+        <div id="address-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border:2px solid #e8ddd0;border-top:none;border-radius:0 0 12px 12px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.12);"></div>
+       </div>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <input type="text" id="checkout-building" placeholder="Корпус (если есть)" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:14px;">
+        <input type="text" id="checkout-entrance" placeholder="Подъезд" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:14px;">
+       </div>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <input type="text" id="checkout-floor" placeholder="Этаж" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:14px;">
+        <input type="text" id="checkout-apartment" placeholder="Квартира*" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:14px;">
+       </div>
+      </div>
       <div id="pickup-time-section" class="hidden"><label class="block text-sm font-semibold text-coffee mb-2">Время получения</label><button type="button" id="pickup-time-row" onclick="togglePickupTimePicker()" style="width:100%;padding:12px 16px;border:2px solid #e8ddd0;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation;"><span id="pickup-time-display" style="font-size:14px;color:#9ca3af;">Выберите время</span><svg style="width:16px;height:16px;color:#9ca3af;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button><div id="pickup-time-chips" style="display:none;margin-top:8px;padding:12px;background:#fff;border:2px solid #e8ddd0;border-radius:12px;"><div style="display:flex;flex-wrap:wrap;gap:8px;" id="pickup-chips-container"></div></div><input type="hidden" id="checkout-pickup-time" value=""></div>
       <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="checkout-note" placeholder="Ваши пожелания..." rows="3" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none"></textarea></div>
       <div class="bg-gradient-to-br from-gold/10 to-caramel/10 rounded-2xl p-4 border border-gold/30 mt-6"><div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого к оплате:</span><span class="text-2xl font-bold text-gold"><span id="checkout-total">0.00</span> р</span></div></div>
@@ -1129,7 +1143,7 @@
           : `<span style="font-size:2.2rem;">${fallbackEmoji}</span>`;
         return `
           <div style="background:#fff;border-radius:16px;padding:12px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
-            <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;background:#F5E6D3;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+            <div style="width:110px;height:110px;border-radius:14px;overflow:hidden;background:#F5E6D3;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
               ${imgHTML}
             </div>
             <div style="flex:1;min-width:0;">
@@ -1261,7 +1275,7 @@
       const chips = document.getElementById('pickup-time-chips');
       if (chips) chips.style.display = 'none';
       document.getElementById('address-section').classList.toggle('hidden', deliveryMethod !== 'delivery');
-      document.getElementById('checkout-address').value = '';
+      ['checkout-address','checkout-building','checkout-entrance','checkout-floor','checkout-apartment'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       const dd = document.getElementById('address-dropdown');
       if (dd) dd.style.display = 'none';
       document.getElementById('pickup-time-section').classList.toggle('hidden', deliveryMethod !== 'pickup');
@@ -1276,8 +1290,22 @@
       const name = document.getElementById('checkout-name').value.trim();
       const phone = document.getElementById('checkout-phone').value.trim();
       const note = document.getElementById('checkout-note').value.trim();
-      const address = deliveryMethod === 'delivery' ? document.getElementById('checkout-address').value.trim() : null;
       const pickupTime = deliveryMethod === 'pickup' ? document.getElementById('checkout-pickup-time').value : null;
+      let address = null;
+      if (deliveryMethod === 'delivery') {
+        const street = document.getElementById('checkout-address').value.trim();
+        const building = document.getElementById('checkout-building').value.trim();
+        const entrance = document.getElementById('checkout-entrance').value.trim();
+        const floor = document.getElementById('checkout-floor').value.trim();
+        const apartment = document.getElementById('checkout-apartment').value.trim();
+        if (!street) { _checkoutLock = false; showToast('Пожалуйста, укажите улицу и номер дома', '⚠️'); return; }
+        if (!apartment) { _checkoutLock = false; showToast('Пожалуйста, укажите номер квартиры', '⚠️'); return; }
+        address = street;
+        if (building) address += ', корп. ' + building;
+        if (entrance) address += ', подъезд ' + entrance;
+        if (floor) address += ', этаж ' + floor;
+        address += ', кв. ' + apartment;
+      }
       if (cart.length === 0) { _checkoutLock = false; showToast('Корзина пуста', '⚠️'); return; }
       if (!name || !phone) { _checkoutLock = false; showToast('Пожалуйста, укажите имя и телефон', '⚠️'); return; }
       if (!validatePhone(phone)) { _checkoutLock = false; showToast('Введите телефон в формате +375 (XX) XXX-XX-XX', '⚠️'); return; }
@@ -1312,6 +1340,10 @@
         document.getElementById('checkout-name').value='';
         document.getElementById('checkout-phone').value='';
         document.getElementById('checkout-address').value='';
+        document.getElementById('checkout-building').value='';
+        document.getElementById('checkout-entrance').value='';
+        document.getElementById('checkout-floor').value='';
+        document.getElementById('checkout-apartment').value='';
         document.getElementById('checkout-note').value='';
         btn.disabled = false; btn.textContent = 'Подтвердить заказ';
         _checkoutLock = false;
