@@ -426,7 +426,7 @@ async function handleCallback(cb) {
     let keyboard;
     let clientText;
     if (orderType === 'delivery') {
-      keyboard = [[{ text: '🚗 Передать курьеру', callback_data: `courier_${rowNum}_${clientId}` }]];
+      keyboard = [[{ text: '🚗 Отправить доставку', callback_data: `courier_${rowNum}_${clientId}` }]];
       clientText = `🍞 *Заказ №${orderNum} готов!*\n\nПередаём курьеру — скоро будет у вас.`;
     } else {
       keyboard = [[{ text: '✅ Выдан клиенту', callback_data: `done_${rowNum}_${clientId}` }]];
