@@ -249,8 +249,12 @@ async function handleOrder(body) {
   setProp(`client_name_${newRow}`,  clientName);
   setProp(`order_num_${newRow}`,    String(orderNum));
   // тип заказа — нужен для выбора кнопок на статусе «Готов»
-  const orderType = isPreorder ? 'preorder' : (body.deliveryMethod === 'delivery' ? 'delivery' : 'pickup');
+  // двойная проверка: по полю deliveryMethod и по адресу (запасной вариант)
+  const isDeliveryAddr = body.address && body.address !== 'Самовывоз' && body.address !== 'undefined';
+  const orderType = isPreorder ? 'preorder'
+    : (body.deliveryMethod === 'delivery' || isDeliveryAddr) ? 'delivery' : 'pickup';
   setProp(`order_type_${newRow}`, orderType);
+  console.log(`Order ${orderNum} type=${orderType} deliveryMethod=${body.deliveryMethod} address=${body.address}`);
 
   // Параллельная отправка
   const calls = [];
@@ -424,9 +428,11 @@ async function handleCallback(cb) {
     await deleteStoredMsg(`working_msg_${rowNum}`);
 
     // Кнопки зависят от типа заказа
+    // fallback: если state утерян — смотрим текст сообщения
+    const isDeliveryOrder = orderType === 'delivery' || adminBase.includes('🚗 Доставка:');
     let keyboard;
     let clientText;
-    if (orderType === 'delivery') {
+    if (isDeliveryOrder) {
       keyboard = [[{ text: '🚗 Отправить доставку', callback_data: `courier_${rowNum}_${clientId}` }]];
       clientText = `🍞 *Заказ №${orderNum} готов!*\n\nПередаём курьеру — скоро будет у вас.`;
     } else {
@@ -434,6 +440,7 @@ async function handleCallback(cb) {
       clientText = `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130`;
     }
 
+    console.log(`ready: rowNum=${rowNum} orderType=${orderType} isDeliveryOrder=${isDeliveryOrder}`);
     await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Статус: 🍞 Готов', keyboard);
 
     const r = await notifyClient(clientId, clientText);
