@@ -262,6 +262,17 @@ async function handleOrder(body) {
   setProp(`order_type_${newRow}`, orderType);
   console.log(`Order ${orderNum} type=${orderType} deliveryMethod=${body.deliveryMethod} address=${body.address}`);
 
+  // Запомнить клиента для happy hour уведомлений
+  if (clientId !== '0') {
+    const clientsRaw = getProp('known_clients') || '[]';
+    let clients = [];
+    try { clients = JSON.parse(clientsRaw); } catch(e) {}
+    if (!clients.includes(clientId)) {
+      clients.push(clientId);
+      setProp('known_clients', JSON.stringify(clients));
+    }
+  }
+
   // Параллельная отправка
   const calls = [];
   if (clientId !== '0') {
@@ -634,6 +645,45 @@ async function setWebhook() {
   });
   console.log('setWebhook:', JSON.stringify(res));
 }
+
+// ─── Happy Hour уведомления ───────────────────────────────────────────────────
+// Пн–Пт 19:00 и Сб–Вс 17:00 (время Минска UTC+3) — рассылка всем клиентам
+let happyHourSentDate = '';
+
+async function sendHappyHourNotifications() {
+  const clientsRaw = getProp('known_clients') || '[]';
+  let clients = [];
+  try { clients = JSON.parse(clientsRaw); } catch(e) {}
+  if (!clients.length) { console.log('happyHour: no clients to notify'); return; }
+  console.log(`happyHour: sending to ${clients.length} clients`);
+  const text =
+    `🔥 *Счастливый час начался!*\n\n` +
+    `🎉 Скидка *30%* на всю выпечку!\n` +
+    `🕐 Действует 1 час — успейте заказать!\n\n` +
+    `🥐 Откройте приложение и выберите любимую выпечку по выгодной цене.\n\n` +
+    `С уважением, команда «Мамин Хлеб» 🍞`;
+  for (const cid of clients) {
+    try { await tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' }); }
+    catch(e) { console.error(`happyHour notify ${cid}:`, e.message); }
+  }
+}
+
+setInterval(() => {
+  const now = new Date();
+  // Время Минска = UTC+3 (Belarus не меняет часовой пояс)
+  const msk = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Minsk' }));
+  const day = msk.getDay();   // 0=Вс … 6=Сб
+  const h   = msk.getHours();
+  const m   = msk.getMinutes();
+  const dateKey = `${msk.getFullYear()}-${msk.getMonth()}-${msk.getDate()}`;
+  const isWeekday = day >= 1 && day <= 5;
+  const isWeekend = day === 0 || day === 6;
+  const isStart   = (isWeekday && h === 19 && m === 0) || (isWeekend && h === 17 && m === 0);
+  if (isStart && happyHourSentDate !== dateKey) {
+    happyHourSentDate = dateKey;
+    sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
+  }
+}, 60000);
 
 // ─── Запуск ───────────────────────────────────────────────────────────────────
 loadState();
