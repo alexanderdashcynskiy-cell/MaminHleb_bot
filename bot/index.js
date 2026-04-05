@@ -451,7 +451,7 @@ async function handleCallback(cb) {
     ]]);
 
     const r = await notifyClient(clientId,
-      `🚗 *Заказ №${orderNum} передан курьеру!*\n\nСкоро будет у вас. Будьте на связи!`);
+      `🚗 *Заказ №${orderNum} отправлен!*\n\n⏱ Ориентировочное время доставки: *30–45 минут* в зависимости от загруженности.\n\nБудьте на связи!`);
     if (r?.ok) setProp(`courier_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
     await updateCell(rowNum, 12, '🚗 В доставке');
