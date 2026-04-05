@@ -1712,6 +1712,7 @@
                     name: order.name,
                     phone: order.phone,
                     telegramId: String(telegramId || "0"),
+                    deliveryMethod: order.deliveryMethod || "pickup",
                     address: order.address || "Самовывоз",
                     time: order.time || "Как можно быстрее",
                     items: typeof order.items === 'string' ? order.items : JSON.stringify(order.items),
