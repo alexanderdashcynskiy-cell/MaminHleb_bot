@@ -184,8 +184,9 @@ async function handleOrder(body) {
     const dp = (rawDate || '').split('-');
     const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
     deliveryInfo = `📅 Дата предзаказа: ${niceDate}\n🕐 Время получения: ${rawTime || ''}`;
-  } else if (body.address && body.address !== 'undefined') {
-    deliveryInfo = `🚗 Доставка: ${body.address}`;
+  } else if (body.address && body.address !== 'undefined' && body.address !== 'Самовывоз') {
+    const payLabel = body.payment === 'card' ? '💳 Картой' : body.payment === 'cash' ? '💵 Наличными' : '';
+    deliveryInfo = `🚗 Доставка: ${body.address}${payLabel ? `\n💰 Оплата: ${payLabel}` : ''}`;
   } else if (body.time && body.time !== 'undefined') {
     deliveryInfo = `🕐 Время: ${body.time}`;
   } else {

@@ -367,18 +367,24 @@
       <div><label class="block text-sm font-semibold text-coffee mb-2">Номер телефона*</label><input type="tel" id="checkout-phone" placeholder="+375 (XX) XXX-XX-XX" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" oninput="formatPhone(this)" maxlength="19" required></div>
       <div id="address-section" class="hidden">
        <label class="block text-sm font-semibold text-coffee mb-2">Адрес доставки*</label>
-       <div style="position:relative;margin-bottom:10px;">
-        <input type="text" id="checkout-address" placeholder="Улица и номер дома*" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" oninput="filterAddressSuggestions(this.value)" onfocus="filterAddressSuggestions(this.value)">
+       <div style="position:relative;margin-bottom:8px;">
+        <input type="text" id="checkout-address" placeholder="Улица и номер дома*" autocomplete="off" class="w-full px-3 py-2.5 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:14px;" oninput="filterAddressSuggestions(this.value)" onfocus="filterAddressSuggestions(this.value)">
         <div id="address-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border:2px solid #e8ddd0;border-top:none;border-radius:0 0 12px 12px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.12);"></div>
        </div>
-       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-        <input type="text" id="checkout-building" placeholder="Корпус (если есть)" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:14px;">
-        <input type="text" id="checkout-entrance" placeholder="Подъезд" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:14px;">
+       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">
+        <input type="number" inputmode="numeric" pattern="[0-9]*" id="checkout-building" placeholder="Корп." autocomplete="off" class="w-full px-2 py-2.5 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;text-align:center;">
+        <input type="number" inputmode="numeric" pattern="[0-9]*" id="checkout-entrance" placeholder="Подъ." autocomplete="off" class="w-full px-2 py-2.5 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;text-align:center;">
+        <input type="number" inputmode="numeric" pattern="[0-9]*" id="checkout-floor" placeholder="Этаж" autocomplete="off" class="w-full px-2 py-2.5 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;text-align:center;">
+        <input type="number" inputmode="numeric" pattern="[0-9]*" id="checkout-apartment" placeholder="Кв." autocomplete="off" class="w-full px-2 py-2.5 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;text-align:center;">
        </div>
-       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <input type="text" id="checkout-floor" placeholder="Этаж" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:14px;">
-        <input type="text" id="checkout-apartment" placeholder="Квартира*" autocomplete="off" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:14px;">
+      </div>
+      <div id="payment-section" class="hidden">
+       <label class="block text-sm font-semibold text-coffee mb-2">Способ оплаты*</label>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button type="button" id="pay-card-btn" onclick="selectPayment('card')" style="padding:10px;border:2px solid #e8ddd0;border-radius:12px;background:#fff;font-size:14px;font-weight:600;color:#6b4423;cursor:pointer;touch-action:manipulation;transition:all 0.15s;">💳 Картой</button>
+        <button type="button" id="pay-cash-btn" onclick="selectPayment('cash')" style="padding:10px;border:2px solid #e8ddd0;border-radius:12px;background:#fff;font-size:14px;font-weight:600;color:#6b4423;cursor:pointer;touch-action:manipulation;transition:all 0.15s;">💵 Наличными</button>
        </div>
+       <input type="hidden" id="checkout-payment" value="">
       </div>
       <div id="pickup-time-section" class="hidden"><label class="block text-sm font-semibold text-coffee mb-2">Время получения</label><button type="button" id="pickup-time-row" onclick="togglePickupTimePicker()" style="width:100%;padding:12px 16px;border:2px solid #e8ddd0;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation;"><span id="pickup-time-display" style="font-size:14px;color:#9ca3af;">Выберите время</span><svg style="width:16px;height:16px;color:#9ca3af;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button><div id="pickup-time-chips" style="display:none;margin-top:8px;padding:12px;background:#fff;border:2px solid #e8ddd0;border-radius:12px;"><div style="display:flex;flex-wrap:wrap;gap:8px;" id="pickup-chips-container"></div></div><input type="hidden" id="checkout-pickup-time" value=""></div>
       <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="checkout-note" placeholder="Ваши пожелания..." rows="3" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none"></textarea></div>
@@ -1316,6 +1322,23 @@
     // ── Pickup time chips ───────────────────────────────────────────────────────
     const PICKUP_MINUTES = [5, 10, 15, 20, 25, 30, 35, 40, 45];
 
+    function selectPayment(type) {
+      document.getElementById('checkout-payment').value = type;
+      const cardBtn = document.getElementById('pay-card-btn');
+      const cashBtn = document.getElementById('pay-cash-btn');
+      if (!cardBtn || !cashBtn) return;
+      const active = 'linear-gradient(90deg,#C9A227,#D4A574)';
+      const activeBorder = '#C9A227';
+      const inactive = '#fff';
+      const inactiveBorder = '#e8ddd0';
+      cardBtn.style.background = type === 'card' ? active : inactive;
+      cardBtn.style.borderColor = type === 'card' ? activeBorder : inactiveBorder;
+      cardBtn.style.color = type === 'card' ? '#fff' : '#6b4423';
+      cashBtn.style.background = type === 'cash' ? active : inactive;
+      cashBtn.style.borderColor = type === 'cash' ? activeBorder : inactiveBorder;
+      cashBtn.style.color = type === 'cash' ? '#fff' : '#6b4423';
+    }
+
     function togglePickupTimePicker() {
       const chips = document.getElementById('pickup-time-chips');
       if (!chips) return;
@@ -1350,9 +1373,11 @@
       const chips = document.getElementById('pickup-time-chips');
       if (chips) chips.style.display = 'none';
       document.getElementById('address-section').classList.toggle('hidden', deliveryMethod !== 'delivery');
+      document.getElementById('payment-section').classList.toggle('hidden', deliveryMethod !== 'delivery');
       ['checkout-address','checkout-building','checkout-entrance','checkout-floor','checkout-apartment'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       const dd = document.getElementById('address-dropdown');
       if (dd) dd.style.display = 'none';
+      selectPayment('');
       document.getElementById('pickup-time-section').classList.toggle('hidden', deliveryMethod !== 'pickup');
       showScreen('checkout');
     }
@@ -1367,6 +1392,7 @@
       const note = document.getElementById('checkout-note').value.trim();
       const pickupTime = deliveryMethod === 'pickup' ? document.getElementById('checkout-pickup-time').value : null;
       let address = null;
+      let paymentMethod = null;
       if (deliveryMethod === 'delivery') {
         const street = document.getElementById('checkout-address').value.trim();
         const building = document.getElementById('checkout-building').value.trim();
@@ -1374,12 +1400,13 @@
         const floor = document.getElementById('checkout-floor').value.trim();
         const apartment = document.getElementById('checkout-apartment').value.trim();
         if (!street) { _checkoutLock = false; showToast('Пожалуйста, укажите улицу и номер дома', '⚠️'); return; }
-        if (!apartment) { _checkoutLock = false; showToast('Пожалуйста, укажите номер квартиры', '⚠️'); return; }
         address = street;
         if (building) address += ', корп. ' + building;
         if (entrance) address += ', подъезд ' + entrance;
         if (floor) address += ', этаж ' + floor;
-        address += ', кв. ' + apartment;
+        if (apartment) address += ', кв. ' + apartment;
+        paymentMethod = document.getElementById('checkout-payment').value;
+        if (!paymentMethod) { _checkoutLock = false; showToast('Пожалуйста, выберите способ оплаты', '⚠️'); return; }
       }
       if (cart.length === 0) { _checkoutLock = false; showToast('Корзина пуста', '⚠️'); return; }
       if (!name || !phone) { _checkoutLock = false; showToast('Пожалуйста, укажите имя и телефон', '⚠️'); return; }
@@ -1401,8 +1428,9 @@
             phone: phone,
             telegramId: telegramId,
             deliveryMethod: deliveryMethod,
-            address: address ||"Самовывоз",
-            time: pickupTime ||"Как можно быстрее",
+            address: address || "Самовывоз",
+            time: pickupTime || "Как можно быстрее",
+            payment: paymentMethod || "",
             items: JSON.stringify(cartSnapshot),
             total: total,
             note: note || "",
@@ -1420,6 +1448,7 @@
         document.getElementById('checkout-floor').value='';
         document.getElementById('checkout-apartment').value='';
         document.getElementById('checkout-note').value='';
+        selectPayment('');
         btn.disabled = false; btn.textContent = 'Подтвердить заказ';
         _checkoutLock = false;
         showReceipt(orderId, name, phone, cartSnapshot, total, deliveryMethod, address, pickupTime);
@@ -1715,6 +1744,7 @@
                     deliveryMethod: order.deliveryMethod || "pickup",
                     address: order.address || "Самовывоз",
                     time: order.time || "Как можно быстрее",
+                    payment: order.payment || "",
                     items: typeof order.items === 'string' ? order.items : JSON.stringify(order.items),
                     total: order.total,
                     note: order.note || ""
