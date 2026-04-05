@@ -459,7 +459,7 @@ async function handleCallback(cb) {
     ]]);
 
     const r = await notifyClient(clientId,
-      `🚗 *Заказ №${orderNum} отправлен!*\n\n⏱ Ориентировочное время доставки: *30–45 минут* в зависимости от загруженности.\n\nБудьте на связи!`);
+      `🚗 *Заказ №${orderNum} отправлен!*\n\n⏱ Ориентировочное время доставки: *30–45 минут* в зависимости от загруженности.\nПо приезде заказа, курьер с вами свяжется!\n\nС уважением команда «Мамин Хлеб»\nЕсли возникли вопросы звоните по номеру:\n☎️ +375(29)722-20-22`);
     if (r?.ok) setProp(`courier_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
     await updateCell(rowNum, 12, '🚗 В доставке');
