@@ -672,16 +672,17 @@ async function sendHappyHourNotifications() {
 
 setInterval(() => {
   const now = new Date();
-  // Время Минска = UTC+3 (Belarus не меняет часовой пояс)
-  const msk = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Minsk' }));
-  const day = msk.getDay();   // 0=Вс … 6=Сб
-  const h   = msk.getHours();
-  const m   = msk.getMinutes();
-  const dateKey = `${msk.getFullYear()}-${msk.getMonth()}-${msk.getDate()}`;
+  // Belarus = UTC+3 постоянно (без DST) — не зависит от ICU данных сервера
+  const msk = new Date(now.getTime() + 3 * 3600 * 1000);
+  const day = msk.getUTCDay();      // 0=Вс … 6=Сб
+  const h   = msk.getUTCHours();
+  const m   = msk.getUTCMinutes();
+  const dateKey = `${msk.getUTCFullYear()}-${msk.getUTCMonth()}-${msk.getUTCDate()}`;
   const isWeekday = day >= 1 && day <= 5;
   const isWeekend = day === 0 || day === 6;
-  const isStart   = (isWeekday && h === 19 && m === 0) || (isWeekend && h === 17 && m === 0);
-  if (isStart && happyHourSentDate !== dateKey) {
+  // Проверяем первые 5 минут счастливого часа — не пропустим даже при перезапуске бота
+  const isHappyStart = (isWeekday && h === 19 && m < 5) || (isWeekend && h === 17 && m < 5);
+  if (isHappyStart && happyHourSentDate !== dateKey) {
     happyHourSentDate = dateKey;
     sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
   }
