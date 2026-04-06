@@ -18,10 +18,11 @@ app.use((req, res, next) => {
   next();
 });
 
-const BOT_TOKEN      = (process.env.BOT_TOKEN      || '').trim();
-const ADMIN_ID       = (process.env.ADMIN_ID       || '').trim();
-const SPREADSHEET_ID = (process.env.SPREADSHEET_ID || '').trim();
-const PORT           = process.env.PORT || 3000;
+const BOT_TOKEN       = (process.env.BOT_TOKEN       || '').trim();
+const ADMIN_ID        = (process.env.ADMIN_ID        || '').trim();
+const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
+const SPREADSHEET_ID  = (process.env.SPREADSHEET_ID  || '').trim();
+const PORT            = process.env.PORT || 3000;
 
 // ─── Состояние (память + файл) ────────────────────────────────────────────────
 const STATE_FILE = './state.json';
@@ -261,6 +262,9 @@ async function handleOrder(body) {
   setProp(`admin_body_${newRow}`,   adminBody);
   setProp(`client_name_${newRow}`,  clientName);
   setProp(`order_num_${newRow}`,    String(orderNum));
+  setProp(`order_phone_${newRow}`,   body.phone   || '—');
+  setProp(`order_address_${newRow}`, body.address || 'Самовывоз');
+  setProp(`order_total_${newRow}`,   totalStr);
 
   // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
@@ -476,35 +480,66 @@ async function handleCallback(cb) {
   if (action === 'courier') {
     await deleteStoredMsg(`ready_msg_${rowNum}`);
 
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Статус: 🚗 В доставке', [[
-      { text: '✅ Доставлен', callback_data: `done_${rowNum}_${clientId}` }
-    ]], adminBody);
+    // У админа — статус «В доставке», кнопок нет
+    await editAdminMsg(adminChatId, adminMsgId, adminBase, '🚗 В доставке', [], adminBody);
 
-    const r = await notifyClient(clientId,
+    // Сообщение в чат доставки с кнопкой «Доставлен»
+    if (DELIVERY_CHAT_ID) {
+      const phone   = getProp(`order_phone_${rowNum}`)   || '—';
+      const address = getProp(`order_address_${rowNum}`) || '—';
+      const total   = getProp(`order_total_${rowNum}`)   || '—';
+      const name    = getProp(`client_name_${rowNum}`)   || '—';
+      const deliveryText =
+        `🚗 *ДОСТАВКА — №${orderNum}*\n\n` +
+        `👤 ${name}\n` +
+        `📞 ${phone}\n` +
+        `📍 ${address}\n` +
+        `💰 ${total}`;
+      const dr = await tg('sendMessage', {
+        chat_id:      DELIVERY_CHAT_ID,
+        text:         deliveryText,
+        parse_mode:   'Markdown',
+        reply_markup: { inline_keyboard: [[
+          { text: '✅ Доставлен', callback_data: `done_${rowNum}_${clientId}` }
+        ]]}
+      });
+      if (dr.ok) setProp(`delivery_msg_${rowNum}`, JSON.stringify({ chatId: DELIVERY_CHAT_ID, msgId: dr.result.message_id }));
+    }
+
+    // Уведомление клиенту
+    await notifyClient(clientId,
       `🚗 *Заказ №${orderNum} отправлен!*\n\n⏱ Ориентировочное время доставки: *30–45 минут* в зависимости от загруженности.\nПо приезде заказа, курьер с вами свяжется!\n\nС уважением команда «Мамин Хлеб»\nЕсли возникли вопросы звоните по номеру:\n☎️ +375(29)722-20-22`);
-    if (r?.ok) setProp(`courier_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
     await updateCell(rowNum, 12, '🚗 В доставке');
     return;
   }
 
-  // ── 4b. Выполнен / Доставлен ─────────────────────────────────────────────
+  // ── 4b. Доставлен (нажимает доставщик в чате доставки) ───────────────────
   if (action === 'done') {
     await deleteStoredMsg(`ready_msg_${rowNum}`);
-    await deleteStoredMsg(`courier_msg_${rowNum}`);
 
-    const doneLabel = orderType === 'delivery' ? '✅ Доставлен' : '✅ Выдан';
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, `Статус: ${doneLabel}`, [], adminBody);
+    // Убрать кнопку из сообщения в чате доставки
+    const deliveryMsgRaw = getProp(`delivery_msg_${rowNum}`);
+    if (deliveryMsgRaw) {
+      const dm = JSON.parse(deliveryMsgRaw);
+      await tg('editMessageReplyMarkup', { chat_id: dm.chatId, message_id: dm.msgId, reply_markup: { inline_keyboard: [] } });
+      delProp(`delivery_msg_${rowNum}`);
+    }
 
-    const doneText = orderType === 'delivery'
-      ? `🎉 *Ваш заказ №${orderNum} доставлен!*\n\nСпасибо, что выбрали нас! 🍞`
-      : `🎉 *Спасибо за покупку!*\n\nЗаказ №${orderNum} выдан. Приятного аппетита! 🍞`;
+    // Обновить сообщение у АДМИНА (берём из state, т.к. callback пришёл из чата доставки)
+    const adminMsgRaw = getProp(`admin_msg_${rowNum}`);
+    const storedAdmin = adminMsgRaw ? JSON.parse(adminMsgRaw) : null;
+    const targetChatId = storedAdmin ? storedAdmin.chatId : adminChatId;
+    const targetMsgId  = storedAdmin ? storedAdmin.msgId  : adminMsgId;
+    await editAdminMsg(targetChatId, targetMsgId, adminBase, '✅ Доставлен', [], adminBody);
 
+    // Уведомление клиенту + оценка
     const r = await notifyClient(clientId,
-      doneText + '\n\n⭐ *Оцените качество обслуживания:*', ratingKeyboard(rowNum));
+      `🎉 *Ваш заказ №${orderNum} доставлен!*\n\nСпасибо, что выбрали нас! 🍞\n\n⭐ *Оцените качество обслуживания:*`,
+      ratingKeyboard(rowNum));
     if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
-    await updateCell(rowNum, 12, doneLabel);
+    await updateCell(rowNum, 12, '✅ Доставлен');
     return;
   }
 
