@@ -386,6 +386,17 @@ function ratingKeyboard(rowNum) {
   return [RATING_KEYBOARD[0].map(b => ({ ...b, callback_data: b.callback_data.replace('ROW', rowNum) }))];
 }
 
+// ─── Ежедневный check-in администратора ──────────────────────────────────────
+async function sendAdminCheckin() {
+  const r = await tg('sendMessage', {
+    chat_id:      ADMIN_ID,
+    text:         `🌙 *Добрый вечер!*\n\nКто сегодня работает администратором?\nНажмите кнопку и введите имя.`,
+    parse_mode:   'Markdown',
+    reply_markup: { inline_keyboard: [[{ text: '✏️ Ввести имя', callback_data: 'checkin_start' }]] }
+  });
+  if (r.ok) setProp('checkin_msg', JSON.stringify({ chatId: ADMIN_ID, msgId: r.result.message_id }));
+}
+
 // ─── Обработка кнопок ─────────────────────────────────────────────────────────
 async function handleCallback(cb) {
   await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
@@ -396,6 +407,23 @@ async function handleCallback(cb) {
 
   const parts    = cb.data.split('_');
   const action   = parts[0];
+
+  // ── Check-in администратора ───────────────────────────────────────────────
+  if (action === 'checkin') {
+    const r = await tg('sendMessage', {
+      chat_id:    String(cb.from.id),
+      text:       '✏️ Введите ваше имя:',
+      parse_mode: 'Markdown'
+    });
+    setProp(`pending_checkin_${cb.from.id}`, JSON.stringify({ promptMsgId: r?.ok ? r.result.message_id : null }));
+    // Убираем кнопку с исходного сообщения
+    const cm = getProp('checkin_msg');
+    if (cm) {
+      const { chatId, msgId } = JSON.parse(cm);
+      await tg('editMessageReplyMarkup', { chat_id: chatId, message_id: msgId, reply_markup: { inline_keyboard: [] } });
+    }
+    return;
+  }
 
   // ── Оценка звёздами ───────────────────────────────────────────────────────
   if (action === 'rate') {
@@ -451,8 +479,10 @@ async function handleCallback(cb) {
       { text: '❌ Отменить', callback_data: `cancel_${rowNum}_${clientId}` }
     ]], adminBody);
 
-    const r = await notifyClient(clientId,
-      `✅ *Ваш заказ №${orderNum} принят!*\n\n🍞 Мы уже приступаем к приготовлению. Сообщим о готовности!`);
+    const acceptText = orderType === 'preorder'
+      ? `☀️ *Доброе утро!*\n\nВаш заказ №${orderNum} принят! Мы уже готовим его для вас. 🍞`
+      : `✅ *Ваш заказ №${orderNum} принят!*\n\n🍞 Мы уже приступаем к приготовлению. Сообщим о готовности!`;
+    const r = await notifyClient(clientId, acceptText);
     if (r?.ok) setProp(`accept_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
     await updateCell(rowNum, 12, '✅ Принят');
@@ -495,9 +525,10 @@ async function handleCallback(cb) {
     } else {
       // Самовывоз: завершаем сразу, отправляем оценку
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
-      const r = await notifyClient(clientId,
-        `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130\n\n⭐ *Оцените качество обслуживания:*`,
-        ratingKeyboard(rowNum));
+      const readyText = orderType === 'preorder'
+        ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
+        : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130\n\n⭐ *Оцените качество обслуживания:*`;
+      const r = await notifyClient(clientId, readyText, ratingKeyboard(rowNum));
       if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
       await updateCell(rowNum, 12, '🍞 Готов');
     }
@@ -625,6 +656,32 @@ async function handleTextMessage(message) {
   if (getProp(msgKey)) return;
   setProp(msgKey, '1');
 
+  // ── Check-in администратора ─────────────────────────────────────────────
+  const checkinRaw = getProp(`pending_checkin_${senderId}`);
+  if (checkinRaw) {
+    const cd = JSON.parse(checkinRaw);
+    if (cd.promptMsgId) await tg('deleteMessage', { chat_id: senderId, message_id: cd.promptMsgId });
+    await tg('sendMessage', {
+      chat_id:    senderId,
+      text:       `✅ Записано! Сегодня работает: *${msgText}*`,
+      parse_mode: 'Markdown'
+    });
+    // Логируем в Google Sheets
+    try {
+      const sheets = await getSheets();
+      const now = new Date();
+      const dateStr = now.toLocaleString('ru-RU', { timeZone: 'Europe/Minsk' });
+      await sheets.spreadsheets.values.append({
+        spreadsheetId:    SPREADSHEET_ID,
+        range:            'Журнал!A:B',
+        valueInputOption: 'USER_ENTERED',
+        resource:         { values: [[dateStr, msgText]] }
+      });
+    } catch(e) { console.error('checkin sheet:', e.message); }
+    delProp(`pending_checkin_${senderId}`);
+    return;
+  }
+
   const pendingRaw = getProp(`pending_${senderId}`);
   if (!pendingRaw) return;
 
@@ -711,6 +768,20 @@ async function setWebhook() {
   console.log('setWebhook:', JSON.stringify(res));
 }
 
+// ─── Ежедневный check-in в 22:00 ─────────────────────────────────────────────
+let checkinSentDate = '';
+setInterval(() => {
+  const now = new Date();
+  const msk = new Date(now.getTime() + 3 * 3600 * 1000);
+  const h   = msk.getUTCHours();
+  const m   = msk.getUTCMinutes();
+  const dateKey = `${msk.getUTCFullYear()}-${msk.getUTCMonth()}-${msk.getUTCDate()}`;
+  if (h === 22 && m < 5 && checkinSentDate !== dateKey) {
+    checkinSentDate = dateKey;
+    sendAdminCheckin().catch(e => console.error('checkin err:', e));
+  }
+}, 60000);
+
 // ─── Happy Hour уведомления ───────────────────────────────────────────────────
 // Пн–Пт 19:00 и Сб–Вс 17:00 (время Минска UTC+3) — рассылка всем клиентам
 let happyHourSentDate = '';
@@ -722,11 +793,9 @@ async function sendHappyHourNotifications() {
   if (!clients.length) { console.log('happyHour: no clients to notify'); return; }
   console.log(`happyHour: sending to ${clients.length} clients`);
   const text =
-    `🔥 *Счастливый час начался!*\n\n` +
-    `🎉 Скидка *30%* на всю выпечку!\n` +
-    `🕐 Действует 1 час — успейте заказать!\n\n` +
-    `🥐 Откройте приложение и выберите любимую выпечку по выгодной цене.\n\n` +
-    `С уважением, команда «Мамин Хлеб» 🍞`;
+    `🌆 *Добрый вечер!*\n\n` +
+    `Настало время счастливого часа — скидка *30%* на всю оставшуюся продукцию для самовывоза.\n\n` +
+    `Успейте забрать! 🥐`;
   for (const cid of clients) {
     try { await tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' }); }
     catch(e) { console.error(`happyHour notify ${cid}:`, e.message); }
