@@ -233,8 +233,16 @@ async function handleOrder(body) {
     `💰 *Итого:* ${totalStr}\n` +
     noteLine;
 
+  // тип заказа — нужен для заголовка и кнопок
+  const isDeliveryAddr = body.address && body.address !== 'Самовывоз' && body.address !== 'undefined';
+  const orderType = isPreorder ? 'preorder'
+    : (body.deliveryMethod === 'delivery' || isDeliveryAddr) ? 'delivery' : 'pickup';
+  setProp(`order_type_${newRow}`, orderType);
+  console.log(`Order ${orderNum} type=${orderType} deliveryMethod=${body.deliveryMethod} address=${body.address}`);
+
   // Заголовок (меняется вместе со статусом) и тело (статично)
-  const adminHeader = `🥐 *${isPreorder ? 'ПРЕДЗАКАЗ' : 'НОВЫЙ ЗАКАЗ'} — №${orderNum}*`;
+  const orderTypeLabel = isPreorder ? 'ПРЕДЗАКАЗ' : orderType === 'delivery' ? 'ДОСТАВКА' : 'НОВЫЙ ЗАКАЗ';
+  const adminHeader = `🥐 *${orderTypeLabel} — №${orderNum}*`;
   const adminBody   =
     `\n*КЛИЕНТ:*\n` +
     `👤 ${clientName}\n` +
@@ -246,7 +254,6 @@ async function handleOrder(body) {
     `💰 *Сумма заказа:* ${totalStr}` +
     noteLine;
 
-  // adminBase = header + body (для обратной совместимости с editAdminMsg)
   const adminBase = adminHeader;
 
   setProp(`receipt_base_${newRow}`, receiptBase);
@@ -254,13 +261,6 @@ async function handleOrder(body) {
   setProp(`admin_body_${newRow}`,   adminBody);
   setProp(`client_name_${newRow}`,  clientName);
   setProp(`order_num_${newRow}`,    String(orderNum));
-  // тип заказа — нужен для выбора кнопок на статусе «Готов»
-  // двойная проверка: по полю deliveryMethod и по адресу (запасной вариант)
-  const isDeliveryAddr = body.address && body.address !== 'Самовывоз' && body.address !== 'undefined';
-  const orderType = isPreorder ? 'preorder'
-    : (body.deliveryMethod === 'delivery' || isDeliveryAddr) ? 'delivery' : 'pickup';
-  setProp(`order_type_${newRow}`, orderType);
-  console.log(`Order ${orderNum} type=${orderType} deliveryMethod=${body.deliveryMethod} address=${body.address}`);
 
   // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
@@ -284,7 +284,7 @@ async function handleOrder(body) {
   }
   calls.push(['sendMessage', {
     chat_id:      ADMIN_ID,
-    text:         `${adminBase} 🟡 Статус: Новый${adminBody}`,
+    text:         `${adminBase}\n🟡 Статус: Новый${adminBody}`,
     parse_mode:   'Markdown',
     reply_markup: { inline_keyboard: [[
       { text: '✅ Принять заказ', callback_data: `accept_${newRow}_${clientId}` },
@@ -316,7 +316,7 @@ async function editAdminMsg(adminChatId, adminMsgId, adminBase, statusLine, keyb
   return tg('editMessageText', {
     chat_id:      adminChatId,
     message_id:   adminMsgId,
-    text:         `${adminBase} ${statusLine}${body}`,
+    text:         `${adminBase}\n${statusLine}${body}`,
     parse_mode:   'Markdown',
     reply_markup: { inline_keyboard: keyboard }
   });
@@ -414,8 +414,8 @@ async function handleCallback(cb) {
     await deleteStoredMsg(`decline_msg_${rowNum}`);
     await deleteStoredMsg(`restore_msg_${rowNum}`);
 
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Статус: ✅ Принят', [[
-      { text: '👨‍🍳 В работе',  callback_data: `working_${rowNum}_${clientId}` },
+    await editAdminMsg(adminChatId, adminMsgId, adminBase, '🟢 Статус: Принят', [[
+      { text: '✅ Готово',    callback_data: `ready_${rowNum}_${clientId}` },
       { text: '❌ Отменить', callback_data: `cancel_${rowNum}_${clientId}` }
     ]], adminBody);
 
@@ -445,28 +445,30 @@ async function handleCallback(cb) {
 
   // ── 3. Готов ──────────────────────────────────────────────────────────────
   if (action === 'ready') {
+    await deleteStoredMsg(`accept_msg_${rowNum}`);
     await deleteStoredMsg(`working_msg_${rowNum}`);
 
-    // Кнопки зависят от типа заказа
-    // fallback: если state утерян — смотрим текст сообщения
-    const isDeliveryOrder = orderType === 'delivery' || adminBase.includes('🚗 Доставка:');
-    let keyboard;
-    let clientText;
-    if (isDeliveryOrder) {
-      keyboard = [[{ text: '🚗 Отправить доставку', callback_data: `courier_${rowNum}_${clientId}` }]];
-      clientText = `🍞 *Заказ №${orderNum} готов!*\n\nПередаём курьеру — скоро будет у вас.`;
-    } else {
-      keyboard = [[{ text: '✅ Выдан клиенту', callback_data: `done_${rowNum}_${clientId}` }]];
-      clientText = `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130`;
-    }
-
+    const isDeliveryOrder = orderType === 'delivery' || adminBase.includes('ДОСТАВКА');
     console.log(`ready: rowNum=${rowNum} orderType=${orderType} isDeliveryOrder=${isDeliveryOrder}`);
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Статус: 🍞 Готов', keyboard, adminBody);
 
-    const r = await notifyClient(clientId, clientText);
-    if (r?.ok) setProp(`ready_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-
-    await updateCell(rowNum, 12, '🍞 Готов');
+    if (isDeliveryOrder) {
+      // Доставка: ждём подтверждения курьера
+      await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [[
+        { text: '🚗 Отправить доставку', callback_data: `courier_${rowNum}_${clientId}` }
+      ]], adminBody);
+      const r = await notifyClient(clientId,
+        `🍞 *Заказ №${orderNum} готов!*\n\nПередаём курьеру — скоро будет у вас.`);
+      if (r?.ok) setProp(`ready_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
+      await updateCell(rowNum, 12, '🍞 Готов');
+    } else {
+      // Самовывоз: завершаем сразу, отправляем оценку
+      await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
+      const r = await notifyClient(clientId,
+        `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130\n\n⭐ *Оцените качество обслуживания:*`,
+        ratingKeyboard(rowNum));
+      if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
+      await updateCell(rowNum, 12, '🍞 Готов');
+    }
     return;
   }
 
@@ -535,7 +537,7 @@ async function handleCallback(cb) {
   if (action === 'restore') {
     await deleteStoredMsg(`decline_msg_${rowNum}`);
 
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Статус: 🟡 Новый', [[
+    await editAdminMsg(adminChatId, adminMsgId, adminBase, '🟡 Статус: Новый', [[
       { text: '✅ Принять заказ', callback_data: `accept_${rowNum}_${clientId}` },
       { text: '❌ Отклонить',     callback_data: `decline_${rowNum}_${clientId}` }
     ]], adminBody);
