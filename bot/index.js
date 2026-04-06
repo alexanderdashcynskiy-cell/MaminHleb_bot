@@ -294,16 +294,20 @@ async function handleOrder(body) {
     const dp = (rawDate || '').split('-');
     const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
     const preorderText =
-      `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n\n` +
+      `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n🟡 Статус: Новый\n\n` +
       `👤 ${clientName}\n` +
       `📞 ${body.phone || '—'}\n` +
       `📅 ${niceDate}  🕐 ${rawTime || '—'}\n\n` +
       `*Состав:*\n${itemsText}\n\n` +
       `💰 ${totalStr}`;
     calls.push(['sendMessage', {
-      chat_id:    PREORDER_CHAT_ID,
-      text:       preorderText,
-      parse_mode: 'Markdown'
+      chat_id:      PREORDER_CHAT_ID,
+      text:         preorderText,
+      parse_mode:   'Markdown',
+      reply_markup: { inline_keyboard: [[
+        { text: '✅ Принять заказ', callback_data: `accept_${newRow}_${clientId}` },
+        { text: '❌ Отклонить',     callback_data: `decline_${newRow}_${clientId}` }
+      ]]}
     }]);
   } else {
     // Обычный заказ или предзаказ без настроенного чата — идёт админу
@@ -329,8 +333,10 @@ async function handleOrder(body) {
   }
 
   const adminR = responses[offset];
-  if (adminR.ok) setProp(`admin_msg_${newRow}`,
-    JSON.stringify({ chatId: ADMIN_ID, msgId: adminR.result.message_id }));
+  if (adminR.ok) {
+    const chatId = (isPreorder && PREORDER_CHAT_ID) ? PREORDER_CHAT_ID : ADMIN_ID;
+    setProp(`admin_msg_${newRow}`, JSON.stringify({ chatId, msgId: adminR.result.message_id }));
+  }
 }
 
 // ─── Вспомогательные функции статусов ────────────────────────────────────────
