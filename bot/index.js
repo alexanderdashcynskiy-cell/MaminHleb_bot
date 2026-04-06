@@ -18,11 +18,12 @@ app.use((req, res, next) => {
   next();
 });
 
-const BOT_TOKEN       = (process.env.BOT_TOKEN       || '').trim();
-const ADMIN_ID        = (process.env.ADMIN_ID        || '').trim();
+const BOT_TOKEN        = (process.env.BOT_TOKEN        || '').trim();
+const ADMIN_ID         = (process.env.ADMIN_ID         || '').trim();
 const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
-const SPREADSHEET_ID  = (process.env.SPREADSHEET_ID  || '').trim();
-const PORT            = process.env.PORT || 3000;
+const PREORDER_CHAT_ID = (process.env.PREORDER_CHAT_ID || '').trim();
+const SPREADSHEET_ID   = (process.env.SPREADSHEET_ID   || '').trim();
+const PORT             = process.env.PORT || 3000;
 
 // ─── Состояние (память + файл) ────────────────────────────────────────────────
 const STATE_FILE = './state.json';
@@ -295,6 +296,25 @@ async function handleOrder(body) {
       { text: '❌ Отклонить',     callback_data: `decline_${newRow}_${clientId}` }
     ]]}
   }]);
+
+  // Если предзаказ — отдельное сообщение в чат предзаказов
+  if (isPreorder && PREORDER_CHAT_ID) {
+    const [rawDate, rawTime] = (body.time || '').split(' в ');
+    const dp = (rawDate || '').split('-');
+    const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
+    const preorderText =
+      `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n\n` +
+      `👤 ${clientName}\n` +
+      `📞 ${body.phone || '—'}\n` +
+      `📅 ${niceDate}  🕐 ${rawTime || '—'}\n\n` +
+      `*Состав:*\n${itemsText}\n\n` +
+      `💰 ${totalStr}`;
+    calls.push(['sendMessage', {
+      chat_id:    PREORDER_CHAT_ID,
+      text:       preorderText,
+      parse_mode: 'Markdown'
+    }]);
+  }
 
   const responses = await tgAll(calls);
   let offset = 0;
