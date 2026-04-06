@@ -5,10 +5,12 @@ const express  = require('express');
 const fetch    = require('node-fetch');
 const { google } = require('googleapis');
 const fs       = require('fs');
+const path     = require('path');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.text({ type: 'text/plain', limit: '10mb' }));
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 // CORS — Mini App шлёт запросы из браузера
 app.use((req, res, next) => {
