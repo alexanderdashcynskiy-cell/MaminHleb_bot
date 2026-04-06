@@ -390,7 +390,7 @@ function ratingKeyboard(rowNum) {
 async function sendAdminCheckin() {
   const r = await tg('sendMessage', {
     chat_id:      ADMIN_ID,
-    text:         `🌙 *Добрый вечер!*\n\nКто сегодня работает администратором?\nНажмите кнопку и введите имя.`,
+    text:         `☀️ *Доброе утро!*\n\nКто сегодня работает администратором?\nНажмите кнопку и введите имя.`,
     parse_mode:   'Markdown',
     reply_markup: { inline_keyboard: [[{ text: '✏️ Ввести имя', callback_data: 'checkin_start' }]] }
   });
@@ -776,7 +776,7 @@ setInterval(() => {
   const h   = msk.getUTCHours();
   const m   = msk.getUTCMinutes();
   const dateKey = `${msk.getUTCFullYear()}-${msk.getUTCMonth()}-${msk.getUTCDate()}`;
-  if (h === 22 && m < 5 && checkinSentDate !== dateKey) {
+  if (h === 6 && m < 5 && checkinSentDate !== dateKey) {
     checkinSentDate = dateKey;
     sendAdminCheckin().catch(e => console.error('checkin err:', e));
   }
