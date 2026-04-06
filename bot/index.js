@@ -287,18 +287,9 @@ async function handleOrder(body) {
       parse_mode: 'Markdown'
     }]);
   }
-  calls.push(['sendMessage', {
-    chat_id:      ADMIN_ID,
-    text:         `${adminBase}\n🟡 Статус: Новый${adminBody}`,
-    parse_mode:   'Markdown',
-    reply_markup: { inline_keyboard: [[
-      { text: '✅ Принять заказ', callback_data: `accept_${newRow}_${clientId}` },
-      { text: '❌ Отклонить',     callback_data: `decline_${newRow}_${clientId}` }
-    ]]}
-  }]);
 
-  // Если предзаказ — отдельное сообщение в чат предзаказов
   if (isPreorder && PREORDER_CHAT_ID) {
+    // Предзаказ идёт ТОЛЬКО в чат предзаказов, не админу
     const [rawDate, rawTime] = (body.time || '').split(' в ');
     const dp = (rawDate || '').split('-');
     const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
@@ -313,6 +304,17 @@ async function handleOrder(body) {
       chat_id:    PREORDER_CHAT_ID,
       text:       preorderText,
       parse_mode: 'Markdown'
+    }]);
+  } else {
+    // Обычный заказ или предзаказ без настроенного чата — идёт админу
+    calls.push(['sendMessage', {
+      chat_id:      ADMIN_ID,
+      text:         `${adminBase}\n🟡 Статус: Новый${adminBody}`,
+      parse_mode:   'Markdown',
+      reply_markup: { inline_keyboard: [[
+        { text: '✅ Принять заказ', callback_data: `accept_${newRow}_${clientId}` },
+        { text: '❌ Отклонить',     callback_data: `decline_${newRow}_${clientId}` }
+      ]]}
     }]);
   }
 
