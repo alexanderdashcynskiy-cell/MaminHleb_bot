@@ -1538,18 +1538,27 @@
 
     // ── Preorder ───────────────────────────────────────────────────────────────
 
+    function preorderBtnZoneHTML(productId, price, qty) {
+      if (qty > 0) {
+        return `<div class="flex items-center gap-1">
+          <button type="button" onclick="updatePreorderQuantity('${productId}', -1)" class="w-6 h-6 rounded-full bg-purple-200 text-purple-600 flex items-center justify-center font-bold text-sm">−</button>
+          <span class="w-5 text-center font-bold text-purple-600 text-xs">${qty}</span>
+          <button type="button" onclick="updatePreorderQuantity('${productId}', 1)" class="w-6 h-6 rounded-full bg-purple-400 text-white flex items-center justify-center font-bold text-sm">+</button>
+        </div>`;
+      }
+      return `<button type="button" onclick="addPreorderItem('${productId}', ${price})" class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-300 to-purple-400 text-white flex items-center justify-center font-bold text-lg">+</button>`;
+    }
+
     function renderPreorderProducts() {
       const allowed = ['pastries', 'pizza', 'buns'];
       const filtered = products.filter(p => allowed.includes(p.category));
       document.getElementById('preorder-products').innerHTML = filtered.map(p => {
-        const cartItem = preorderCart.find(i => i.product_id === p.id);
-        const qty = cartItem ? cartItem.quantity : 0;
         const imgHTML = productImages[p.id]
           ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-5xl bg-purple-50\\'>${p.image}</div>'">`
           : `<div class="w-full h-full flex items-center justify-center text-5xl bg-purple-50">${p.image}</div>`;
         return `
-          <div class="animate-fade">
-            <div class="bg-white rounded-3xl shadow-sm h-full flex flex-col ${qty > 0 ? 'ring-2 ring-purple-400' : ''}">
+          <div>
+            <div class="bg-white rounded-3xl shadow-sm h-full flex flex-col">
               <button type="button" onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square">
                 <div class="w-full h-full">${imgHTML}</div>
               </button>
@@ -1557,18 +1566,23 @@
                 <h3 class="font-bold text-coffee text-sm leading-tight" style="font-family:'Playfair Display',serif;">${p.name}</h3>
                 <div class="flex items-center justify-between gap-2 mt-1">
                   <span class="font-bold text-sm text-caramel" style="font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} р</span>
-                  ${qty > 0 ? `
-                    <div class="flex items-center gap-1">
-                      <button type="button" onclick="updatePreorderQuantity('${p.id}', -1)" class="w-6 h-6 rounded-full bg-purple-200 text-purple-600 flex items-center justify-center font-bold text-sm">−</button>
-                      <span class="w-4 text-center font-bold text-purple-600 text-xs">${qty}</span>
-                      <button type="button" onclick="updatePreorderQuantity('${p.id}', 1)" class="w-6 h-6 rounded-full bg-purple-400 text-white flex items-center justify-center font-bold text-sm">+</button>
-                    </div>
-                  ` : `<button type="button" onclick="addPreorderItem('${p.id}', ${p.price})" class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-300 to-purple-400 text-white flex items-center justify-center font-bold text-lg hover:scale-110 transition-transform">+</button>`}
+                  <div class="preorder-btn-zone flex-shrink-0" data-pid="${p.id}" data-price="${p.price}" style="min-width:2rem;display:flex;align-items:center;justify-content:flex-end;"></div>
                 </div>
               </div>
             </div>
           </div>`;
       }).join('');
+      updatePreorderCartUI();
+    }
+
+    function updatePreorderCartUI() {
+      document.querySelectorAll('.preorder-btn-zone').forEach(zone => {
+        const pid = zone.dataset.pid;
+        const price = parseFloat(zone.dataset.price);
+        const cartItem = preorderCart.find(i => i.product_id === pid);
+        const qty = cartItem ? cartItem.quantity : 0;
+        zone.innerHTML = preorderBtnZoneHTML(pid, price, qty);
+      });
     }
 
     function addPreorderItem(productId, price) {
@@ -1578,7 +1592,7 @@
       if (existing) { existing.quantity++; } else {
         preorderCart.push({ product_id: productId, product_name: product.name, price, quantity: 1 });
       }
-      updatePreorderTotal(); renderPreorderProducts();
+      updatePreorderTotal(); updatePreorderCartUI();
     }
 
     function updatePreorderQuantity(productId, delta) {
@@ -1586,7 +1600,7 @@
       if (!item) return;
       item.quantity += delta;
       if (item.quantity <= 0) preorderCart = preorderCart.filter(i => i !== item);
-      updatePreorderTotal(); renderPreorderProducts();
+      updatePreorderTotal(); updatePreorderCartUI();
     }
 
     function updatePreorderTotal() {
