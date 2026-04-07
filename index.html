@@ -837,8 +837,11 @@
       const screen = document.getElementById(`screen-${screenName}`);
       if (screen) {
         screen.classList.remove('hidden');
-        var needsFlex = (screenName === 'product' || screenName === 'cart' || screenName === 'checkout' || screenName === 'receipt');
-        screen.style.display = needsFlex ? 'flex' : '';
+        if (screenName === 'product' || screenName === 'cart' || screenName === 'checkout' || screenName === 'receipt') {
+          screen.style.display = 'flex';
+        } else {
+          screen.style.display = 'block';
+        }
         if (screenName === 'cart') {
           updateCartUI();
         }
