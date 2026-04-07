@@ -837,7 +837,8 @@
       const screen = document.getElementById(`screen-${screenName}`);
       if (screen) {
         screen.classList.remove('hidden');
-        screen.style.display = (screenName === 'product') ? 'flex' : '';
+        var needsFlex = (screenName === 'product' || screenName === 'cart' || screenName === 'checkout' || screenName === 'receipt');
+        screen.style.display = needsFlex ? 'flex' : '';
         if (screenName === 'cart') {
           updateCartUI();
         }
