@@ -394,7 +394,7 @@ function ratingKeyboard(rowNum) {
 async function sendAdminCheckin() {
   const r = await tg('sendMessage', {
     chat_id:      ADMIN_ID,
-    text:         `☀️ *Доброе утро!*\n\nКто сегодня работает администратором?\nНажмите кнопку и введите имя.`,
+    text:         `☀️ Доброе утро!\n\nКто сегодня работает администратором?\nНажмите кнопку и введите имя.`,
     parse_mode:   'Markdown',
     reply_markup: { inline_keyboard: [[{ text: '✏️ Ввести имя', callback_data: 'checkin_start' }]] }
   });
