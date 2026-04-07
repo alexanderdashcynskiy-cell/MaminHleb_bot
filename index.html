@@ -58,8 +58,9 @@
     /* Fix: фиксированная высота нижней зоны кнопок в compact-карточке */
     .compact-card-controls { min-height: 36px; }
     /* Preorder card lift animation */
-    .preorder-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .preorder-card-lifted { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(107,68,35,0.18) !important; }
+    .preorder-card { transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), box-shadow 0.25s ease; will-change: transform; }
+    .preorder-card-lifted { transform: translateY(-3px) scale(1.01); box-shadow: 0 8px 18px rgba(107,68,35,0.16) !important; }
+    #preorder-products { isolation: isolate; }
   </style>
   <style>body { box-sizing: border-box; }</style>
  </head>
@@ -136,19 +137,18 @@
         </div>
        </div>
        <!-- Slide 3: Preorder -->
-       <div class="w-full flex-shrink-0 rounded-3xl h-40 flex flex-row items-stretch relative overflow-hidden px-3 py-3 gap-2.5" style="background-color: #ede4db;">
-        <div class="flex flex-col items-start justify-center rounded-2xl px-3 py-2 flex-shrink-0" style="background-color: #7a4e2d; min-width: 120px;">
-         <p class="font-montserrat font-semibold uppercase" style="font-size: 7.5px; color: rgba(255,255,255,0.7); letter-spacing: 1.5px;">Свежий хлеб<br>к завтраку</p>
-         <p class="font-playfair font-bold" style="font-size: 19px; color: #fff; line-height: 1.15; margin-top: 4px;">Утренний<br>предзаказ</p>
+       <div class="w-full flex-shrink-0 rounded-3xl h-40 flex flex-col items-stretch relative overflow-hidden px-3 pt-2.5 pb-2.5 gap-2" style="background-color: #ede4db;">
+        <p class="font-playfair font-bold text-center" style="font-size: 13px; color: #3d1f0a; line-height: 1.2;">Забронируйте заранее</p>
+        <div class="rounded-xl flex flex-col items-start justify-center px-3 py-1.5 flex-shrink-0" style="background-color: #7a4e2d;">
+         <p class="font-montserrat font-semibold uppercase" style="font-size: 7px; color: rgba(255,255,255,0.65); letter-spacing: 1.5px;">Свежий хлеб к завтраку</p>
+         <p class="font-playfair font-bold" style="font-size: 17px; color: #fff; line-height: 1.15;">Утренний предзаказ</p>
         </div>
-        <div class="flex flex-col justify-between flex-1 gap-2">
-         <div class="flex flex-col gap-1.5 rounded-2xl px-3 py-2.5 flex-1 justify-center" style="background: rgba(255,255,255,0.75);">
-          <div class="flex items-center gap-2">
-           <span style="font-size: 13px;">🌅</span>
-           <p class="font-montserrat font-semibold" style="font-size: 10px; color: #5a3520;">Доступно<br>07:00 – 11:00</p>
-          </div>
+        <div class="flex items-center gap-2 flex-1">
+         <div class="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 flex-1" style="background: rgba(255,255,255,0.75);">
+          <span style="font-size: 11px;">🌅</span>
+          <p class="font-montserrat font-semibold" style="font-size: 9px; color: #5a3520;">Доступно с 07:00 до 11:00</p>
          </div>
-         <button onclick="showScreen('preorder')" class="rounded-2xl font-montserrat font-semibold text-white active:scale-95 transition-transform" style="background-color: #7a4e2d; font-size: 11px; padding: 8px 12px; border: none; cursor: pointer; touch-action: manipulation;">Сделать заказ →</button>
+         <button onclick="showScreen('preorder')" class="rounded-xl font-montserrat font-semibold text-white flex-shrink-0 active:scale-95 transition-transform" style="background-color: #7a4e2d; font-size: 10px; padding: 8px 10px; border: none; cursor: pointer; touch-action: manipulation; white-space: nowrap;">Заказать →</button>
         </div>
        </div>
       </div>
@@ -556,24 +556,24 @@
     <form onsubmit="submitPreorder(event)" class="space-y-4">
      <div>
       <label class="block text-sm font-semibold text-coffee mb-3">Выберите товары</label>
-      <div id="preorder-products" class="grid grid-cols-2 gap-3" style="overflow-x:hidden;width:100%;"></div>
+      <div id="preorder-products" class="grid grid-cols-3 gap-2" style="overflow-x:hidden;width:100%;"></div>
      </div>
      <!-- Блок выбора времени -->
      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <div style="min-width:0;overflow:hidden;">
        <label class="block text-sm font-semibold text-coffee mb-2">Дата*</label>
-       <input type="date" id="preorder-date" class="border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;padding:10px 6px;box-sizing:border-box;width:100%;min-width:0;" required>
+       <input type="date" id="preorder-date" class="border-2 border-beige focus:outline-none focus:border-gold transition-colors" style="font-size:13px;padding:10px 12px;box-sizing:border-box;width:100%;min-width:0;border-radius:9999px;" required>
       </div>
       <div style="min-width:0;overflow:hidden;">
-       <label class="block text-sm font-semibold text-coffee mb-2">Время (07–09)*</label>
-       <input type="time" id="preorder-time" min="07:00" max="11:00" class="border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;padding:10px 6px;box-sizing:border-box;width:100%;min-width:0;" required>
+       <label class="block text-sm font-semibold text-coffee mb-2">Время (07–11)*</label>
+       <input type="time" id="preorder-time" min="07:00" max="11:00" class="border-2 border-beige focus:outline-none focus:border-gold transition-colors" style="font-size:13px;padding:10px 12px;box-sizing:border-box;width:100%;min-width:0;border-radius:9999px;" required>
       </div>
      </div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Ваше имя*</label><input type="text" id="preorder-name" placeholder="Введите имя" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Номер телефона*</label><input type="tel" id="preorder-phone" placeholder="+375 (XX) XXX-XX-XX" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" oninput="formatPhone(this)" maxlength="19" required></div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="preorder-note" placeholder="Ваши пожелания..." rows="2" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none"></textarea></div>
-     <div class="bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl p-4 border-2 border-purple-300"><div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого:</span><span class="text-2xl font-bold text-purple-600"><span id="preorder-total">0.00</span> р</span></div></div>
-     <button type="submit" id="submit-preorder-btn" class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all" style="touch-action:manipulation;">Забронировать предзаказ</button>
+     <div class="bg-gradient-to-br from-gold/10 to-caramel/10 rounded-2xl p-4 border-2 border-gold/40"><div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого:</span><span class="text-2xl font-bold text-gold"><span id="preorder-total">0.00</span> р</span></div></div>
+     <button type="submit" id="submit-preorder-btn" class="w-full text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all" style="background:linear-gradient(90deg,#C9A227,#D4A574);touch-action:manipulation;">Забронировать предзаказ</button>
     </form>
    </div>
   </div>
@@ -995,6 +995,8 @@
         delete document.getElementById('detail-add-btn').dataset.selectedSize;
       }
       showScreen('product');
+      const addWrap = document.getElementById('detail-add-wrap');
+      if (addWrap) addWrap.style.display = _productDetailSource === 'preorder' ? 'none' : 'block';
       setTimeout(updateDetailQtyControls, 0);
     }
 
@@ -1562,13 +1564,13 @@
 
     function preorderBtnZoneHTML(productId, price, qty) {
       if (qty > 0) {
-        return `<div class="flex items-center gap-1">
-          <button type="button" onclick="updatePreorderQuantity('${productId}', -1)" class="w-6 h-6 rounded-full bg-purple-200 text-purple-600 flex items-center justify-center font-bold text-sm">−</button>
-          <span class="w-5 text-center font-bold text-purple-600 text-xs">${qty}</span>
-          <button type="button" onclick="updatePreorderQuantity('${productId}', 1)" class="w-6 h-6 rounded-full bg-purple-400 text-white flex items-center justify-center font-bold text-sm">+</button>
+        return `<div class="flex items-center gap-0.5">
+          <button type="button" onclick="updatePreorderQuantity('${productId}', -1)" style="width:20px;height:20px;border-radius:50%;background:rgba(201,162,39,0.2);color:#a07b10;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;touch-action:manipulation;">−</button>
+          <span style="width:16px;text-align:center;font-weight:700;font-size:10px;color:#a07b10;">${qty}</span>
+          <button type="button" onclick="updatePreorderQuantity('${productId}', 1)" style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;touch-action:manipulation;">+</button>
         </div>`;
       }
-      return `<button type="button" onclick="addPreorderItem('${productId}', ${price})" class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-300 to-purple-400 text-white flex items-center justify-center font-bold text-lg">+</button>`;
+      return `<button type="button" onclick="addPreorderItem('${productId}', ${price})" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;touch-action:manipulation;">+</button>`;
     }
 
     function renderPreorderProducts() {
@@ -1584,11 +1586,11 @@
               <button type="button" onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square">
                 <div class="w-full h-full">${imgHTML}</div>
               </button>
-              <div class="flex-1 px-3 pt-2.5 pb-3 flex flex-col justify-between gap-1.5">
-                <h3 class="font-bold text-coffee text-sm leading-tight" style="font-family:'Playfair Display',serif;">${p.name}</h3>
-                <div class="flex items-center justify-between gap-2 mt-1">
-                  <span class="font-bold text-sm text-caramel" style="font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} р</span>
-                  <div class="preorder-btn-zone flex-shrink-0" data-pid="${p.id}" data-price="${p.price}" style="min-width:2rem;display:flex;align-items:center;justify-content:flex-end;"></div>
+              <div class="flex-1 px-2 pt-2 pb-2 flex flex-col justify-between gap-1">
+                <h3 class="font-bold text-coffee leading-tight" style="font-family:'Playfair Display',serif;font-size:11px;">${p.name}</h3>
+                <div class="flex items-center justify-between gap-1 mt-0.5">
+                  <span class="font-bold text-caramel" style="font-family:'Montserrat',sans-serif;font-size:10px;">${p.price.toFixed(2)} р</span>
+                  <div class="preorder-btn-zone flex-shrink-0" data-pid="${p.id}" data-price="${p.price}" style="display:flex;align-items:center;justify-content:flex-end;"></div>
                 </div>
               </div>
             </div>
