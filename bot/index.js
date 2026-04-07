@@ -268,6 +268,8 @@ async function handleOrder(body) {
   setProp(`order_phone_${newRow}`,   body.phone   || '—');
   setProp(`order_address_${newRow}`, body.address || 'Самовывоз');
   setProp(`order_total_${newRow}`,   totalStr);
+  setProp(`order_payment_${newRow}`, body.payment || '');
+  setProp(`order_note_${newRow}`,    (body.note || '').trim());
 
   // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
@@ -550,12 +552,17 @@ async function handleCallback(cb) {
       const address = getProp(`order_address_${rowNum}`) || '—';
       const total   = getProp(`order_total_${rowNum}`)   || '—';
       const name    = getProp(`client_name_${rowNum}`)   || '—';
+      const payment = getProp(`order_payment_${rowNum}`) || '';
+      const note    = getProp(`order_note_${rowNum}`)    || '';
+      const payLabel = payment === 'card' ? '💳 Картой' : payment === 'cash' ? '💵 Наличными' : '';
       const deliveryText =
         `🚗 *ДОСТАВКА — №${orderNum}*\n\n` +
         `👤 ${name}\n` +
         `📞 ${phone}\n` +
         `📍 ${address}\n` +
-        `💰 ${total}`;
+        (payLabel ? `${payLabel}\n` : '') +
+        `💰 ${total}` +
+        (note ? `\n\n💬 *Примечание:* ${note}` : '');
       const dr = await tg('sendMessage', {
         chat_id:      DELIVERY_CHAT_ID,
         text:         deliveryText,
@@ -789,9 +796,21 @@ setInterval(() => {
 let happyHourSentDate = '';
 
 async function sendHappyHourNotifications() {
-  const clientsRaw = getProp('known_clients') || '[]';
+  // Читаем всех клиентов из Google Sheets колонка E (telegramId)
   let clients = [];
-  try { clients = JSON.parse(clientsRaw); } catch(e) {}
+  try {
+    const sheets = await getSheets();
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'E2:E'  // колонка E, начиная со 2-й строки (без заголовка)
+    });
+    const rows = res.data.values || [];
+    const seen = new Set();
+    rows.forEach(row => {
+      const id = (row[0] || '').trim();
+      if (id && id !== '0' && !seen.has(id)) { seen.add(id); clients.push(id); }
+    });
+  } catch(e) { console.error('happyHour getClients:', e.message); }
   if (!clients.length) { console.log('happyHour: no clients to notify'); return; }
   console.log(`happyHour: sending to ${clients.length} clients`);
   const text =
