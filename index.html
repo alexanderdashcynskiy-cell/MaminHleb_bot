@@ -104,11 +104,9 @@
    <div id="screen-main" class="flex-1 overflow-y-auto w-full pb-24">
     <!-- Carousel -->
     <div class="px-4 pt-4 pb-2">
-     <div class="relative overflow-hidden rounded-3xl shadow-lg h-40" id="carousel-wrapper">
-      <button onclick="prevSlide()" class="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg">
-       <svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-      </button>
-      <div id="carousel-container" class="flex transition-transform duration-500 ease-out">
+     <div class="relative">
+      <div class="relative overflow-hidden rounded-3xl shadow-lg h-40" id="carousel-wrapper">
+       <div id="carousel-container" class="flex transition-transform duration-500 ease-out h-40">
        <!-- Slide 1: Brand -->
        <div class="w-full flex-shrink-0 rounded-3xl h-40 flex flex-row items-center justify-center relative overflow-hidden px-5 gap-4" style="background-color: #ede4db;">
         <img src="https://maminhlebbot-production.up.railway.app/images/logo.jpeg" alt="Мамин Хлеб" class="h-28 w-28 rounded-full object-cover flex-shrink-0 shadow-md" />
@@ -152,15 +150,22 @@
          </div>
          <button onclick="showScreen('preorder')" class="rounded-full font-playfair font-semibold flex-1 active:scale-95 transition-transform" style="background:#c9a27a;color:#fff;font-size:12px;padding:7px 12px;border:none;cursor:pointer;touch-action:manipulation;">Заказать →</button>
         </div>
+       </div>
       </div>
-      <button onclick="nextSlide()" class="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg">
-       <svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+      <!-- Prev button — outside overflow-hidden so it's never clipped -->
+      <button onclick="prevSlide()" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 z-20 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform" style="touch-action:manipulation;">
+       <svg class="w-5 h-5" style="color:#7a4e2d;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+      </button>
+      <!-- Next button — outside overflow-hidden -->
+      <button onclick="nextSlide()" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 z-20 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform" style="touch-action:manipulation;">
+       <svg class="w-5 h-5" style="color:#7a4e2d;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
       </button>
      </div>
-     <div class="flex justify-center gap-2 mt-4">
-      <button class="carousel-dot w-2 h-2 rounded-full bg-gold transition-all" onclick="goToSlide(0)"></button>
-      <button class="carousel-dot w-2 h-2 rounded-full bg-beige transition-all" onclick="goToSlide(1)"></button>
-      <button class="carousel-dot w-2 h-2 rounded-full bg-beige transition-all" onclick="goToSlide(2)"></button>
+     <!-- Dots -->
+     <div class="flex justify-center items-center gap-2 mt-3">
+      <button class="carousel-dot rounded-full transition-all duration-300" style="width:22px;height:8px;background:#C9A227;" onclick="goToSlide(0)"></button>
+      <button class="carousel-dot rounded-full transition-all duration-300" style="width:8px;height:8px;background:#d4b896;" onclick="goToSlide(1)"></button>
+      <button class="carousel-dot rounded-full transition-all duration-300" style="width:8px;height:8px;background:#d4b896;" onclick="goToSlide(2)"></button>
      </div>
     </div>
 
@@ -798,10 +803,15 @@
       const container = document.getElementById('carousel-container');
       container.style.transform = `translateX(-${currentSlide * 100}%)`;
       document.querySelectorAll('.carousel-dot').forEach((dot, index) => {
-        dot.classList.toggle('w-6', index === currentSlide);
-        dot.classList.toggle('bg-gold', index === currentSlide);
-        dot.classList.toggle('w-2', index !== currentSlide);
-        dot.classList.toggle('bg-beige', index !== currentSlide);
+        if (index === currentSlide) {
+          dot.style.width = '22px';
+          dot.style.height = '8px';
+          dot.style.background = '#C9A227';
+        } else {
+          dot.style.width = '8px';
+          dot.style.height = '8px';
+          dot.style.background = '#d4b896';
+        }
       });
     }
     function startCarousel() {
