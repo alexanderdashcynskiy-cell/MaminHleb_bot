@@ -420,12 +420,14 @@ async function handleCallback(cb) {
 
   // ── Check-in администратора ───────────────────────────────────────────────
   if (action === 'checkin') {
+    // Реагируем только на нажатие самого администратора
+    if (String(cb.from.id) !== ADMIN_ID) return;
     const r = await tg('sendMessage', {
-      chat_id:    String(cb.from.id),
+      chat_id:    ADMIN_ID,
       text:       '✏️ Введите ваше имя:',
       parse_mode: 'Markdown'
     });
-    setProp(`pending_checkin_${cb.from.id}`, JSON.stringify({ promptMsgId: r?.ok ? r.result.message_id : null }));
+    setProp(`pending_checkin_${ADMIN_ID}`, JSON.stringify({ promptMsgId: r?.ok ? r.result.message_id : null }));
     // Убираем кнопку с исходного сообщения
     const cm = getProp('checkin_msg');
     if (cm) {
@@ -678,8 +680,8 @@ async function handleTextMessage(message) {
   if (getProp(msgKey)) return;
   setProp(msgKey, '1');
 
-  // ── Check-in администратора ─────────────────────────────────────────────
-  const checkinRaw = getProp(`pending_checkin_${senderId}`);
+  // ── Check-in администратора (только для ADMIN_ID) ───────────────────────
+  const checkinRaw = senderId === ADMIN_ID ? getProp(`pending_checkin_${ADMIN_ID}`) : null;
   if (checkinRaw) {
     const cd = JSON.parse(checkinRaw);
     if (cd.promptMsgId) await tg('deleteMessage', { chat_id: senderId, message_id: cd.promptMsgId });
