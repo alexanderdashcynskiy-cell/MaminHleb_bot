@@ -403,14 +403,20 @@ async function sendAdminCheckin() {
 
 // ─── Обработка кнопок ─────────────────────────────────────────────────────────
 async function handleCallback(cb) {
-  await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
-
-  if (cbSeen.has(cb.id)) return;
+  if (cbSeen.has(cb.id)) {
+    await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
+    return;
+  }
   cbSeen.add(cb.id);
   if (cbSeen.size > 10000) Array.from(cbSeen).slice(0, 1000).forEach(id => cbSeen.delete(id));
 
   const parts    = cb.data.split('_');
   const action   = parts[0];
+
+  // Для всех кнопок кроме rate — отвечаем сразу (rate отвечает сам со своим текстом)
+  if (action !== 'rate') {
+    await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
+  }
 
   // ── Check-in администратора ───────────────────────────────────────────────
   if (action === 'checkin') {
@@ -435,17 +441,24 @@ async function handleCallback(cb) {
     const ratingRow = parseInt(parts[2]);
     const starStr   = '⭐'.repeat(stars) + ` (${stars}/5)`;
 
+    // Визуальный ответ на нажатие
+    await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: starStr, show_alert: false });
+
+    // Если уже показан запрос отзыва — только обновляем оценку, не дублируем сообщение
     const existingRaw = getProp(`pending_${cb.from.id}`);
     if (existingRaw) {
-      const ep = JSON.parse(existingRaw);
-      if (ep.reviewReqMsgId) {
-        setProp(`pending_${cb.from.id}`,
-          JSON.stringify({ stars, rowNum: ratingRow, reviewReqMsgId: ep.reviewReqMsgId }));
-        await updateCell(ratingRow, 10, starStr);
-        return;
-      }
+      try {
+        const ep = JSON.parse(existingRaw);
+        if (ep.reviewReqMsgId) {
+          setProp(`pending_${cb.from.id}`,
+            JSON.stringify({ stars, rowNum: ratingRow, reviewReqMsgId: ep.reviewReqMsgId }));
+          await updateCell(ratingRow, 10, starStr);
+          return;
+        }
+      } catch(e) { /* устаревшее состояние — продолжаем */ }
     }
 
+    // Удаляем сообщение с кнопками и просим отзыв
     const [, reviewRes] = await tgAll([
       ['deleteMessage', { chat_id: String(cb.from.id), message_id: cb.message.message_id }],
       ['sendMessage', {
