@@ -130,7 +130,7 @@
         <div class="relative z-10 flex flex-col items-center justify-center text-center gap-0.5">
          <p class="text-white font-playfair italic text-[10px]" style="letter-spacing: 1px;">Забронируйте заранее</p>
          <h2 class="font-montserrat font-extrabold text-2xl text-white drop-shadow-lg" style="text-shadow: 0 2px 8px rgba(75,0,130,0.4); line-height: 1;">УТРЕННИЙ ПРЕДЗАКАЗ</h2>
-         <p class="font-montserrat font-semibold text-[11px] text-white drop-shadow-md">Доступно с 07:00 до 09:00</p>
+         <p class="font-montserrat font-semibold text-[11px] text-white drop-shadow-md">Доступно с 07:00 до 11:00</p>
          <button onclick="showScreen('preorder')" class="font-montserrat font-semibold text-[11px] text-purple-600 bg-white rounded-full px-4 py-1.5 mt-2 hover:bg-purple-50 transition-colors active:scale-95">Сделать заказ →</button>
         </div>
        </div>
@@ -155,7 +155,7 @@
       </div>
       <div class="relative z-10 flex flex-col items-center justify-center text-center gap-0.5">
        <h3 class="font-montserrat font-extrabold text-sm text-coffee drop-shadow-lg" style="line-height: 1;">🌅 УТРЕННИЙ ПРЕДЗАКАЗ</h3>
-       <p class="font-montserrat font-semibold text-[10px] text-coffee/80">Доступно с 07:00 до 09:00</p>
+       <p class="font-montserrat font-semibold text-[10px] text-coffee/80">Доступно с 07:00 до 11:00</p>
       </div>
      </button>
     </div>
@@ -549,7 +549,7 @@
       </div>
       <div style="min-width:0;overflow:hidden;">
        <label class="block text-sm font-semibold text-coffee mb-2">Время (07–09)*</label>
-       <input type="time" id="preorder-time" min="07:00" max="09:00" class="border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;padding:10px 6px;box-sizing:border-box;width:100%;min-width:0;" required>
+       <input type="time" id="preorder-time" min="07:00" max="11:00" class="border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;padding:10px 6px;box-sizing:border-box;width:100%;min-width:0;" required>
       </div>
      </div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Ваше имя*</label><input type="text" id="preorder-name" placeholder="Введите имя" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
@@ -1544,14 +1544,19 @@
       document.getElementById('preorder-products').innerHTML = filtered.map(p => {
         const cartItem = preorderCart.find(i => i.product_id === p.id);
         const qty = cartItem ? cartItem.quantity : 0;
+        const imgHTML = productImages[p.id]
+          ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-5xl bg-purple-50\\'>${p.image}</div>'">`
+          : `<div class="w-full h-full flex items-center justify-center text-5xl bg-purple-50">${p.image}</div>`;
         return `
           <div class="animate-fade">
-            <div class="bg-white rounded-3xl overflow-hidden shadow-md h-full flex flex-col ${qty > 0 ? 'ring-2 ring-purple-400' : ''}">
-              <button type="button" onclick="showProductDetail('${p.id}')" class="w-full aspect-square bg-purple-50 flex items-center justify-center text-5xl">${p.image}</button>
-              <div class="flex-1 px-3 pt-2 pb-3 flex flex-col justify-between gap-2">
-                <h3 class="font-bold text-coffee text-xs" style="font-family:'Playfair Display',serif;">${p.name}</h3>
-                <div class="flex items-center justify-between gap-2">
-                  <span class="font-bold text-[10px] text-caramel" style="font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} р</span>
+            <div class="bg-white rounded-3xl shadow-sm h-full flex flex-col ${qty > 0 ? 'ring-2 ring-purple-400' : ''}">
+              <button type="button" onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square">
+                <div class="w-full h-full">${imgHTML}</div>
+              </button>
+              <div class="flex-1 px-3 pt-2.5 pb-3 flex flex-col justify-between gap-1.5">
+                <h3 class="font-bold text-coffee text-sm leading-tight" style="font-family:'Playfair Display',serif;">${p.name}</h3>
+                <div class="flex items-center justify-between gap-2 mt-1">
+                  <span class="font-bold text-sm text-caramel" style="font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} р</span>
                   ${qty > 0 ? `
                     <div class="flex items-center gap-1">
                       <button type="button" onclick="updatePreorderQuantity('${p.id}', -1)" class="w-6 h-6 rounded-full bg-purple-200 text-purple-600 flex items-center justify-center font-bold text-sm">−</button>
