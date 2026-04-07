@@ -57,6 +57,9 @@
     #bestsellers-items { align-items: flex-end; }
     /* Fix: фиксированная высота нижней зоны кнопок в compact-карточке */
     .compact-card-controls { min-height: 36px; }
+    /* Preorder card lift animation */
+    .preorder-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .preorder-card-lifted { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(107,68,35,0.18) !important; }
   </style>
   <style>body { box-sizing: border-box; }</style>
  </head>
@@ -102,7 +105,8 @@
        <svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
       </button>
       <div id="carousel-container" class="flex transition-transform duration-500 ease-out">
-       <div class="w-full flex-shrink-0 rounded-3xl h-40 flex flex-row items-center justify-center relative overflow-hidden px-5 gap-4" style="background-color: #f5ede4;">
+       <!-- Slide 1: Brand -->
+       <div class="w-full flex-shrink-0 rounded-3xl h-40 flex flex-row items-center justify-center relative overflow-hidden px-5 gap-4" style="background-color: #ede4db;">
         <img src="https://maminhlebbot-production.up.railway.app/images/logo.jpeg" alt="Мамин Хлеб" class="h-28 w-28 rounded-full object-cover flex-shrink-0 shadow-md" />
         <div class="flex flex-col justify-center gap-1">
          <h1 class="font-playfair font-bold leading-tight" style="font-size: 26px; color: #3d1f0a; line-height: 1.15;">Мамин <span style="color: #a0612a;">хлеб</span></h1>
@@ -110,28 +114,41 @@
          <p class="font-montserrat font-medium tracking-widest uppercase" style="font-size: 9px; color: #8b5e3c; letter-spacing: 2px;">Домашняя выпечка<br>с любовью</p>
         </div>
        </div>
-       <div class="w-full flex-shrink-0 bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-400 rounded-3xl h-40 flex items-center justify-center relative overflow-hidden p-3 shadow-lg">
-        <div class="absolute inset-0 opacity-20">
-         <div class="absolute top-0 left-1/4 w-24 h-24 bg-white rounded-full blur-3xl"></div>
-         <div class="absolute bottom-0 right-1/4 w-32 h-32 bg-orange-100 rounded-full blur-3xl"></div>
+       <!-- Slide 2: Happy Hour -->
+       <div class="w-full flex-shrink-0 rounded-3xl h-40 flex flex-row items-stretch relative overflow-hidden px-3 py-3 gap-2.5" style="background-color: #ede4db;">
+        <div class="flex flex-col items-center justify-center rounded-2xl px-3 py-2 flex-shrink-0" style="background-color: #7a4e2d; min-width: 110px;">
+         <p class="font-montserrat font-semibold text-center uppercase" style="font-size: 8px; color: rgba(255,255,255,0.75); letter-spacing: 1.5px; line-height: 1.3;">Специальное<br>предложение</p>
+         <p class="font-playfair font-bold" style="font-size: 34px; color: #fff; line-height: 1;">−30%</p>
+         <p class="font-montserrat font-semibold uppercase" style="font-size: 9px; color: rgba(255,255,255,0.85); letter-spacing: 2px;">на всё</p>
         </div>
-        <div class="relative z-10 flex flex-col items-center justify-center text-center gap-0.5">
-         <p class="text-coffee font-playfair italic text-[10px]" style="letter-spacing: 1px;">Счастливый час в «Мамином Хлебе»</p>
-         <h2 class="font-montserrat font-extrabold text-2xl text-white drop-shadow-lg" style="text-shadow: 0 2px 8px rgba(107,68,35,0.3); line-height: 1;">СКИДКА 20% НА ВСЁ</h2>
-         <p class="font-montserrat font-semibold text-[11px] text-white drop-shadow-md">Ежедневно 19:00–20:00</p>
-         <p class="font-montserrat font-light text-[10px] text-white/80 mt-1">Забирайте тепло дома к ужину ✨</p>
+        <div class="flex flex-col justify-between flex-1 gap-2">
+         <div class="flex flex-col gap-1.5 rounded-2xl px-3 py-2.5 flex-1" style="background: rgba(255,255,255,0.75);">
+          <div class="flex items-center gap-2">
+           <span style="font-size: 13px;">🕐</span>
+           <p class="font-montserrat font-semibold" style="font-size: 10px; color: #5a3520; line-height: 1.3;">Ежедневно<br>19:00 – 20:00</p>
+          </div>
+          <div style="height: 1px; background: rgba(107,68,35,0.15);"></div>
+          <div class="flex items-center gap-2">
+           <span style="font-size: 13px;">🏠</span>
+           <p class="font-montserrat" style="font-size: 9px; color: #8b6040;">Забирайте тепло дома к ужину</p>
+          </div>
+         </div>
         </div>
        </div>
-       <div class="w-full flex-shrink-0 bg-gradient-to-r from-purple-400 via-purple-500 to-indigo-500 rounded-3xl h-40 flex items-center justify-center relative overflow-hidden p-3 shadow-lg">
-        <div class="absolute inset-0 opacity-15">
-         <div class="absolute top-0 right-1/4 w-24 h-24 bg-white rounded-full blur-3xl"></div>
-         <div class="absolute bottom-0 left-1/4 w-32 h-32 bg-purple-200 rounded-full blur-3xl"></div>
+       <!-- Slide 3: Preorder -->
+       <div class="w-full flex-shrink-0 rounded-3xl h-40 flex flex-row items-stretch relative overflow-hidden px-3 py-3 gap-2.5" style="background-color: #ede4db;">
+        <div class="flex flex-col items-start justify-center rounded-2xl px-3 py-2 flex-shrink-0" style="background-color: #7a4e2d; min-width: 120px;">
+         <p class="font-montserrat font-semibold uppercase" style="font-size: 7.5px; color: rgba(255,255,255,0.7); letter-spacing: 1.5px;">Свежий хлеб<br>к завтраку</p>
+         <p class="font-playfair font-bold" style="font-size: 19px; color: #fff; line-height: 1.15; margin-top: 4px;">Утренний<br>предзаказ</p>
         </div>
-        <div class="relative z-10 flex flex-col items-center justify-center text-center gap-0.5">
-         <p class="text-white font-playfair italic text-[10px]" style="letter-spacing: 1px;">Забронируйте заранее</p>
-         <h2 class="font-montserrat font-extrabold text-2xl text-white drop-shadow-lg" style="text-shadow: 0 2px 8px rgba(75,0,130,0.4); line-height: 1;">УТРЕННИЙ ПРЕДЗАКАЗ</h2>
-         <p class="font-montserrat font-semibold text-[11px] text-white drop-shadow-md">Доступно с 07:00 до 11:00</p>
-         <button onclick="showScreen('preorder')" class="font-montserrat font-semibold text-[11px] text-purple-600 bg-white rounded-full px-4 py-1.5 mt-2 hover:bg-purple-50 transition-colors active:scale-95">Сделать заказ →</button>
+        <div class="flex flex-col justify-between flex-1 gap-2">
+         <div class="flex flex-col gap-1.5 rounded-2xl px-3 py-2.5 flex-1 justify-center" style="background: rgba(255,255,255,0.75);">
+          <div class="flex items-center gap-2">
+           <span style="font-size: 13px;">🌅</span>
+           <p class="font-montserrat font-semibold" style="font-size: 10px; color: #5a3520;">Доступно<br>07:00 – 11:00</p>
+          </div>
+         </div>
+         <button onclick="showScreen('preorder')" class="rounded-2xl font-montserrat font-semibold text-white active:scale-95 transition-transform" style="background-color: #7a4e2d; font-size: 11px; padding: 8px 12px; border: none; cursor: pointer; touch-action: manipulation;">Сделать заказ →</button>
         </div>
        </div>
       </div>
@@ -405,7 +422,7 @@
      <!-- тёмный градиент снизу фото -->
      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.72) 0%,rgba(0,0,0,0) 55%);pointer-events:none;"></div>
      <!-- кнопка назад -->
-     <button onclick="showScreen('main')" style="position:absolute;top:18px;left:18px;width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,0.35);border:none;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);touch-action:manipulation;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:2;">
+     <button onclick="goBackFromDetail()" style="position:absolute;top:18px;left:18px;width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,0.35);border:none;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);touch-action:manipulation;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:2;">
       <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
      </button>
      <!-- название и вес — над белой карточкой -->
@@ -708,10 +725,13 @@
       setupButtonPressAnim();
     }
 
+    let _productDetailSource = 'main';
+    function goBackFromDetail() { showScreen(_productDetailSource); }
+
     // ── Swipe-back (left edge → right) ────────────────────────────────────────
     function setupSwipeBack() {
       const routes = [
-        { id: 'screen-product',  back: 'main' },
+        { id: 'screen-product',  back: null },
         { id: 'screen-cart',     back: 'main' },
         { id: 'screen-checkout', back: 'cart' },
       ];
@@ -727,7 +747,8 @@
           const dx = e.changedTouches[0].clientX - startX;
           const dy = e.changedTouches[0].clientY - startY;
           if (startX < 40 && dx > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-            showScreen(back);
+            if (back === null) goBackFromDetail();
+            else showScreen(back);
           }
         }, { passive: true });
       });
@@ -937,6 +958,7 @@
 
     // ── Product detail ─────────────────────────────────────────────────────────
     function showProductDetail(productId) {
+      _productDetailSource = document.getElementById('screen-preorder').style.display !== 'none' ? 'preorder' : 'main';
       const product = products.find(p => p.id === productId);
       if (!product) return;
       document.getElementById('detail-card-name').textContent = product.name;
@@ -1558,7 +1580,7 @@
           : `<div class="w-full h-full flex items-center justify-center text-5xl bg-purple-50">${p.image}</div>`;
         return `
           <div>
-            <div class="bg-white rounded-3xl shadow-sm h-full flex flex-col">
+            <div class="preorder-card bg-white rounded-3xl shadow-sm h-full flex flex-col" data-card-pid="${p.id}">
               <button type="button" onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square">
                 <div class="w-full h-full">${imgHTML}</div>
               </button>
@@ -1582,6 +1604,8 @@
         const cartItem = preorderCart.find(i => i.product_id === pid);
         const qty = cartItem ? cartItem.quantity : 0;
         zone.innerHTML = preorderBtnZoneHTML(pid, price, qty);
+        const card = document.querySelector(`.preorder-card[data-card-pid="${pid}"]`);
+        if (card) card.classList.toggle('preorder-card-lifted', qty > 0);
       });
     }
 
