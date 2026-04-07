@@ -838,6 +838,9 @@
       if (screen) {
         screen.classList.remove('hidden');
         screen.style.display = (screenName === 'product') ? 'flex' : '';
+        if (screenName === 'cart') {
+          updateCartUI();
+        }
         if (screenName === 'bestsellers') {
           const grid = document.getElementById('bestsellers-grid');
           if (grid) grid.innerHTML = products.filter(p => p.bestseller).map(p => productCardHTML(p, false)).join('');
