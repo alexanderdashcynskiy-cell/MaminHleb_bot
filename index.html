@@ -61,9 +61,6 @@
     .preorder-card, .product-card { transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), box-shadow 0.25s ease; will-change: transform; }
     .preorder-card-lifted, .product-card-lifted { transform: translateY(-3px) scale(1.01); box-shadow: 0 8px 18px rgba(107,68,35,0.16) !important; }
     #preorder-products { isolation: isolate; }
-    #products-grid .product-card { flex-direction: row; height: auto; min-height: 110px; }
-    #products-grid .product-card > button.relative { width: 110px !important; min-width: 110px; aspect-ratio: unset !important; height: auto; align-self: stretch; border-radius: 1.5rem 0 0 1.5rem !important; }
-    #products-grid .product-card > .flex-1 { padding: 12px 12px 10px; }
     /* Category button press */
     .cat-btn { -webkit-tap-highlight-color: transparent; }
     .cat-btn:active > div { transform: scale(0.93); box-shadow: 0 6px 16px rgba(107,68,35,0.22); transition: transform 0.1s ease, box-shadow 0.1s ease; }
@@ -232,7 +229,7 @@
     <!-- Products Grid -->
     <div class="px-4 pb-4" style="padding-top:20px;">
      <h3 id="products-section-title" class="font-montserrat font-bold text-coffee mb-4 text-sm">РЕКОМЕНДУЕМЫЕ</h3>
-     <div id="products-grid" class="grid grid-cols-1 gap-4"></div>
+     <div id="products-grid" class="grid grid-cols-2 gap-2"></div>
     </div>
 
     <!-- Why Choose Us -->
