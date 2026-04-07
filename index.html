@@ -289,7 +289,7 @@
      <!-- Адрес самовывоза — вне скролла -->
      <div id="cart-pickup-info" style="background:#fff;border-radius:16px;padding:12px 16px;margin-bottom:12px;display:none;align-items:center;justify-content:center;gap:8px;">
       <svg width="16" height="16" fill="none" stroke="#C9A227" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span style="font-size:14px;color:#555;">г. Витебск, пр-т Московский 130</span>
+      <span style="font-size:14px;color:#555;">г. Витебск, ул. Ленина 74</span>
      </div>
     </div>
 
@@ -562,11 +562,11 @@
      <div style="display:flex;gap:8px;align-items:flex-end;">
       <div style="flex:1;min-width:0;">
        <label class="block font-semibold text-coffee mb-1" style="font-size:11px;">Дата*</label>
-       <input type="date" id="preorder-date" class="border-2 border-beige focus:outline-none focus:border-gold transition-colors" style="font-size:11px;padding:4px 8px;box-sizing:border-box;width:100%;min-width:0;border-radius:9999px;" required>
+       <input type="date" id="preorder-date" class="border-2 border-beige focus:outline-none focus:border-gold transition-colors" style="font-size:10px;padding:3px 8px;box-sizing:border-box;width:100%;min-width:0;border-radius:9999px;" required>
       </div>
       <div style="flex:1;min-width:0;">
        <label class="block font-semibold text-coffee mb-1" style="font-size:11px;">Время (07–11)*</label>
-       <input type="time" id="preorder-time" min="07:00" max="11:00" class="border-2 border-beige focus:outline-none focus:border-gold transition-colors" style="font-size:11px;padding:4px 8px;box-sizing:border-box;width:100%;min-width:0;border-radius:9999px;" required>
+       <input type="time" id="preorder-time" min="07:00" max="11:00" class="border-2 border-beige focus:outline-none focus:border-gold transition-colors" style="font-size:10px;padding:3px 8px;box-sizing:border-box;width:100%;min-width:0;border-radius:9999px;" required>
       </div>
      </div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Ваше имя*</label><input type="text" id="preorder-name" placeholder="Введите имя" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
@@ -1141,19 +1141,22 @@
             + '</div>'
           : '';
         var trashIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a07b50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
-        return '<div style="background:#fff;border-radius:18px;display:flex;align-items:stretch;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.06);min-height:96px;">'
-          + '<div style="width:96px;flex-shrink:0;background:#F5E6D3;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
-          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:10px 8px 10px 12px;">'
-          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;color:#3d1f0a;font-size:13px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + item.product_name + '</div>'
+        return '<div style="background:#fff;border-radius:18px;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 10px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">'
+          + '<div style="width:82px;height:82px;flex-shrink:0;border-radius:14px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
+          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;">'
+          + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;">'
+          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;color:#3d1f0a;font-size:13px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' + item.product_name + '</div>'
+          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:28px;height:28px;border-radius:50%;background:#f2ece4;border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + trashIcon + '</button>'
+          + '</div>'
           + weightBadge
-          + '<div style="display:flex;align-items:center;gap:8px;margin-top:2px;">'
-          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:30px;height:30px;border-radius:50%;background:rgba(212,165,116,0.25);border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:18px;font-weight:400;line-height:1;">−</button>'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;">'
+          + '<div style="display:flex;align-items:center;gap:8px;">'
+          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:30px;height:30px;border-radius:50%;background:rgba(212,165,116,0.25);border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:18px;line-height:1;">−</button>'
           + '<span style="font-weight:700;font-size:14px;color:#3d1f0a;min-width:14px;text-align:center;">' + item.quantity + '</span>'
-          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:400;line-height:1;">+</button>'
-          + '</div></div>'
-          + '<div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:8px;padding:10px 10px 10px 0;flex-shrink:0;">'
-          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:30px;height:30px;border-radius:50%;background:#f2ece4;border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;">' + trashIcon + '</button>'
-          + '<div style="background:#f2ece4;border-radius:10px;padding:4px 8px;font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#a07b10;white-space:nowrap;">' + (item.price * item.quantity).toFixed(2) + ' р</div>'
+          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;line-height:1;">+</button>'
+          + '</div>'
+          + '<div style="background:#f2ece4;border-radius:10px;padding:4px 10px;font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#a07b10;white-space:nowrap;">' + (item.price * item.quantity).toFixed(2) + ' р</div>'
+          + '</div>'
           + '</div></div>';
       }).join('');
 
@@ -1591,9 +1594,9 @@
                 <div class="w-full h-full">${imgHTML}</div>
               </button>
               <div class="flex-1 px-2 pt-2 pb-2 flex flex-col justify-between gap-1">
-                <h3 class="font-bold text-coffee leading-tight" style="font-family:'Playfair Display',serif;font-size:11px;">${p.name}</h3>
+                <h3 class="font-bold text-coffee leading-tight" style="font-family:'Playfair Display',serif;font-size:13px;">${p.name}</h3>
                 <div class="flex items-center justify-between gap-1 mt-0.5">
-                  <span class="font-bold text-caramel" style="font-family:'Montserrat',sans-serif;font-size:10px;">${p.price.toFixed(2)} р</span>
+                  <span class="font-bold text-caramel" style="font-family:'Montserrat',sans-serif;font-size:12px;">${p.price.toFixed(2)} р</span>
                   <div class="preorder-btn-zone flex-shrink-0" data-pid="${p.id}" data-price="${p.price}" style="display:flex;align-items:center;justify-content:flex-end;"></div>
                 </div>
               </div>
