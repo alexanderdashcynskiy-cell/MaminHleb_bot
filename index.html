@@ -911,7 +911,7 @@
               ${!compact && p.isNew ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
             </button>
             <div class="flex-1 px-3 pt-2.5 pb-3 flex flex-col justify-between gap-1.5">
-              <div>
+              <div onclick="showProductDetail('${p.id}')" style="cursor:pointer;">
                 <h3 class="font-bold text-coffee leading-tight ${compact ? 'text-xs' : 'text-sm'}" style="font-family:'Playfair Display',serif;">${p.name}</h3>
                 <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${weightInfo}</p>
               </div>
@@ -978,46 +978,47 @@
 
     // ── Product detail ─────────────────────────────────────────────────────────
     function showProductDetail(productId) {
-      _productDetailSource = document.getElementById('screen-preorder').style.display !== 'none' ? 'preorder' : 'main';
-      const product = productsById.get(productId);
-      if (!product) return;
-      document.getElementById('detail-card-name').textContent = product.name;
-      document.getElementById('detail-card-price').textContent = product.price.toFixed(2);
-      document.getElementById('detail-description').textContent = product.description;
-      document.getElementById('detail-calories').textContent = product.nutrition.calories;
-      document.getElementById('detail-protein').textContent = product.nutrition.protein;
-      document.getElementById('detail-fat').textContent = product.nutrition.fat;
-      document.getElementById('detail-carbs').textContent = product.nutrition.carbs;
-      document.getElementById('detail-card-weight').textContent = product.weight || '';
-      // Image
-      const imgEl = document.getElementById('detail-image');
-      if (productImages[productId]) {
-        imgEl.innerHTML = `<img src="${productImages[productId]}" class="w-full h-full object-cover" alt="${product.name}" onerror="this.parentNode.innerHTML='<span style=\\'font-size:6rem;\\'>${product.image}</span>'">`;
-      } else {
-        imgEl.innerHTML = `<span style="font-size:6rem;">${product.image}</span>`;
+      try {
+        _productDetailSource = document.getElementById('screen-preorder').style.display !== 'none' ? 'preorder' : 'main';
+        const product = productsById.get(productId);
+        if (!product) return;
+        document.getElementById('detail-card-name').textContent = product.name;
+        document.getElementById('detail-card-price').textContent = product.price.toFixed(2);
+        document.getElementById('detail-description').textContent = product.description;
+        document.getElementById('detail-calories').textContent = product.nutrition.calories;
+        document.getElementById('detail-protein').textContent = product.nutrition.protein;
+        document.getElementById('detail-fat').textContent = product.nutrition.fat;
+        document.getElementById('detail-carbs').textContent = product.nutrition.carbs;
+        document.getElementById('detail-card-weight').textContent = product.weight || '';
+        const imgEl = document.getElementById('detail-image');
+        if (productImages[productId]) {
+          imgEl.innerHTML = '<img src="' + productImages[productId] + '" class="w-full h-full object-cover" alt="' + product.name + '" onerror="this.parentNode.innerHTML=\'<span style=\\\'font-size:6rem;\\\'>' + product.image + '</span>\'">';
+        } else {
+          imgEl.innerHTML = '<span style="font-size:6rem;">' + product.image + '</span>';
+        }
+        const ingEl = document.getElementById('detail-ingredients-text');
+        if (ingEl) ingEl.textContent = product.ingredients ? 'Состав: ' + product.ingredients : '';
+        document.getElementById('detail-add-btn').dataset.productId = productId;
+        document.getElementById('detail-add-btn').dataset.price = product.price;
+        const sizeSection = document.getElementById('detail-size-section');
+        if (product.sizes && product.sizes.length > 0) {
+          sizeSection.style.display = 'block';
+          document.getElementById('detail-size-buttons').innerHTML = product.sizes.map(function(sizeOpt, i) {
+            return '<button type="button" onclick="selectDetailSize(\'' + sizeOpt.size + '\', event)" class="detail-size-btn" style="padding:10px 20px;border-radius:50px;font-size:14px;font-weight:600;border:2px solid ' + (i === 0 ? 'transparent' : 'rgba(212,165,116,0.4)') + ';background:' + (i === 0 ? 'linear-gradient(90deg,#C9A227,#D4A574)' : 'transparent') + ';color:' + (i === 0 ? '#fff' : '#6B4423') + ';cursor:pointer;touch-action:manipulation;">' + sizeOpt.size + '</button>';
+          }).join('');
+          document.getElementById('detail-add-btn').dataset.selectedSize = product.sizes[0].size;
+          document.getElementById('detail-add-btn').dataset.price = product.sizes[0].price;
+        } else {
+          sizeSection.style.display = 'none';
+          delete document.getElementById('detail-add-btn').dataset.selectedSize;
+        }
+        showScreen('product');
+        const addWrap = document.getElementById('detail-add-wrap');
+        if (addWrap) addWrap.style.display = _productDetailSource === 'preorder' ? 'none' : 'block';
+        setTimeout(updateDetailQtyControls, 0);
+      } catch(e) {
+        showToast('Err: ' + (e.message || e).toString().substring(0, 40), '❌');
       }
-      // Ingredients as text under description
-      const ingEl = document.getElementById('detail-ingredients-text');
-      if (ingEl) ingEl.textContent = product.ingredients ? 'Состав: ' + product.ingredients : '';
-      // Add btn
-      document.getElementById('detail-add-btn').dataset.productId = productId;
-      document.getElementById('detail-add-btn').dataset.price = product.price;
-      const sizeSection = document.getElementById('detail-size-section');
-      if (product.sizes && product.sizes.length > 0) {
-        sizeSection.style.display = 'block';
-        document.getElementById('detail-size-buttons').innerHTML = product.sizes.map((sizeOpt, i) => `
-          <button type="button" onclick="selectDetailSize('${sizeOpt.size}', event)" class="detail-size-btn" style="padding:10px 20px;border-radius:50px;font-size:14px;font-weight:600;border:2px solid ${i === 0 ? 'transparent' : 'rgba(212,165,116,0.4)'};background:${i === 0 ? 'linear-gradient(90deg,#C9A227,#D4A574)' : 'transparent'};color:${i === 0 ? '#fff' : '#6B4423'};cursor:pointer;touch-action:manipulation;">${sizeOpt.size}</button>
-        `).join('');
-        document.getElementById('detail-add-btn').dataset.selectedSize = product.sizes[0].size;
-        document.getElementById('detail-add-btn').dataset.price = product.sizes[0].price;
-      } else {
-        sizeSection.style.display = 'none';
-        delete document.getElementById('detail-add-btn').dataset.selectedSize;
-      }
-      showScreen('product');
-      const addWrap = document.getElementById('detail-add-wrap');
-      if (addWrap) addWrap.style.display = _productDetailSource === 'preorder' ? 'none' : 'block';
-      setTimeout(updateDetailQtyControls, 0);
     }
 
     // FIX #6: event передаётся явно
@@ -1612,7 +1613,7 @@
                 <div class="w-full h-full">${imgHTML}</div>
               </button>
               <div class="flex-1 px-2 pt-2 pb-2 flex flex-col justify-between gap-1">
-                <h3 class="font-bold text-coffee leading-tight" style="font-family:'Playfair Display',serif;font-size:13px;">${p.name}</h3>
+                <h3 class="font-bold text-coffee leading-tight" onclick="showProductDetail('${p.id}')" style="font-family:'Playfair Display',serif;font-size:13px;cursor:pointer;">${p.name}</h3>
                 <div class="flex items-center justify-between gap-1 mt-0.5">
                   <span class="font-bold text-caramel" style="font-family:'Montserrat',sans-serif;font-size:12px;">${p.price.toFixed(2)} р</span>
                   <div class="preorder-btn-zone flex-shrink-0" data-pid="${p.id}" data-price="${p.price}" style="display:flex;align-items:center;justify-content:flex-end;"></div>
