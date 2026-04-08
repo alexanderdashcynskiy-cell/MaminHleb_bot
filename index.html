@@ -275,7 +275,7 @@
    </div>
 
    <!-- Cart Screen -->
-   <div id="screen-cart" class="fixed inset-0 z-50 hidden flex flex-col overflow-hidden" style="background:#F5F5F5;zoom:0.85;">
+   <div id="screen-cart" class="fixed inset-0 z-50 flex flex-col overflow-hidden" style="display:none;background:#F5F5F5;zoom:0.85;">
     <!-- Header -->
     <div class="flex-shrink-0 flex items-center px-5 pt-4 pb-3" style="background:#F5F5F5;position:relative;">
      <button onclick="showScreen('main')" class="rounded-xl flex items-center justify-center" style="background:#E8E4DF;position:absolute;left:20px;width:44px;height:44px;">
@@ -333,7 +333,7 @@
    </div>
 
    <!-- Checkout Screen -->
-   <div id="screen-checkout" class="fixed inset-0 bg-cream z-50 hidden overflow-hidden flex flex-col">
+   <div id="screen-checkout" class="fixed inset-0 bg-cream z-50 overflow-hidden flex flex-col" style="display:none;">
     <header class="bg-warmWhite px-4 py-4 flex items-center gap-3 flex-shrink-0 shadow-sm">
      <button onclick="showScreen('cart')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Оформление заказа</h2>
@@ -372,7 +372,7 @@
    </div>
 
    <!-- Referral Screen -->
-   <div id="screen-referral" class="fixed inset-0 bg-cream z-50 hidden overflow-auto">
+   <div id="screen-referral" class="fixed inset-0 bg-cream z-50 overflow-auto" style="display:none;">
     <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3">
      <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Реферальная программа</h2>
@@ -408,7 +408,7 @@
    </div>
 
    <!-- Locations Screen -->
-   <div id="screen-locations" class="fixed inset-0 bg-cream z-50 hidden overflow-auto">
+   <div id="screen-locations" class="fixed inset-0 bg-cream z-50 overflow-auto" style="display:none;">
     <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3">
      <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Выбрать локацию</h2>
@@ -420,7 +420,7 @@
    </div>
 
    <!-- Product Detail Screen -->
-   <div id="screen-product" class="fixed inset-0 z-50 hidden" style="display:none;flex-direction:column;background:#000;overflow:hidden;">
+   <div id="screen-product" class="fixed inset-0 z-50" style="display:none;flex-direction:column;background:#000;overflow:hidden;">
 
     <!-- Фото — занимает верхние ~42% экрана -->
     <div style="position:relative;flex-shrink:0;height:42vh;min-height:240px;max-height:340px;">
@@ -534,7 +534,7 @@
   <div id="floating-cart-overlay" class="fixed inset-0 bg-black/30 z-40 hidden transition-opacity duration-300" onclick="toggleFloatingCart()"></div>
 
   <!-- Receipt Screen -->
-  <div id="screen-receipt" class="fixed inset-0 bg-cream z-50 hidden overflow-auto flex flex-col">
+  <div id="screen-receipt" class="fixed inset-0 bg-cream z-50 overflow-auto flex flex-col" style="display:none;">
    <div class="flex-1 flex items-center justify-center p-4">
     <div class="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-gold/30">
      <div class="bg-gradient-to-b from-gold/10 to-caramel/10 p-6 text-center border-b-2 border-beige"><div class="text-5xl mb-3">✓</div><h2 class="text-2xl font-bold text-coffee mb-1 font-playfair">Заказ принят!</h2><p class="text-sm text-caramel">Спасибо за ваш заказ</p></div>
@@ -553,7 +553,7 @@
   </div>
 
   <!-- Preorder Screen -->
-  <div id="screen-preorder" class="fixed inset-0 bg-cream z-50 hidden flex flex-col overflow-hidden">
+  <div id="screen-preorder" class="fixed inset-0 bg-cream z-50 flex flex-col overflow-hidden" style="display:none;">
    <header class="bg-warmWhite px-4 py-4 z-10 shadow-sm flex items-center gap-3 flex-shrink-0">
     <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
     <h2 class="text-xl font-bold text-coffee">🌅 Утренний предзаказ</h2>
@@ -607,7 +607,7 @@
   </div>
 
   <!-- Bestsellers Screen -->
-  <div id="screen-bestsellers" class="fixed inset-0 bg-cream z-50 hidden overflow-auto flex flex-col">
+  <div id="screen-bestsellers" class="fixed inset-0 bg-cream z-50 overflow-auto flex flex-col" style="display:none;">
    <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3 flex-shrink-0">
     <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
     <h2 class="text-xl font-bold text-coffee">🔥 Хит продаж</h2>
@@ -823,8 +823,7 @@
     function closeSizeSelect() { showScreen('main'); }
 
     function showScreen(screenName) {
-      document.querySelectorAll('[id^="screen-"]').forEach(s => {
-        s.classList.add('hidden');
+      document.querySelectorAll('[id^="screen-"]').forEach(function(s) {
         s.style.display = 'none';
       });
       if (screenName === 'main') {
@@ -832,11 +831,10 @@
       } else {
         document.body.style.overflow = 'hidden';
       }
-      const addWrap = document.getElementById('detail-add-wrap');
+      var addWrap = document.getElementById('detail-add-wrap');
       if (addWrap) addWrap.style.display = (screenName === 'product') ? 'block' : 'none';
-      const screen = document.getElementById(`screen-${screenName}`);
+      var screen = document.getElementById('screen-' + screenName);
       if (screen) {
-        screen.classList.remove('hidden');
         if (screenName === 'product' || screenName === 'cart' || screenName === 'checkout' || screenName === 'receipt') {
           screen.style.display = 'flex';
         } else {
@@ -1540,8 +1538,7 @@
       const emptyState = document.getElementById('float-cart-empty');
       const count = cart.reduce((s, i) => s + i.quantity, 0);
       const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
-      const onMain = document.getElementById('screen-main')?.style.display !== 'none'
-                  && !document.getElementById('screen-main')?.classList.contains('hidden');
+      const onMain = document.getElementById('screen-main')?.style.display !== 'none';
       if (count === 0 || !onMain) {
         floatingCartBtn.style.transform = 'scale(0)';
         floatingCartBtn.style.pointerEvents = 'none';
