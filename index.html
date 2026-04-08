@@ -663,6 +663,9 @@
       { id: 'coffee-macchiato', name: 'Макиято', price: 3.30, category: 'buns', image: '☕', description: 'Эспрессо с небольшим количеством молока.', weight: '150ml', bestseller: true, details: 'Концентрированный кофе с каплей молока', ingredients: 'Кофе эспрессо, молоко', nutrition: { calories: 35, protein: 2, fat: 1, carbs: 3 } }
     ];
 
+    // ── Product lookup map (O(1) by id) ───────────────────────────────────────
+    const productsById = new Map(products.map(p => [p.id, p]));
+
     // ── Product Images ─────────────────────────────────────────────────────────
     const BASE = 'https://maminhlebbot-production.up.railway.app/images/';
     const productImages = {
@@ -976,7 +979,7 @@
     // ── Product detail ─────────────────────────────────────────────────────────
     function showProductDetail(productId) {
       _productDetailSource = document.getElementById('screen-preorder').style.display !== 'none' ? 'preorder' : 'main';
-      const product = products.find(p => p.id === productId);
+      const product = productsById.get(productId);
       if (!product) return;
       document.getElementById('detail-card-name').textContent = product.name;
       document.getElementById('detail-card-price').textContent = product.price.toFixed(2);
@@ -1029,7 +1032,7 @@
       btn.style.color = '#fff';
       btn.style.borderColor = 'transparent';
       const productId = document.getElementById('detail-add-btn').dataset.productId;
-      const product = products.find(p => p.id === productId);
+      const product = productsById.get(productId);
       if (!product || !product.sizes) return;
       const sizeOpt = product.sizes.find(s => s.size === size);
       if (sizeOpt) {
@@ -1042,7 +1045,7 @@
 
     // ── Cart ───────────────────────────────────────────────────────────────────
     function addToCart(productId) {
-      const product = products.find(p => p.id === productId);
+      const product = productsById.get(productId);
       if (!product) return;
       const existing = cart.find(i => i.product_id === productId && !i.selected_size);
       if (existing) { existing.quantity++; } else {
@@ -1055,7 +1058,7 @@
       const btn = document.getElementById('detail-add-btn');
       if (!btn) return;
       const productId = btn.dataset.productId;
-      const product = products.find(p => p.id === productId);
+      const product = productsById.get(productId);
       if (!product) return;
       const selectedSize = btn.dataset.selectedSize;
       const price = parseFloat(btn.dataset.price);
@@ -1116,8 +1119,8 @@
     }
 
     function updateCartUI() {
-      const count = cart.reduce((s, i) => s + i.quantity, 0);
-      const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+      let count = 0, subtotal = 0;
+      for (let ci = 0; ci < cart.length; ci++) { count += cart[ci].quantity; subtotal += cart[ci].price * cart[ci].quantity; }
       const total = subtotal + (deliveryMethod === 'delivery' ? DELIVERY_COST : 0);
       document.getElementById('cart-badge-count').textContent = count;
       document.getElementById('cart-badge-dot').classList.toggle('hidden', count === 0);
@@ -1142,7 +1145,7 @@
       document.getElementById('cart-items-count').textContent = count;
       document.getElementById('cart-subtotal-display').textContent = subtotal.toFixed(2) + ' р';
       itemsContainer.innerHTML = cart.map(function(item) {
-        var product = products.find(function(p) { return p.id === item.product_id; });
+        var product = productsById.get(item.product_id);
         var sizeOrWeight = item.selected_size || (product && product.weight) || '';
         var fallbackEmoji = product ? product.image : '🍞';
         var pid = item.product_id;
@@ -1536,8 +1539,8 @@
       const badge = document.getElementById('float-cart-badge');
       const itemsContainer = document.getElementById('float-cart-items');
       const emptyState = document.getElementById('float-cart-empty');
-      const count = cart.reduce((s, i) => s + i.quantity, 0);
-      const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+      let count = 0, total = 0;
+      for (let ci = 0; ci < cart.length; ci++) { count += cart[ci].quantity; total += cart[ci].price * cart[ci].quantity; }
       const onMain = document.getElementById('screen-main')?.style.display !== 'none';
       if (count === 0 || !onMain) {
         floatingCartBtn.style.transform = 'scale(0)';
@@ -1555,7 +1558,7 @@
       document.getElementById('float-cart-total').textContent = total.toFixed(2) + ' р';
       emptyState.classList.add('hidden');
       itemsContainer.innerHTML = cart.map(item => {
-        const product = products.find(p => p.id === item.product_id);
+        const product = productsById.get(item.product_id);
         if (!product) return '';
         return `
           <div class="flex items-center gap-2 p-2 bg-beige/20 rounded-lg">
@@ -1634,7 +1637,7 @@
     }
 
     function addPreorderItem(productId, price) {
-      const product = products.find(p => p.id === productId);
+      const product = productsById.get(productId);
       if (!product) return;
       const existing = preorderCart.find(i => i.product_id === productId);
       if (existing) { existing.quantity++; } else {
