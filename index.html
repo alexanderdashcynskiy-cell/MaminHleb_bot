@@ -346,9 +346,17 @@
     </div>
     <!-- Переключатель доставка/самовывоз — вне скролла -->
     <div style="flex-shrink:0;padding:0 16px 12px;">
-     <div id="cart-delivery-toggle" style="background:#EDE8E2;border-radius:50px;padding:4px;display:none;gap:4px;margin-bottom:12px;">
-      <button id="cart-delivery-tab" onclick="setCartDelivery('delivery')" style="flex:1;padding:11px;border-radius:50px;border:none;font-size:15px;font-weight:600;cursor:pointer;touch-action:manipulation;transition:all 0.25s;background:transparent;color:rgba(61,31,10,0.45);">Доставка</button>
-      <button id="cart-pickup-tab" onclick="setCartDelivery('pickup')" style="flex:1;padding:11px;border-radius:50px;border:none;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;transition:all 0.25s;background:linear-gradient(90deg,#C9A227,#D4A574);color:#fff;">Самовывоз</button>
+     <div id="cart-delivery-toggle" style="position:relative;background:rgba(255,255,255,0.18);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:2.5rem;padding:5px;display:none;margin-bottom:12px;border:1px solid rgba(255,255,255,0.35);box-shadow:0 20px 40px rgba(0,0,0,0.08),inset 0 1px 2px rgba(255,255,255,0.55);overflow:hidden;">
+      <!-- Скользящий индикатор (liquid effect) -->
+      <div id="delivery-slider" style="position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 7px);border-radius:2rem;background:linear-gradient(90deg,#C9A227,#D4A574);box-shadow:0 8px 20px rgba(201,162,39,0.35),inset 0 2px 8px rgba(255,255,255,0.3);transition:transform 0.42s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;z-index:0;">
+       <!-- Блик на поверхности -->
+       <div style="position:absolute;inset:0;border-radius:2rem;background:linear-gradient(135deg,rgba(255,255,255,0.38) 0%,transparent 55%);pointer-events:none;"></div>
+      </div>
+      <!-- Кнопки поверх слайдера -->
+      <div style="position:relative;z-index:1;display:flex;width:100%;gap:2px;">
+       <button id="cart-delivery-tab" onclick="setCartDelivery('delivery')" style="flex:1;padding:11px;border-radius:2rem;border:none;font-size:14px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;background:transparent;color:rgba(61,31,10,0.38);transition:color 0.3s ease;-webkit-tap-highlight-color:transparent;">Доставка</button>
+       <button id="cart-pickup-tab" onclick="setCartDelivery('pickup')" style="flex:1;padding:11px;border-radius:2rem;border:none;font-size:14px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;background:transparent;color:#fff;transition:color 0.3s ease;-webkit-tap-highlight-color:transparent;">Самовывоз</button>
+      </div>
      </div>
      <!-- Адрес самовывоза — вне скролла -->
      <div id="cart-pickup-info" style="background:#fff;border-radius:16px;padding:12px 16px;margin-bottom:12px;display:none;align-items:center;justify-content:center;gap:8px;">
@@ -1306,12 +1314,11 @@
       const isDelivery = method === 'delivery';
       const dTab = document.getElementById('cart-delivery-tab');
       const pTab = document.getElementById('cart-pickup-tab');
-      dTab.style.background = isDelivery ? 'linear-gradient(90deg,#C9A227,#D4A574)' : 'transparent';
-      dTab.style.color = isDelivery ? '#fff' : 'rgba(61,31,10,0.45)';
-      dTab.style.fontWeight = isDelivery ? '700' : '600';
-      pTab.style.background = isDelivery ? 'transparent' : 'linear-gradient(90deg,#C9A227,#D4A574)';
-      pTab.style.color = isDelivery ? 'rgba(61,31,10,0.45)' : '#fff';
-      pTab.style.fontWeight = isDelivery ? '600' : '700';
+      const slider = document.getElementById('delivery-slider');
+      // Slide the indicator: delivery=left(0), pickup=right(100%+gap)
+      if (slider) slider.style.transform = isDelivery ? 'translateX(0)' : 'translateX(calc(100% + 4px))';
+      dTab.style.color = isDelivery ? '#fff' : 'rgba(61,31,10,0.38)';
+      pTab.style.color = isDelivery ? 'rgba(61,31,10,0.38)' : '#fff';
       const pickupInfo = document.getElementById('cart-pickup-info');
       if (pickupInfo) pickupInfo.style.display = isDelivery ? 'none' : 'flex';
       const costRow = document.getElementById('cart-delivery-cost-row');
