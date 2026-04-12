@@ -57,12 +57,49 @@
     #bestsellers-items { align-items: flex-end; }
     /* Fix: фиксированная высота нижней зоны кнопок в compact-карточке */
     .compact-card-controls { min-height: 36px; }
-    /* Card lift animation (preorder + main grid) */
-    .preorder-card, .product-card { transition: transform 0.12s ease-out, box-shadow 0.12s ease-out; will-change: transform; }
-    .preorder-card-lifted, .product-card-lifted { transform: translateY(-3px) scale(1.01); box-shadow: 0 8px 18px rgba(107,68,35,0.16) !important; }
+    /* Card lift animation removed */
     #preorder-products { isolation: isolate; }
-    /* Category button press */
+    /* Category buttons — liquid glass */
+    @keyframes cat-shimmer {
+      0%   { transform: translateX(-100%) skewX(-12deg); opacity: 0; }
+      15%  { opacity: 0.32; }
+      85%  { opacity: 0.32; }
+      100% { transform: translateX(260%) skewX(-12deg); opacity: 0; }
+    }
+    @keyframes cat-glow-drift {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      50%       { transform: scale(1.1) rotate(5deg); }
+    }
+    @keyframes cat-icon-pop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
     .cat-btn { -webkit-tap-highlight-color: transparent; }
+    .cat-btn:active .cat-pill { transform: scale(0.95); transition: transform 0.1s ease; }
+    .cat-pill {
+      position: relative; overflow: hidden;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.5);
+      transition: background 0.35s ease, box-shadow 0.35s ease;
+    }
+    .cat-pill-shimmer {
+      position: absolute; inset: 0;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,0.35), transparent);
+      transform: translateX(-100%) skewX(-12deg); opacity: 0;
+      pointer-events: none; z-index: 2;
+    }
+    .cat-pill-glow {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+      opacity: 0.5; transform-origin: center;
+      pointer-events: none; z-index: 1;
+    }
+    .cat-pill.active .cat-pill-shimmer { animation: cat-shimmer 3s ease-in-out infinite; }
+    .cat-pill.active .cat-pill-glow    { animation: cat-glow-drift 4s ease-in-out infinite; }
+    .cat-icon-wrap { position: relative; z-index: 10; }
+    .cat-icon-wrap.pop { animation: cat-icon-pop 0.5s ease-out; }
+    .cat-inner-border { position: absolute; inset: 0; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.3); pointer-events: none; z-index: 3; }
     /* Liquid glass header */
     .liquid-refraction { position: relative; overflow: hidden; }
     .liquid-refraction::before {
@@ -91,78 +128,70 @@
       mix-blend-mode: soft-light;
       opacity: 0.12;
     }
-    .cat-btn:active > div { transform: scale(0.93); box-shadow: 0 6px 16px rgba(107,68,35,0.22); transition: transform 0.1s ease, box-shadow 0.1s ease; }
   </style>
   <style>body { box-sizing: border-box; }</style>
  </head>
  <body class="h-full bg-cream font-poppins text-coffee">
   <div id="app" class="w-full h-full flex flex-col bg-gradient-to-br from-[#FDFBF7] via-[#FFF9F2] to-[#FDF7EF]">
    <!-- Top Header Navigation -->
-   <header class="liquid-refraction" style="background:rgba(255,252,248,0.06);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid rgba(255,255,255,0.22);position:sticky;top:0;z-index:20;flex-shrink:0;box-shadow:0 2px 20px rgba(180,130,80,0.08);">
-    <!-- Caustic noise layer -->
-    <div class="caustic-layer" style="position:absolute;inset:0;pointer-events:none;z-index:0;"></div>
+   <header style="background:#FFF8F0;position:sticky;top:0;z-index:20;flex-shrink:0;padding:12px 16px 14px;">
 
     <!-- Profile row -->
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px 8px;position:relative;z-index:1;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
 
      <!-- Left: Avatar + Greeting -->
-     <div style="display:flex;align-items:center;gap:12px;">
-      <!-- Avatar circle -->
-      <div style="position:relative;width:48px;height:48px;flex-shrink:0;">
-       <div style="width:48px;height:48px;border-radius:50%;background:rgba(93,64,55,0.15);border:2px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,0.14);overflow:hidden;display:flex;align-items:center;justify-content:center;">
-        <img id="user-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;" onerror="this.style.display='none';document.getElementById('user-avatar-fallback').style.display='flex';">
-        <div id="user-avatar-fallback" style="width:100%;height:100%;background:linear-gradient(135deg,#D4A574,#C9A227);display:flex;align-items:center;justify-content:center;">
-         <svg width="24" height="24" viewBox="0 0 24 24" fill="white" style="pointer-events:none;">
-          <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.333 0-10 1.667-10 5v2h20v-2c0-3.333-6.667-5-10-5z"/>
-         </svg>
-        </div>
+     <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <div style="width:46px;height:46px;border-radius:50%;background:rgba(93,64,55,0.15);border:2px solid #fff;box-shadow:0 3px 12px rgba(0,0,0,0.13);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+       <img id="user-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;" onerror="this.style.display='none';document.getElementById('user-avatar-fallback').style.display='flex';">
+       <div id="user-avatar-fallback" style="width:100%;height:100%;background:linear-gradient(135deg,#D4A574,#C9A227);display:flex;align-items:center;justify-content:center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style="pointer-events:none;">
+         <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.333 0-10 1.667-10 5v2h20v-2c0-3.333-6.667-5-10-5z"/>
+        </svg>
        </div>
       </div>
-      <!-- Greeting + Name badge -->
-      <div style="display:flex;flex-direction:column;gap:3px;">
-       <span style="font-size:10px;font-weight:700;color:#3d1f0a;opacity:0.4;line-height:1;">Привет!</span>
-       <span id="user-greeting-name" style="font-weight:900;font-size:14px;padding:2px 10px;border-radius:8px;border:1.5px solid #ff8200;background:#fff;color:#ad5c19;line-height:1.4;white-space:nowrap;display:inline-block;">Алексей</span>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+       <span style="font-size:10px;font-weight:700;color:#3d1f0a;opacity:0.38;line-height:1;">Привет!</span>
+       <span id="user-greeting-name" style="font-weight:900;font-size:13px;padding:2px 9px;border-radius:7px;border:1.5px solid #ff8200;background:#fff;color:#ad5c19;line-height:1.4;white-space:nowrap;display:inline-block;">Алексей</span>
       </div>
      </div>
 
-     <!-- Right: Location + Cart -->
-     <div style="display:flex;align-items:center;gap:10px;">
-      <!-- Location -->
-      <button onclick="showScreen('locations')" style="display:flex;flex-direction:column;align-items:flex-end;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:0;gap:1px;">
-       <div style="display:flex;align-items:center;gap:3px;">
-        <svg width="11" height="13" viewBox="0 0 24 24" fill="none" stroke="#bd6012" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;pointer-events:none;">
-         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-        </svg>
-        <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.07em;color:#bd6012;line-height:1;">Локация</span>
-       </div>
-       <span style="font-size:10px;font-weight:700;color:#3d1f0a;opacity:0.6;line-height:1.3;">г. Витебск, ул. Ленина 74</span>
+     <!-- Center: Location -->
+     <button onclick="showScreen('locations')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:0 10px;">
+      <div style="display:flex;align-items:center;gap:3px;">
+       <svg width="10" height="12" viewBox="0 0 24 24" fill="#bd6012" style="flex-shrink:0;pointer-events:none;">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+       </svg>
+       <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:#bd6012;line-height:1;">ЛОКАЦИЯ</span>
+      </div>
+      <span style="font-size:10px;font-weight:600;color:#3d1f0a;opacity:0.55;line-height:1.3;white-space:nowrap;">г. Витебск, ул. Ленина 74</span>
+     </button>
+
+     <!-- Right: Cart -->
+     <div style="position:relative;flex-shrink:0;">
+      <button onclick="showScreen('cart')" style="width:42px;height:42px;background:#EDE8E2;border-radius:13px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 01-8 0"/>
+       </svg>
       </button>
-      <!-- Cart button -->
-      <div style="position:relative;flex-shrink:0;">
-       <button onclick="showScreen('cart')" style="width:42px;height:42px;background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:12px;border:1px solid rgba(255,255,255,0.35);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.07);">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
-         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-         <line x1="3" y1="6" x2="21" y2="6"/>
-         <path d="M16 10a4 4 0 01-8 0"/>
-        </svg>
-       </button>
-       <div id="cart-badge-dot" style="display:none;position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;background:#ef4444;border-radius:50%;flex-direction:row;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;pointer-events:none;padding:0 3px;">
-        <span id="cart-badge-count">0</span>
-       </div>
+      <div id="cart-badge-dot" style="display:none;position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;background:#ef4444;border-radius:50%;flex-direction:row;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;pointer-events:none;padding:0 3px;">
+       <span id="cart-badge-count">0</span>
       </div>
      </div>
 
     </div>
 
-    <!-- Search row -->
-    <div style="padding:0 16px 10px;position:relative;z-index:1;">
+    <!-- Search — gap + shadow + не на всю ширину -->
+    <div style="margin-top:12px;padding:0 4px;">
      <div style="position:relative;">
-      <svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);width:15px;height:15px;pointer-events:none;" fill="none" stroke="rgba(212,165,116,0.65)" viewBox="0 0 24 24">
-       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;pointer-events:none;" fill="none" stroke="rgba(180,140,100,0.55)" stroke-width="2" viewBox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
       </svg>
-      <input type="text" id="search-input" placeholder="Поиск хлеба или пирогов..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.16);color:#3d1f0a;border-radius:50px;padding:9px 14px 9px 36px;border:1px solid rgba(255,255,255,0.32);font-size:14px;outline:none;font-family:inherit;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);" oninput="searchProducts()">
+      <input type="text" id="search-input" placeholder="Поиск хлеба или пирогов..." style="width:100%;box-sizing:border-box;background:#fff;color:#3d1f0a;border-radius:50px;padding:11px 16px 11px 40px;border:none;font-size:14px;outline:none;font-family:inherit;box-shadow:0 4px 18px rgba(140,100,60,0.13);" oninput="searchProducts()">
      </div>
     </div>
+
    </header>
 
    <!-- Main Content - Scrollable -->
@@ -272,13 +301,13 @@
      <h3 class="font-montserrat font-bold text-coffee mb-3 text-sm">КАТЕГОРИИ</h3>
      <div class="overflow-x-auto hide-scrollbar">
       <div class="flex gap-4 w-min">
-       <button onclick="selectCategory('all')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-coffee" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.5 4.5H18l-3.75 2.7 1.5 4.5L12 11.1l-3.75 2.6 1.5-4.5L6 6.5h4.5L12 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 17l1 3h12l1-3"/></svg></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Новинки</span></div></button>
-       <button onclick="selectCategory('bread')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 64 64" fill="none"><ellipse cx="32" cy="38" rx="20" ry="12" fill="none" stroke="#6B4423" stroke-width="2.2"/><path d="M12 36 Q12 20 32 20 Q52 20 52 36" fill="none" stroke="#6B4423" stroke-width="2.2" stroke-linecap="round"/><path d="M28 22 Q32 30 28 36" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round"/><path d="M36 22 Q32 30 36 36" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round"/><path d="M32 20 Q32 30 32 36" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round"/></svg></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Хлеб</span></div></button>
-       <button onclick="selectCategory('pies')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 64 64" fill="none"><ellipse cx="32" cy="44" rx="22" ry="8" fill="#6B4423" opacity="0.15"/><path d="M10 38 Q10 50 32 50 Q54 50 54 38 L54 36 Q54 48 32 48 Q10 48 10 36 Z" fill="#6B4423" opacity="0.3"/><ellipse cx="32" cy="36" rx="22" ry="8" fill="#fff" stroke="#6B4423" stroke-width="2"/><path d="M10 36 C10 24 54 24 54 36" fill="#fff" stroke="#6B4423" stroke-width="2"/><clipPath id="pc"><ellipse cx="32" cy="30" rx="20" ry="7"/></clipPath><g clip-path="url(#pc)"><line x1="16" y1="20" x2="26" y2="40" stroke="#6B4423" stroke-width="2.2"/><line x1="22" y1="20" x2="32" y2="40" stroke="#6B4423" stroke-width="2.2"/><line x1="28" y1="20" x2="38" y2="40" stroke="#6B4423" stroke-width="2.2"/><line x1="34" y1="20" x2="44" y2="40" stroke="#6B4423" stroke-width="2.2"/><line x1="40" y1="20" x2="50" y2="40" stroke="#6B4423" stroke-width="2.2"/><line x1="50" y1="21" x2="30" y2="41" stroke="#6B4423" stroke-width="2.2"/><line x1="44" y1="21" x2="24" y2="41" stroke="#6B4423" stroke-width="2.2"/><line x1="38" y1="21" x2="18" y2="41" stroke="#6B4423" stroke-width="2.2"/><line x1="32" y1="21" x2="12" y2="41" stroke="#6B4423" stroke-width="2.2"/></g><ellipse cx="32" cy="30" rx="20" ry="7" fill="none" stroke="#6B4423" stroke-width="2"/><path d="M12 30 Q14 27 16 30 Q18 27 20 30 Q22 27 24 30 Q26 27 28 30 Q30 27 32 30 Q34 27 36 30 Q38 27 40 30 Q42 27 44 30 Q46 27 48 30 Q50 27 52 30" fill="none" stroke="#6B4423" stroke-width="2"/></svg></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Пироги</span></div></button>
-       <button onclick="selectCategory('cakes')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-coffee" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16v-4a1 1 0 00-1-1H5a1 1 0 00-1 1v4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 14v-3a1 1 0 011-1h8a1 1 0 011 1v3"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 10V7.5M14 10V7.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 7.5c0-.6.5-1.5 0-2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 7.5c0-.6.5-1.5 0-2.5"/></svg></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Торты</span></div></button>
-       <button onclick="selectCategory('buns')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-coffee" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10h12v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 12h1.5a1.5 1.5 0 010 3H17"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 18h16"/><path stroke-linecap="round" stroke-linejoin="round" d="M8.5 8.5c0-1.5 1-1 1-2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c0-1.5 1-1 1-2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M15.5 8.5c0-1.5 1-1 1-2.5"/></svg></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Кофе</span></div></button>
-       <button onclick="selectCategory('pastries')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 64 64" fill="none"><g stroke="#6B4423" stroke-linecap="round" stroke-linejoin="round"><!-- задний пирожок справа --><path d="M34 28 Q50 20 54 32 Q56 40 42 44" stroke-width="2" fill="none"/><path d="M34 28 Q36 36 42 44" stroke-width="2" fill="none"/><!-- средний пирожок --><path d="M18 30 Q20 18 36 20 Q50 22 48 32" stroke-width="2.2" fill="none"/><path d="M18 30 Q22 38 32 40 Q42 42 48 32" stroke-width="2.2" fill="none"/><path d="M20 30 Q28 29 36 30 Q42 31 47 32" stroke-width="1.5" fill="none"/><!-- передний пирожок --><path d="M10 44 Q12 30 28 30 Q44 30 44 42" stroke-width="2.5" fill="none"/><path d="M10 44 Q16 52 28 52 Q40 52 44 42" stroke-width="2.5" fill="none"/><path d="M12 43 Q20 42 28 42 Q36 42 43 42" stroke-width="1.5" fill="none"/></g></svg></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Пирожки</span></div></button>
-       <button onclick="selectCategory('pizza')" class="cat-btn flex-shrink-0"><div class="h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2 transition-all duration-200"><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 64 64" fill="none" stroke="#6B4423" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="22" stroke-width="2.2"/><circle cx="32" cy="32" r="17" stroke-width="1.5"/><line x1="32" y1="10" x2="32" y2="54" stroke-width="2"/><line x1="10" y1="32" x2="54" y2="32" stroke-width="2"/><line x1="16" y1="16" x2="48" y2="48" stroke-width="2"/><line x1="48" y1="16" x2="16" y2="48" stroke-width="2"/><circle cx="23" cy="22" r="3" stroke-width="2"/><circle cx="42" cy="22" r="2.2" stroke-width="2"/><circle cx="23" cy="42" r="2.5" stroke-width="2"/><circle cx="42" cy="42" r="3" stroke-width="2"/><circle cx="26" cy="32" r="1.2" fill="#6B4423" stroke="none"/><circle cx="38" cy="28" r="1" fill="#6B4423" stroke="none"/><circle cx="36" cy="40" r="1.2" fill="#6B4423" stroke="none"/><circle cx="24" cy="36" r="1" fill="#6B4423" stroke="none"/></svg></div><span class="text-xs font-semibold text-coffee whitespace-nowrap">Пицца</span></div></button>
+       <button onclick="selectCategory('all')" class="cat-btn flex-shrink-0"><div class="cat-pill h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2" style="box-shadow:0 2px 6px rgba(0,0,0,0.03);"><div class="cat-pill-shimmer"></div><div class="cat-pill-glow"></div><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0" style="box-shadow:0 4px 10px rgba(0,0,0,0.1),inset 0 1px 4px rgba(255,255,255,1);"><div class="cat-icon-wrap"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-coffee" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2l1.5 4.5H18l-3.75 2.7 1.5 4.5L12 11.1l-3.75 2.6 1.5-4.5L6 6.5h4.5L12 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 17l1 3h12l1-3"/></svg></div></div><span class="cat-label text-xs font-semibold text-coffee whitespace-nowrap" style="position:relative;z-index:1;">Новинки</span><div class="cat-inner-border"></div></div></button>
+       <button onclick="selectCategory('bread')" class="cat-btn flex-shrink-0"><div class="cat-pill h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2" style="box-shadow:0 2px 6px rgba(0,0,0,0.03);"><div class="cat-pill-shimmer"></div><div class="cat-pill-glow"></div><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0" style="box-shadow:0 4px 10px rgba(0,0,0,0.1),inset 0 1px 4px rgba(255,255,255,1);"><div class="cat-icon-wrap"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 64 64" fill="none"><ellipse cx="32" cy="38" rx="20" ry="12" fill="none" stroke="#6B4423" stroke-width="2.2"/><path d="M12 36 Q12 20 32 20 Q52 20 52 36" fill="none" stroke="#6B4423" stroke-width="2.2" stroke-linecap="round"/><path d="M28 22 Q32 30 28 36" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round"/><path d="M36 22 Q32 30 36 36" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round"/><path d="M32 20 Q32 30 32 36" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round"/></svg></div></div><span class="cat-label text-xs font-semibold text-coffee whitespace-nowrap" style="position:relative;z-index:1;">Хлеб</span><div class="cat-inner-border"></div></div></button>
+       <button onclick="selectCategory('pies')" class="cat-btn flex-shrink-0"><div class="cat-pill h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2" style="box-shadow:0 2px 6px rgba(0,0,0,0.03);"><div class="cat-pill-shimmer"></div><div class="cat-pill-glow"></div><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0" style="box-shadow:0 4px 10px rgba(0,0,0,0.1),inset 0 1px 4px rgba(255,255,255,1);"><div class="cat-icon-wrap"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 64 64" fill="none"><ellipse cx="32" cy="44" rx="22" ry="8" fill="#6B4423" opacity="0.15"/><path d="M10 38 Q10 50 32 50 Q54 50 54 38 L54 36 Q54 48 32 48 Q10 48 10 36 Z" fill="#6B4423" opacity="0.3"/><ellipse cx="32" cy="36" rx="22" ry="8" fill="#fff" stroke="#6B4423" stroke-width="2"/><path d="M10 36 C10 24 54 24 54 36" fill="#fff" stroke="#6B4423" stroke-width="2"/><clipPath id="pc"><ellipse cx="32" cy="30" rx="20" ry="7"/></clipPath><g clip-path="url(#pc)"><line x1="16" y1="20" x2="26" y2="40" stroke="#6B4423" stroke-width="2.2"/><line x1="22" y1="20" x2="32" y2="40" stroke="#6B4423" stroke-width="2.2"/><line x1="28" y1="20" x2="38" y2="40" stroke="#6B4423" stroke-width="2.2"/><line x1="34" y1="20" x2="44" y2="40" stroke="#6B4423" stroke-width="2.2"/><line x1="40" y1="20" x2="50" y2="40" stroke="#6B4423" stroke-width="2.2"/><line x1="50" y1="21" x2="30" y2="41" stroke="#6B4423" stroke-width="2.2"/><line x1="44" y1="21" x2="24" y2="41" stroke="#6B4423" stroke-width="2.2"/><line x1="38" y1="21" x2="18" y2="41" stroke="#6B4423" stroke-width="2.2"/><line x1="32" y1="21" x2="12" y2="41" stroke="#6B4423" stroke-width="2.2"/></g><ellipse cx="32" cy="30" rx="20" ry="7" fill="none" stroke="#6B4423" stroke-width="2"/><path d="M12 30 Q14 27 16 30 Q18 27 20 30 Q22 27 24 30 Q26 27 28 30 Q30 27 32 30 Q34 27 36 30 Q38 27 40 30 Q42 27 44 30 Q46 27 48 30 Q50 27 52 30" fill="none" stroke="#6B4423" stroke-width="2"/></svg></div></div><span class="cat-label text-xs font-semibold text-coffee whitespace-nowrap" style="position:relative;z-index:1;">Пироги</span><div class="cat-inner-border"></div></div></button>
+       <button onclick="selectCategory('cakes')" class="cat-btn flex-shrink-0"><div class="cat-pill h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2" style="box-shadow:0 2px 6px rgba(0,0,0,0.03);"><div class="cat-pill-shimmer"></div><div class="cat-pill-glow"></div><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0" style="box-shadow:0 4px 10px rgba(0,0,0,0.1),inset 0 1px 4px rgba(255,255,255,1);"><div class="cat-icon-wrap"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-coffee" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16v-4a1 1 0 00-1-1H5a1 1 0 00-1 1v4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 14v-3a1 1 0 011-1h8a1 1 0 011 1v3"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 10V7.5M14 10V7.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 7.5c0-.6.5-1.5 0-2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 7.5c0-.6.5-1.5 0-2.5"/></svg></div></div><span class="cat-label text-xs font-semibold text-coffee whitespace-nowrap" style="position:relative;z-index:1;">Торты</span><div class="cat-inner-border"></div></div></button>
+       <button onclick="selectCategory('buns')" class="cat-btn flex-shrink-0"><div class="cat-pill h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2" style="box-shadow:0 2px 6px rgba(0,0,0,0.03);"><div class="cat-pill-shimmer"></div><div class="cat-pill-glow"></div><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0" style="box-shadow:0 4px 10px rgba(0,0,0,0.1),inset 0 1px 4px rgba(255,255,255,1);"><div class="cat-icon-wrap"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-coffee" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10h12v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 12h1.5a1.5 1.5 0 010 3H17"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 18h16"/><path stroke-linecap="round" stroke-linejoin="round" d="M8.5 8.5c0-1.5 1-1 1-2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c0-1.5 1-1 1-2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M15.5 8.5c0-1.5 1-1 1-2.5"/></svg></div></div><span class="cat-label text-xs font-semibold text-coffee whitespace-nowrap" style="position:relative;z-index:1;">Кофе</span><div class="cat-inner-border"></div></div></button>
+       <button onclick="selectCategory('pastries')" class="cat-btn flex-shrink-0"><div class="cat-pill h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2" style="box-shadow:0 2px 6px rgba(0,0,0,0.03);"><div class="cat-pill-shimmer"></div><div class="cat-pill-glow"></div><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0" style="box-shadow:0 4px 10px rgba(0,0,0,0.1),inset 0 1px 4px rgba(255,255,255,1);"><div class="cat-icon-wrap"><svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 64 64" fill="none"><g stroke="#6B4423" stroke-linecap="round" stroke-linejoin="round"><!-- задний пирожок справа --><path d="M34 28 Q50 20 54 32 Q56 40 42 44" stroke-width="2" fill="none"/><path d="M34 28 Q36 36 42 44" stroke-width="2" fill="none"/><!-- средний пирожок --><path d="M18 30 Q20 18 36 20 Q50 22 48 32" stroke-width="2.2" fill="none"/><path d="M18 30 Q22 38 32 40 Q42 42 48 32" stroke-width="2.2" fill="none"/><path d="M20 30 Q28 29 36 30 Q42 31 47 32" stroke-width="1.5" fill="none"/><!-- передний пирожок --><path d="M10 44 Q12 30 28 30 Q44 30 44 42" stroke-width="2.5" fill="none"/><path d="M10 44 Q16 52 28 52 Q40 52 44 42" stroke-width="2.5" fill="none"/><path d="M12 43 Q20 42 28 42 Q36 42 43 42" stroke-width="1.5" fill="none"/></g></svg></div></div><span class="cat-label text-xs font-semibold text-coffee whitespace-nowrap" style="position:relative;z-index:1;">Пирожки</span><div class="cat-inner-border"></div></div></button>
+       <button onclick="selectCategory('pizza')" class="cat-btn flex-shrink-0"><div class="cat-pill h-12 pl-1 pr-5 rounded-full bg-beige flex items-center gap-2" style="box-shadow:0 2px 6px rgba(0,0,0,0.03);"><div class="cat-pill-shimmer"></div><div class="cat-pill-glow"></div><div class="w-10 h-10 rounded-full bg-warmWhite flex items-center justify-center flex-shrink-0" style="box-shadow:0 4px 10px rgba(0,0,0,0.1),inset 0 1px 4px rgba(255,255,255,1);"><div class="cat-icon-wrap"><svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 64 64" fill="none" stroke="#6B4423" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="22" stroke-width="2.2"/><circle cx="32" cy="32" r="17" stroke-width="1.5"/><line x1="32" y1="10" x2="32" y2="54" stroke-width="2"/><line x1="10" y1="32" x2="54" y2="32" stroke-width="2"/><line x1="16" y1="16" x2="48" y2="48" stroke-width="2"/><line x1="48" y1="16" x2="16" y2="48" stroke-width="2"/><circle cx="23" cy="22" r="3" stroke-width="2"/><circle cx="42" cy="22" r="2.2" stroke-width="2"/><circle cx="23" cy="42" r="2.5" stroke-width="2"/><circle cx="42" cy="42" r="3" stroke-width="2"/><circle cx="26" cy="32" r="1.2" fill="#6B4423" stroke="none"/><circle cx="38" cy="28" r="1" fill="#6B4423" stroke="none"/><circle cx="36" cy="40" r="1.2" fill="#6B4423" stroke="none"/><circle cx="24" cy="36" r="1" fill="#6B4423" stroke="none"/></svg></div></div><span class="cat-label text-xs font-semibold text-coffee whitespace-nowrap" style="position:relative;z-index:1;">Пицца</span><div class="cat-inner-border"></div></div></button>
       </div>
      </div>
     </div>
@@ -355,9 +384,17 @@
     </div>
     <!-- Переключатель доставка/самовывоз — вне скролла -->
     <div style="flex-shrink:0;padding:0 16px 12px;">
-     <div id="cart-delivery-toggle" style="background:#EDE8E2;border-radius:50px;padding:4px;display:none;gap:4px;margin-bottom:12px;">
-      <button id="cart-delivery-tab" onclick="setCartDelivery('delivery')" style="flex:1;padding:11px;border-radius:50px;border:none;font-size:15px;font-weight:600;cursor:pointer;touch-action:manipulation;transition:all 0.25s;background:transparent;color:rgba(61,31,10,0.45);">Доставка</button>
-      <button id="cart-pickup-tab" onclick="setCartDelivery('pickup')" style="flex:1;padding:11px;border-radius:50px;border:none;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;transition:all 0.25s;background:linear-gradient(90deg,#C9A227,#D4A574);color:#fff;">Самовывоз</button>
+     <div id="cart-delivery-toggle" style="position:relative;background:rgba(255,255,255,0.18);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:2.5rem;padding:5px;display:none;margin-bottom:12px;border:1px solid rgba(255,255,255,0.35);box-shadow:0 20px 40px rgba(0,0,0,0.08),inset 0 1px 2px rgba(255,255,255,0.55);overflow:hidden;">
+      <!-- Скользящий индикатор (liquid effect) -->
+      <div id="delivery-slider" style="position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 7px);border-radius:2rem;background:linear-gradient(90deg,#C9A227,#D4A574);box-shadow:0 8px 20px rgba(201,162,39,0.35),inset 0 2px 8px rgba(255,255,255,0.3);transition:transform 0.42s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;z-index:0;">
+       <!-- Блик на поверхности -->
+       <div style="position:absolute;inset:0;border-radius:2rem;background:linear-gradient(135deg,rgba(255,255,255,0.38) 0%,transparent 55%);pointer-events:none;"></div>
+      </div>
+      <!-- Кнопки поверх слайдера -->
+      <div style="position:relative;z-index:1;display:flex;width:100%;gap:2px;">
+       <button id="cart-delivery-tab" onclick="setCartDelivery('delivery')" style="flex:1;padding:11px;border-radius:2rem;border:none;font-size:14px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;background:transparent;color:rgba(61,31,10,0.38);transition:color 0.3s ease;-webkit-tap-highlight-color:transparent;">Доставка</button>
+       <button id="cart-pickup-tab" onclick="setCartDelivery('pickup')" style="flex:1;padding:11px;border-radius:2rem;border:none;font-size:14px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;background:transparent;color:#fff;transition:color 0.3s ease;-webkit-tap-highlight-color:transparent;">Самовывоз</button>
+      </div>
      </div>
      <!-- Адрес самовывоза — вне скролла -->
      <div id="cart-pickup-info" style="background:#fff;border-radius:16px;padding:12px 16px;margin-bottom:12px;display:none;align-items:center;justify-content:center;gap:8px;">
@@ -400,40 +437,116 @@
    </div>
 
    <!-- Checkout Screen -->
-   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
-    <header class="bg-warmWhite px-4 py-4 flex items-center gap-3 flex-shrink-0 shadow-sm">
-     <button onclick="showScreen('cart')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
-     <h2 class="text-xl font-bold text-coffee">Оформление заказа</h2>
-    </header>
-    <div class="flex-1 px-4 py-6 overflow-y-auto pb-10" style="min-height:0;">
-     <form onsubmit="submitCheckout(event)" class="space-y-4">
-      <div><label class="block text-sm font-semibold text-coffee mb-2">Ваше имя*</label><input type="text" id="checkout-name" placeholder="Введите ваше имя" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
-      <div><label class="block text-sm font-semibold text-coffee mb-2">Номер телефона*</label><input type="tel" id="checkout-phone" placeholder="+375 (XX) XXX-XX-XX" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" oninput="formatPhone(this)" maxlength="19" required></div>
-      <div id="address-section" style="display:none;">
-       <label class="block text-sm font-semibold text-coffee mb-2">Адрес доставки*</label>
+   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#F5EEE6;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+
+    <!-- Header -->
+    <div style="flex-shrink:0;display:flex;align-items:center;padding:14px 16px 12px;background:#F5EEE6;">
+     <button onclick="showScreen('cart')" style="width:44px;height:44px;border-radius:14px;background:#EDE8E2;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="20" height="20" fill="none" stroke="#3d1f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
+     </button>
+     <h2 style="font-size:20px;font-weight:800;color:#3d1f0a;margin:0 0 0 14px;font-family:'Montserrat',sans-serif;">Оформление заказа</h2>
+    </div>
+
+    <!-- Scrollable form -->
+    <div style="flex:1;overflow-y:auto;min-height:0;padding:4px 16px 40px;">
+     <form onsubmit="submitCheckout(event)">
+
+      <!-- Имя -->
+      <div style="margin-bottom:18px;">
+       <label style="display:block;font-size:13px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Ваше имя*</label>
+       <input type="text" id="checkout-name" placeholder="Введите ваше имя" required
+        style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:16px;padding:15px 18px;font-size:15px;color:#3d1f0a;outline:none;font-family:inherit;box-shadow:0 2px 12px rgba(140,100,60,0.09);">
+      </div>
+
+      <!-- Телефон -->
+      <div style="margin-bottom:18px;">
+       <label style="display:block;font-size:13px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Номер телефона*</label>
+       <input type="tel" id="checkout-phone" placeholder="+375 (хх) ХХХ-ХХ-ХХ" maxlength="19" required
+        oninput="formatPhone(this)"
+        style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:16px;padding:15px 18px;font-size:15px;color:#3d1f0a;outline:none;font-family:inherit;box-shadow:0 2px 12px rgba(140,100,60,0.09);">
+      </div>
+
+      <!-- Адрес доставки -->
+      <div id="address-section" style="display:none;margin-bottom:18px;">
+       <label style="display:block;font-size:13px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Адрес доставки*</label>
        <div style="position:relative;margin-bottom:8px;">
-        <input type="text" id="checkout-address" placeholder="Улица и номер дома*" autocomplete="off" class="w-full px-3 py-2.5 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:14px;" oninput="filterAddressSuggestions(this.value)" onfocus="filterAddressSuggestions(this.value)">
-        <div id="address-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border:2px solid #e8ddd0;border-top:none;border-radius:0 0 12px 12px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.12);"></div>
+        <input type="text" id="checkout-address" placeholder="Улица и номер дома*" autocomplete="off"
+         oninput="filterAddressSuggestions(this.value)" onfocus="filterAddressSuggestions(this.value)"
+         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:16px;padding:15px 18px;font-size:15px;color:#3d1f0a;outline:none;font-family:inherit;box-shadow:0 2px 12px rgba(140,100,60,0.09);">
+        <div id="address-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border-radius:0 0 14px 14px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 8px 20px rgba(0,0,0,0.12);margin-top:2px;"></div>
        </div>
-       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">
-        <input type="number" inputmode="numeric" pattern="[0-9]*" id="checkout-building" placeholder="Корп." autocomplete="off" class="w-full px-2 py-2.5 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;text-align:center;">
-        <input type="number" inputmode="numeric" pattern="[0-9]*" id="checkout-entrance" placeholder="Подъ." autocomplete="off" class="w-full px-2 py-2.5 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;text-align:center;">
-        <input type="number" inputmode="numeric" pattern="[0-9]*" id="checkout-floor" placeholder="Этаж" autocomplete="off" class="w-full px-2 py-2.5 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;text-align:center;">
-        <input type="number" inputmode="numeric" pattern="[0-9]*" id="checkout-apartment" placeholder="Кв." autocomplete="off" class="w-full px-2 py-2.5 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" style="font-size:13px;text-align:center;">
+       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
+        <input type="number" inputmode="numeric" id="checkout-building" placeholder="Корп." autocomplete="off"
+         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:12px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 2px 10px rgba(140,100,60,0.09);">
+        <input type="number" inputmode="numeric" id="checkout-entrance" placeholder="Подъ." autocomplete="off"
+         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:12px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 2px 10px rgba(140,100,60,0.09);">
+        <input type="number" inputmode="numeric" id="checkout-floor" placeholder="Этаж" autocomplete="off"
+         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:12px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 2px 10px rgba(140,100,60,0.09);">
+        <input type="number" inputmode="numeric" id="checkout-apartment" placeholder="Кв." autocomplete="off"
+         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:12px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 2px 10px rgba(140,100,60,0.09);">
        </div>
       </div>
-      <div id="payment-section" style="display:none;">
-       <label class="block text-sm font-semibold text-coffee mb-2">Способ оплаты*</label>
-       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button type="button" id="pay-card-btn" onclick="selectPayment('card')" style="padding:10px;border:2px solid #e8ddd0;border-radius:12px;background:#fff;font-size:14px;font-weight:600;color:#6b4423;cursor:pointer;touch-action:manipulation;transition:all 0.15s;">💳 Картой</button>
-        <button type="button" id="pay-cash-btn" onclick="selectPayment('cash')" style="padding:10px;border:2px solid #e8ddd0;border-radius:12px;background:#fff;font-size:14px;font-weight:600;color:#6b4423;cursor:pointer;touch-action:manipulation;transition:all 0.15s;">💵 Наличными</button>
+
+      <!-- Способ оплаты -->
+      <div id="payment-section" style="display:none;margin-bottom:18px;">
+       <label style="display:block;font-size:13px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Способ оплаты*</label>
+       <!-- Liquid glass payment toggle -->
+       <div id="payment-toggle" style="position:relative;background:rgba(255,255,255,0.18);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:2.5rem;padding:5px;border:1px solid rgba(255,255,255,0.35);box-shadow:0 20px 40px rgba(0,0,0,0.08),inset 0 1px 2px rgba(255,255,255,0.55);overflow:hidden;">
+        <!-- Скользящий индикатор -->
+        <div id="payment-slider" style="position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 7px);border-radius:2rem;background:linear-gradient(90deg,#C9A227,#D4A574);box-shadow:0 8px 20px rgba(201,162,39,0.35),inset 0 2px 8px rgba(255,255,255,0.3);transition:transform 0.42s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;z-index:0;">
+         <div style="position:absolute;inset:0;border-radius:2rem;background:linear-gradient(135deg,rgba(255,255,255,0.38) 0%,transparent 55%);pointer-events:none;"></div>
+        </div>
+        <div style="position:relative;z-index:1;display:flex;width:100%;gap:2px;">
+         <button type="button" id="pay-card-btn" onclick="selectPayment('card')"
+          style="flex:1;padding:11px;border-radius:2rem;border:none;font-size:14px;font-weight:800;letter-spacing:0.03em;cursor:pointer;touch-action:manipulation;background:transparent;color:#fff;transition:color 0.3s ease;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;flex-shrink:0;"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Картой
+         </button>
+         <button type="button" id="pay-cash-btn" onclick="selectPayment('cash')"
+          style="flex:1;padding:11px;border-radius:2rem;border:none;font-size:14px;font-weight:800;letter-spacing:0.03em;cursor:pointer;touch-action:manipulation;background:transparent;color:rgba(61,31,10,0.38);transition:color 0.3s ease;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;flex-shrink:0;"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg>
+          Наличными
+         </button>
+        </div>
        </div>
        <input type="hidden" id="checkout-payment" value="">
       </div>
-      <div id="pickup-time-section" style="display:none;"><label class="block text-sm font-semibold text-coffee mb-2">Время получения</label><button type="button" id="pickup-time-row" onclick="togglePickupTimePicker()" style="width:100%;padding:12px 16px;border:2px solid #e8ddd0;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation;"><span id="pickup-time-display" style="font-size:14px;color:#9ca3af;">Выберите время</span><svg style="width:16px;height:16px;color:#9ca3af;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button><div id="pickup-time-chips" style="display:none;margin-top:8px;padding:12px;background:#fff;border:2px solid #e8ddd0;border-radius:12px;"><div style="display:flex;flex-wrap:wrap;gap:8px;" id="pickup-chips-container"></div></div><input type="hidden" id="checkout-pickup-time" value=""></div>
-      <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="checkout-note" placeholder="Ваши пожелания..." rows="2" class="w-full px-4 py-2 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none" style="font-size:14px;"></textarea></div>
-      <div class="bg-gradient-to-br from-gold/10 to-caramel/10 rounded-2xl p-4 border border-gold/30 mt-6"><div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого к оплате:</span><span class="text-2xl font-bold text-gold"><span id="checkout-total">0.00</span> р</span></div></div>
-      <button type="submit" id="submit-checkout-btn" class="w-full bg-gradient-to-r from-coffee to-caramel text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all" style="touch-action:manipulation;">Подтвердить заказ</button>
+
+      <!-- Время (самовывоз) -->
+      <div id="pickup-time-section" style="display:none;margin-bottom:18px;">
+       <label style="display:block;font-size:13px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Время получения</label>
+       <button type="button" id="pickup-time-row" onclick="togglePickupTimePicker()"
+        style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:16px;padding:15px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation;box-shadow:0 2px 12px rgba(140,100,60,0.09);">
+        <span id="pickup-time-display" style="font-size:15px;color:#9ca3af;font-family:inherit;">Выберите время</span>
+        <svg style="width:16px;height:16px;color:#9ca3af;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+       </button>
+       <div id="pickup-time-chips" style="display:none;margin-top:8px;padding:14px;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(140,100,60,0.09);">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;" id="pickup-chips-container"></div>
+       </div>
+       <input type="hidden" id="checkout-pickup-time" value="">
+      </div>
+
+      <!-- Примечание -->
+      <div style="margin-bottom:20px;">
+       <label style="display:block;font-size:13px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Примечание (опционально)</label>
+       <textarea id="checkout-note" placeholder="Ваши пожелания..." rows="3"
+        style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:16px;padding:15px 18px;font-size:15px;color:#3d1f0a;outline:none;font-family:inherit;box-shadow:0 2px 12px rgba(140,100,60,0.09);resize:none;"></textarea>
+      </div>
+
+      <!-- Итого -->
+      <div style="background:linear-gradient(135deg,rgba(201,162,39,0.12),rgba(212,165,116,0.12));border-radius:16px;padding:16px 18px;margin-bottom:16px;border:1px solid rgba(201,162,39,0.2);">
+       <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:15px;font-weight:700;color:#3d1f0a;">Итого к оплате:</span>
+        <span style="font-size:22px;font-weight:800;color:#C9A227;"><span id="checkout-total">0.00</span> р</span>
+       </div>
+      </div>
+
+      <!-- Кнопка подтвердить -->
+      <button type="submit" id="submit-checkout-btn"
+       style="width:100%;background:linear-gradient(90deg,#6B4423,#D4A574);border:none;border-radius:16px;padding:18px;font-size:16px;font-weight:800;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 20px rgba(107,68,35,0.28);letter-spacing:0.03em;">
+       Подтвердить заказ
+      </button>
+
      </form>
     </div>
    </div>
@@ -952,13 +1065,26 @@
       const titles = { all: 'РЕКОМЕНДУЕМЫЕ', bread: 'ХЛЕБ', pies: 'ПИРОГИ', cakes: 'ТОРТЫ', pastries: 'ПИРОЖКИ', pizza: 'ПИЦЦА', buns: 'КОФЕ' };
       document.getElementById('products-section-title').textContent = titles[category] || 'РЕКОМЕНДУЕМЫЕ';
       document.querySelectorAll('.cat-btn').forEach(btn => {
-        const inner = btn.querySelector('div');
-        const label = inner.querySelector('span:last-child');
+        const pill = btn.querySelector('.cat-pill');
+        const label = btn.querySelector('.cat-label');
+        const iconWrap = btn.querySelector('.cat-icon-wrap');
         const isActive = btn.getAttribute('onclick') === `selectCategory('${category}')`;
-        inner.classList.toggle('bg-caramel', isActive);
-        inner.classList.toggle('bg-beige', !isActive);
-        label.classList.toggle('text-white', isActive);
-        label.classList.toggle('text-coffee', !isActive);
+        if (!pill) return;
+        pill.classList.toggle('active', isActive);
+        pill.classList.toggle('bg-caramel', isActive);
+        pill.classList.toggle('bg-beige', !isActive);
+        pill.style.boxShadow = isActive
+          ? '0 4px 12px rgba(217,160,102,0.2),inset 0 2px 8px rgba(255,255,255,0.7)'
+          : '0 2px 6px rgba(0,0,0,0.03)';
+        if (label) {
+          label.classList.toggle('text-white', isActive);
+          label.classList.toggle('text-coffee', !isActive);
+        }
+        if (isActive && iconWrap) {
+          iconWrap.classList.remove('pop');
+          void iconWrap.offsetWidth;
+          iconWrap.classList.add('pop');
+        }
       });
       renderProducts();
     }
@@ -982,7 +1108,7 @@
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
       return `
         <div class="animate-fade ${compact ? 'flex-shrink-0 w-40' : ''}" data-pid="${p.id}">
-          <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col ${quantity > 0 ? 'ring-2 ring-caramel product-card-lifted' : ''}">
+          <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col">
             <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square group/img">
               <div class="w-full h-full">${imgHTML}</div>
               ${!compact && p.isNew ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
@@ -1022,15 +1148,6 @@
         if (btn) btn.outerHTML = cardBtnHTML(productId, qty, compact);
         const card = zone.closest('.product-card');
         if (card) {
-          card.classList.toggle('ring-2', qty > 0);
-          card.classList.toggle('ring-caramel', qty > 0);
-          card.classList.toggle('product-card-lifted', qty > 0);
-          if (flash && qty > 0) {
-            card.classList.remove('ring-pop');
-            void card.offsetWidth;
-            card.classList.add('ring-pop');
-            setTimeout(() => card.classList.remove('ring-pop'), 500);
-          }
         }
       });
     }
@@ -1315,12 +1432,11 @@
       const isDelivery = method === 'delivery';
       const dTab = document.getElementById('cart-delivery-tab');
       const pTab = document.getElementById('cart-pickup-tab');
-      dTab.style.background = isDelivery ? 'linear-gradient(90deg,#C9A227,#D4A574)' : 'transparent';
-      dTab.style.color = isDelivery ? '#fff' : 'rgba(61,31,10,0.45)';
-      dTab.style.fontWeight = isDelivery ? '700' : '600';
-      pTab.style.background = isDelivery ? 'transparent' : 'linear-gradient(90deg,#C9A227,#D4A574)';
-      pTab.style.color = isDelivery ? 'rgba(61,31,10,0.45)' : '#fff';
-      pTab.style.fontWeight = isDelivery ? '600' : '700';
+      const slider = document.getElementById('delivery-slider');
+      // Slide the indicator: delivery=left(0), pickup=right(100%+gap)
+      if (slider) slider.style.transform = isDelivery ? 'translateX(0)' : 'translateX(calc(100% + 4px))';
+      dTab.style.color = isDelivery ? '#fff' : 'rgba(61,31,10,0.38)';
+      pTab.style.color = isDelivery ? 'rgba(61,31,10,0.38)' : '#fff';
       const pickupInfo = document.getElementById('cart-pickup-info');
       if (pickupInfo) pickupInfo.style.display = isDelivery ? 'none' : 'flex';
       const costRow = document.getElementById('cart-delivery-cost-row');
@@ -1462,19 +1578,14 @@
 
     function selectPayment(type) {
       document.getElementById('checkout-payment').value = type;
+      const slider = document.getElementById('payment-slider');
       const cardBtn = document.getElementById('pay-card-btn');
       const cashBtn = document.getElementById('pay-cash-btn');
       if (!cardBtn || !cashBtn) return;
-      const active = 'linear-gradient(90deg,#C9A227,#D4A574)';
-      const activeBorder = '#C9A227';
-      const inactive = '#fff';
-      const inactiveBorder = '#e8ddd0';
-      cardBtn.style.background = type === 'card' ? active : inactive;
-      cardBtn.style.borderColor = type === 'card' ? activeBorder : inactiveBorder;
-      cardBtn.style.color = type === 'card' ? '#fff' : '#6b4423';
-      cashBtn.style.background = type === 'cash' ? active : inactive;
-      cashBtn.style.borderColor = type === 'cash' ? activeBorder : inactiveBorder;
-      cashBtn.style.color = type === 'cash' ? '#fff' : '#6b4423';
+      const isCard = type === 'card';
+      if (slider) slider.style.transform = isCard ? 'translateX(0)' : 'translateX(calc(100% + 4px))';
+      cardBtn.style.color = isCard ? '#fff' : 'rgba(61,31,10,0.38)';
+      cashBtn.style.color = isCard ? 'rgba(61,31,10,0.38)' : '#fff';
     }
 
     function togglePickupTimePicker() {
@@ -1714,8 +1825,7 @@
         const cartItem = preorderCart.find(i => i.product_id === pid);
         const qty = cartItem ? cartItem.quantity : 0;
         zone.innerHTML = preorderBtnZoneHTML(pid, price, qty);
-        const card = document.querySelector(`.preorder-card[data-card-pid="${pid}"]`);
-        if (card) card.classList.toggle('preorder-card-lifted', qty > 0);
+        // card lift removed
       });
     }
 

@@ -393,12 +393,11 @@ function ratingKeyboard(rowNum) {
 // ─── Ежедневный check-in администратора ──────────────────────────────────────
 async function sendAdminCheckin() {
   const r = await tg('sendMessage', {
-    chat_id:      ADMIN_ID,
-    text:         `☀️ Доброе утро!\n\nКто сегодня работает администратором?\nНажмите кнопку и введите имя.`,
-    parse_mode:   'Markdown',
-    reply_markup: { inline_keyboard: [[{ text: '✏️ Ввести имя', callback_data: 'checkin_start' }]] }
+    chat_id:    ADMIN_ID,
+    text:       `☀️ Доброе утро!\n\nКто сегодня работает администратором?\nВведите ваше имя:`,
+    parse_mode: 'Markdown'
   });
-  if (r.ok) setProp('checkin_msg', JSON.stringify({ chatId: ADMIN_ID, msgId: r.result.message_id }));
+  if (r.ok) setProp(`pending_checkin_${ADMIN_ID}`, JSON.stringify({ promptMsgId: r.result.message_id }));
 }
 
 // ─── Обработка кнопок ─────────────────────────────────────────────────────────
