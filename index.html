@@ -1055,7 +1055,7 @@
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
       return `
         <div class="animate-fade ${compact ? 'flex-shrink-0 w-40' : ''}" data-pid="${p.id}">
-          <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col ${quantity > 0 ? 'ring-2 ring-caramel' : ''}">
+          <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col">
             <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square group/img">
               <div class="w-full h-full">${imgHTML}</div>
               ${!compact && p.isNew ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
@@ -1095,8 +1095,6 @@
         if (btn) btn.outerHTML = cardBtnHTML(productId, qty, compact);
         const card = zone.closest('.product-card');
         if (card) {
-          card.classList.toggle('ring-2', qty > 0);
-          card.classList.toggle('ring-caramel', qty > 0);
         }
       });
     }
