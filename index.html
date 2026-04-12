@@ -57,9 +57,7 @@
     #bestsellers-items { align-items: flex-end; }
     /* Fix: фиксированная высота нижней зоны кнопок в compact-карточке */
     .compact-card-controls { min-height: 36px; }
-    /* Card lift animation (preorder + main grid) */
-    .preorder-card, .product-card { transition: transform 0.12s ease-out, box-shadow 0.12s ease-out; will-change: transform; }
-    .preorder-card-lifted, .product-card-lifted { transform: translateY(-3px) scale(1.01); box-shadow: 0 8px 18px rgba(107,68,35,0.16) !important; }
+    /* Card lift animation removed */
     #preorder-products { isolation: isolate; }
     /* Category button press */
     .cat-btn { -webkit-tap-highlight-color: transparent; }
@@ -1057,7 +1055,7 @@
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
       return `
         <div class="animate-fade ${compact ? 'flex-shrink-0 w-40' : ''}" data-pid="${p.id}">
-          <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col ${quantity > 0 ? 'ring-2 ring-caramel product-card-lifted' : ''}">
+          <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col ${quantity > 0 ? 'ring-2 ring-caramel' : ''}">
             <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square group/img">
               <div class="w-full h-full">${imgHTML}</div>
               ${!compact && p.isNew ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
@@ -1099,13 +1097,6 @@
         if (card) {
           card.classList.toggle('ring-2', qty > 0);
           card.classList.toggle('ring-caramel', qty > 0);
-          card.classList.toggle('product-card-lifted', qty > 0);
-          if (flash && qty > 0) {
-            card.classList.remove('ring-pop');
-            void card.offsetWidth;
-            card.classList.add('ring-pop');
-            setTimeout(() => card.classList.remove('ring-pop'), 500);
-          }
         }
       });
     }
@@ -1783,8 +1774,7 @@
         const cartItem = preorderCart.find(i => i.product_id === pid);
         const qty = cartItem ? cartItem.quantity : 0;
         zone.innerHTML = preorderBtnZoneHTML(pid, price, qty);
-        const card = document.querySelector(`.preorder-card[data-card-pid="${pid}"]`);
-        if (card) card.classList.toggle('preorder-card-lifted', qty > 0);
+        // card lift removed
       });
     }
 
