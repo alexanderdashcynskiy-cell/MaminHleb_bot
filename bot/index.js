@@ -764,21 +764,22 @@ app.post('/reply', async (req, res) => {
 });
 
 // ─── Склад (контроль наличия товаров) ────────────────────────────────────────
+// Структура листа "Склад":
+//   A = Название товара  B = Начальный запас  C = Продано  D = Остаток на складе
 
-// Читает лист "Склад": колонка A = product_id, колонка B = quantity
 async function getStock() {
   try {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A2:B'
+      range: 'Склад!A2:D'
     });
     const rows = res.data.values || [];
     const stock = {};
     rows.forEach(row => {
-      const id  = (row[0] || '').trim();
-      const qty = parseInt(row[1] || '0', 10);
-      if (id) stock[id] = isNaN(qty) ? 0 : qty;
+      const name      = (row[0] || '').trim();
+      const remaining = parseInt(row[3] || '0', 10); // колонка D = Остаток
+      if (name) stock[name] = isNaN(remaining) ? 0 : remaining;
     });
     return stock;
   } catch(e) {
@@ -787,34 +788,39 @@ async function getStock() {
   }
 }
 
-// Уменьшает количество товаров в листе "Склад" после оформления заказа
+// Уменьшает остаток: C (Продано) += qty, D (Остаток) -= qty
 async function decrementStock(items) {
   if (!items || !items.length) return;
   try {
     const sheets = await getSheets();
-    // Читаем все строки A:B
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A:B'
+      range: 'Склад!A:D'
     });
     const rows = res.data.values || [];
     const updates = [];
+
     items.forEach(item => {
-      const pid = item.product_id || item.id;
-      const qty = item.quantity || 1;
-      for (let i = 1; i < rows.length; i++) {  // i=1 пропускаем заголовок
-        if ((rows[i][0] || '').trim() === pid) {
-          const current = parseInt(rows[i][1] || '0', 10);
-          const newQty  = Math.max(0, current - qty);
-          updates.push({
-            range: `Склад!B${i + 1}`,
-            values: [[String(newQty)]]
-          });
-          rows[i][1] = String(newQty); // обновляем локально для следующей итерации
+      const name = (item.product_name || '').trim();
+      const qty  = item.quantity || 1;
+      for (let i = 1; i < rows.length; i++) {  // i=1 — пропускаем заголовок
+        if ((rows[i][0] || '').trim() === name) {
+          const sold      = parseInt(rows[i][2] || '0', 10); // C = Продано
+          const remaining = parseInt(rows[i][3] || '0', 10); // D = Остаток
+          const newSold      = sold + qty;
+          const newRemaining = Math.max(0, remaining - qty);
+          updates.push(
+            { range: `Склад!C${i + 1}`, values: [[String(newSold)]] },
+            { range: `Склад!D${i + 1}`, values: [[String(newRemaining)]] }
+          );
+          // Обновляем локально чтобы не было двойного декремента для одного товара
+          rows[i][2] = String(newSold);
+          rows[i][3] = String(newRemaining);
           break;
         }
       }
     });
+
     if (!updates.length) return;
     await sheets.spreadsheets.values.batchUpdate({
       spreadsheetId: SPREADSHEET_ID,
@@ -823,7 +829,7 @@ async function decrementStock(items) {
         data: updates
       }
     });
-    console.log(`Stock decremented for ${updates.length} items`);
+    console.log(`Stock decremented for ${updates.length / 2} items`);
   } catch(e) {
     console.error('decrementStock:', e.message);
   }

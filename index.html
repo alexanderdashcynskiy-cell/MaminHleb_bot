@@ -943,10 +943,11 @@
       }
     }
 
-    // Проверка: есть ли товар в наличии (undefined = нет записи = считаем в наличии)
-    function inStock(pid) {
-      if (!(pid in stockData)) return true; // нет записи — считаем в наличии
-      return stockData[pid] > 0;
+    // Проверка: есть ли товар в наличии (ключ = название товара из листа Склад)
+    // undefined = товар не найден в листе = считаем в наличии (не ограничиваем)
+    function inStock(productName) {
+      if (!(productName in stockData)) return true;
+      return stockData[productName] > 0;
     }
 
     // ── Init ───────────────────────────────────────────────────────────────────
@@ -1339,7 +1340,7 @@
       else if (p.weight) weightInfo = p.weight;
       const cartItem = cart.find(item => item.product_id === p.id);
       const quantity = cartItem ? cartItem.quantity : 0;
-      const available = inStock(p.id);
+      const available = inStock(p.name);
       const imgHTML = productImages[p.id]
         ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige\\'>${p.image}</div>'">`
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
