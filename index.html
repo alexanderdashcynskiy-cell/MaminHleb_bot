@@ -921,6 +921,33 @@
     let referrals = [];
     let preorderCart = [];
     let preorderTime = null;
+    // Остатки товаров со склада: { [product_id]: quantity }
+    let stockData = {};
+
+    // ── Stock ──────────────────────────────────────────────────────────────────
+    const API_BASE = 'https://maminhlebbot-production.up.railway.app';
+
+    async function fetchStock() {
+      try {
+        const res  = await fetch(`${API_BASE}/api/stock`);
+        const json = await res.json();
+        if (json.ok && json.stock) {
+          stockData = json.stock;
+          // Перерисовываем карточки, чтобы показать актуальный остаток
+          renderBestsellers();
+          const filtered = products.filter(p => currentCategory === 'all' || p.category === currentCategory);
+          document.getElementById('products-grid').innerHTML = filtered.map(p => productCardHTML(p, false)).join('');
+        }
+      } catch(e) {
+        console.log('fetchStock failed (offline?):', e.message);
+      }
+    }
+
+    // Проверка: есть ли товар в наличии (undefined = нет записи = считаем в наличии)
+    function inStock(pid) {
+      if (!(pid in stockData)) return true; // нет записи — считаем в наличии
+      return stockData[pid] > 0;
+    }
 
     // ── Init ───────────────────────────────────────────────────────────────────
     function initApp() {
@@ -938,6 +965,7 @@
       setupProductModalSwipe();
       setupKeyboardDismiss();
       setupButtonPressAnim();
+      fetchStock(); // загружаем остатки — перерисовывает карточки когда придёт ответ
     }
 
     let _productDetailSource = 'main';
@@ -1311,15 +1339,22 @@
       else if (p.weight) weightInfo = p.weight;
       const cartItem = cart.find(item => item.product_id === p.id);
       const quantity = cartItem ? cartItem.quantity : 0;
+      const available = inStock(p.id);
       const imgHTML = productImages[p.id]
         ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige\\'>${p.image}</div>'">`
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
+      // Оверлей «Товар закончился» поверх фото
+      const oosOverlay = !available ? `
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.52);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;">
+          <p style="color:#fff;font-weight:800;font-size:${compact?'9px':'11px'};text-align:center;line-height:1.3;font-family:'Montserrat',sans-serif;">Товар закончился,<br>завтра сделаем<br>новую партию 🔥</p>
+        </div>` : '';
       return `
-        <div class="${compact ? 'flex-shrink-0 w-44' : ''}" data-pid="${p.id}">
+        <div class="${compact ? 'flex-shrink-0 w-44' : ''}" data-pid="${p.id}" style="${!available ? 'opacity:0.55;' : ''}">
           <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col">
             <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square group/img">
               <div class="w-full h-full">${imgHTML}</div>
-              ${!compact && p.isNew ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
+              ${!compact && p.isNew && available ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
+              ${oosOverlay}
             </button>
             <div class="flex-1 px-3 pt-2.5 pb-3 flex flex-col justify-between gap-1.5">
               <div onclick="showProductDetail('${p.id}')" style="cursor:pointer;">
@@ -1327,10 +1362,11 @@
                 <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${weightInfo}</p>
               </div>
               <div class="flex items-center justify-between gap-2 mt-1 card-btn-zone" data-pid="${p.id}">
-                ${(() => { const disc = happyPrice(p); return disc < p.price
+                ${available ? (() => { const disc = happyPrice(p); return disc < p.price
                   ? `<div style="white-space:nowrap;"><span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} ${BYN}</span><br><span class="font-bold ${compact ? 'text-sm' : 'text-base'}" style="color:#E05252;font-family:'Montserrat',sans-serif;white-space:nowrap;">${disc.toFixed(2)} ${BYN}</span></div>`
-                  : `<span class="font-bold text-coffee ${compact ? 'text-sm' : 'text-base'}" style="font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} ${BYN}</span>`; })()}
-                ${cardBtnHTML(p.id, quantity, compact)}
+                  : `<span class="font-bold text-coffee ${compact ? 'text-sm' : 'text-base'}" style="font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} ${BYN}</span>`; })()
+                  : `<span style="font-size:${compact?'9px':'11px'};color:#aaa;font-family:'Montserrat',sans-serif;">Нет в наличии</span>`}
+                ${available ? cardBtnHTML(p.id, quantity, compact) : ''}
               </div>
             </div>
           </div>

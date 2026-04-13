@@ -121,7 +121,7 @@ async function appendRow(values) {
     spreadsheetId:    SPREADSHEET_ID,
     range:            'A:N',
     valueInputOption: 'USER_ENTERED',
-    resource:         { values: [values] }
+    requestBody:      { values: [values] }
   });
   // Надёжно: считаем реальное количество строк в колонке A
   const meta = await sheets.spreadsheets.values.get({
@@ -140,7 +140,7 @@ async function updateCell(row, col, value) {
     spreadsheetId:   SPREADSHEET_ID,
     range:           `${colLetter}${row}`,
     valueInputOption: 'USER_ENTERED',
-    resource:        { values: [[value]] }
+    requestBody:     { values: [[value]] }
   });
 }
 
@@ -203,27 +203,38 @@ async function handleOrder(body) {
   const noteStr  = (body.note || '').trim();
   const noteLine = noteStr ? `\n💬 *ПРИМЕЧАНИЕ:* ${noteStr}\n` : '';
 
-  // Запись в Google Sheets
+  // Получаем номер заказа ДО записи в Sheets (чтобы всегда иметь ID)
+  const orderNum = getNextOrderNum();
+
+  // Запись в Google Sheets (с защитой от сбоя)
   const now     = new Date();
   const dateStr = now.toLocaleString('ru-RU', { timeZone: 'Europe/Kyiv' });
 
-  const newRow = await appendRow([
-    dateStr,
-    !isPreorder ? '✅ Заказ'      : '',
-    isPreorder  ? '📌 Предзаказ' : '',
-    clientName,
-    clientId,
-    body.phone || '-',
-    itemsText,
-    totalStr,
-    deliveryBlock,
-    '', '', '🟡 Новый', '',
-    noteStr
-  ]);
+  let sheetRow = 0;
+  try {
+    sheetRow = await appendRow([
+      dateStr,
+      !isPreorder ? '✅ Заказ'      : '',
+      isPreorder  ? '📌 Предзаказ' : '',
+      clientName,
+      clientId,
+      body.phone || '-',
+      itemsText,
+      totalStr,
+      deliveryBlock,
+      '', '', '🟡 Новый', '',
+      noteStr
+    ]);
+    if (!sheetRow) console.warn(`Order #${orderNum}: appendRow returned 0`);
+  } catch(sheetErr) {
+    console.error(`Order #${orderNum}: appendRow failed — ${sheetErr.message}`);
+    sheetsApi = null; // сбрасываем кэш для следующей попытки
+  }
 
-  if (!newRow) { console.error('appendRow: failed to get row number'); return; }
-
-  const orderNum = getNextOrderNum();
+  // sheetRow используется только для обновления ячеек статуса
+  // Основной ключ состояния — orderNum
+  const newRow = orderNum;
+  if (sheetRow) setProp(`sheet_row_${newRow}`, String(sheetRow));
 
   const receiptBase =
     `🧾 *${isPreorder ? 'ВАШ ПРЕДЗАКАЗ' : 'ВАШ ЗАКАЗ'} №${orderNum}*\n` +
@@ -264,12 +275,18 @@ async function handleOrder(body) {
   setProp(`admin_base_${newRow}`,   adminBase);
   setProp(`admin_body_${newRow}`,   adminBody);
   setProp(`client_name_${newRow}`,  clientName);
-  setProp(`order_num_${newRow}`,    String(orderNum));
+  setProp(`order_num_${newRow}`,     String(orderNum));
   setProp(`order_phone_${newRow}`,   body.phone   || '—');
   setProp(`order_address_${newRow}`, body.address || 'Самовывоз');
   setProp(`order_total_${newRow}`,   totalStr);
   setProp(`order_payment_${newRow}`, body.payment || '');
   setProp(`order_note_${newRow}`,    (body.note || '').trim());
+
+  // Убавить остаток со склада
+  try {
+    const parsed = typeof body.items === 'string' ? JSON.parse(body.items) : body.items;
+    if (Array.isArray(parsed)) await decrementStock(parsed);
+  } catch(e) { console.error('decrementStock call:', e.message); }
 
   // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
@@ -453,7 +470,7 @@ async function handleCallback(cb) {
         if (ep.reviewReqMsgId) {
           setProp(`pending_${cb.from.id}`,
             JSON.stringify({ stars, rowNum: ratingRow, reviewReqMsgId: ep.reviewReqMsgId }));
-          await updateCell(ratingRow, 10, starStr);
+          if (ratingRow > 0) await updateCell(ratingRow, 10, starStr);
           return;
         }
       } catch(e) { /* устаревшее состояние — продолжаем */ }
@@ -474,13 +491,15 @@ async function handleCallback(cb) {
       rowNum:         ratingRow,
       reviewReqMsgId: reviewRes?.ok ? reviewRes.result.message_id : null
     }));
-    await updateCell(ratingRow, 10, starStr);
+    if (ratingRow > 0) await updateCell(ratingRow, 10, starStr);
     return;
   }
 
   const rowNum      = parseInt(parts[1]);
   const clientId    = parts[2];
-  const orderNum    = getProp(`order_num_${rowNum}`) || String(rowNum - 1);
+  // rowNum — это orderNum (из счётчика); sheetRow — строка в таблице для updateCell
+  const sheetRow    = parseInt(getProp(`sheet_row_${rowNum}`) || '0');
+  const orderNum    = getProp(`order_num_${rowNum}`) || String(rowNum);
   const adminChatId = cb.message?.chat?.id || ADMIN_ID;
   const adminMsgId  = cb.message?.message_id;
   const adminBase   = getProp(`admin_base_${rowNum}`) || '';
@@ -503,7 +522,7 @@ async function handleCallback(cb) {
     const r = await notifyClient(clientId, acceptText);
     if (r?.ok) setProp(`accept_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
-    await updateCell(rowNum, 12, '✅ Принят');
+    if (sheetRow) await updateCell(sheetRow, 12, '✅ Принят');
     return;
   }
 
@@ -519,7 +538,7 @@ async function handleCallback(cb) {
       `👨‍🍳 *Заказ №${orderNum} готовится!*\n\nМы уже работаем над вашим заказом. Скоро сообщим о готовности.`);
     if (r?.ok) setProp(`working_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
-    await updateCell(rowNum, 12, '👨‍🍳 В работе');
+    if (sheetRow) await updateCell(sheetRow, 12, '👨‍🍳 В работе');
     return;
   }
 
@@ -539,16 +558,16 @@ async function handleCallback(cb) {
       const r = await notifyClient(clientId,
         `🍞 *Заказ №${orderNum} готов!*\n\nПередаём курьеру — скоро будет у вас.`);
       if (r?.ok) setProp(`ready_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-      await updateCell(rowNum, 12, '🍞 Готов');
+      if (sheetRow) await updateCell(sheetRow, 12, '🍞 Готов');
     } else {
       // Самовывоз: завершаем сразу, отправляем оценку
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
       const readyText = orderType === 'preorder'
         ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
         : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130\n\n⭐ *Оцените качество обслуживания:*`;
-      const r = await notifyClient(clientId, readyText, ratingKeyboard(rowNum));
+      const r = await notifyClient(clientId, readyText, ratingKeyboard(sheetRow || rowNum));
       if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-      await updateCell(rowNum, 12, '🍞 Готов');
+      if (sheetRow) await updateCell(sheetRow, 12, '🍞 Готов');
     }
     return;
   }
@@ -592,7 +611,7 @@ async function handleCallback(cb) {
     await notifyClient(clientId,
       `🚗 *Заказ №${orderNum} отправлен!*\n\n⏱ Ориентировочное время доставки: *30–45 минут* в зависимости от загруженности.\nПо приезде заказа, курьер с вами свяжется!\n\nС уважением команда «Мамин Хлеб»\nЕсли возникли вопросы звоните по номеру:\n☎️ +375(29)722-20-22`);
 
-    await updateCell(rowNum, 12, '🚗 В доставке');
+    if (sheetRow) await updateCell(sheetRow, 12, '🚗 В доставке');
     return;
   }
 
@@ -618,10 +637,10 @@ async function handleCallback(cb) {
     // Уведомление клиенту + оценка
     const r = await notifyClient(clientId,
       `🎉 *Ваш заказ №${orderNum} доставлен!*\n\nСпасибо, что выбрали нас! 🍞\n\n⭐ *Оцените качество обслуживания:*`,
-      ratingKeyboard(rowNum));
+      ratingKeyboard(sheetRow || rowNum));
     if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
-    await updateCell(rowNum, 12, '✅ Доставлен');
+    if (sheetRow) await updateCell(sheetRow, 12, '✅ Доставлен');
     return;
   }
 
@@ -646,7 +665,7 @@ async function handleCallback(cb) {
     const r = await notifyClient(clientId, clientText);
     if (r?.ok) setProp(`decline_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
-    await updateCell(rowNum, 12, label);
+    if (sheetRow) await updateCell(sheetRow, 12, label);
     return;
   }
 
@@ -663,7 +682,7 @@ async function handleCallback(cb) {
       `🔄 *Ваш заказ №${orderNum} снова в обработке.*\n\nСкоро свяжемся с вами!`);
     if (r?.ok) setProp(`restore_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
-    await updateCell(rowNum, 12, '🟡 Новый');
+    if (sheetRow) await updateCell(sheetRow, 12, '🟡 Новый');
     delProp(`decline_msg_${rowNum}`);
     return;
   }
@@ -698,7 +717,7 @@ async function handleTextMessage(message) {
         spreadsheetId:    SPREADSHEET_ID,
         range:            'Журнал!A:B',
         valueInputOption: 'USER_ENTERED',
-        resource:         { values: [[dateStr, msgText]] }
+        requestBody:      { values: [[dateStr, msgText]] }
       });
     } catch(e) { console.error('checkin sheet:', e.message); }
     delProp(`pending_checkin_${senderId}`);
@@ -744,6 +763,72 @@ app.post('/reply', async (req, res) => {
   if (row && result.ok) await updateCell(parseInt(row), 13, '✅ Ответили');
 });
 
+// ─── Склад (контроль наличия товаров) ────────────────────────────────────────
+
+// Читает лист "Склад": колонка A = product_id, колонка B = quantity
+async function getStock() {
+  try {
+    const sheets = await getSheets();
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Склад!A2:B'
+    });
+    const rows = res.data.values || [];
+    const stock = {};
+    rows.forEach(row => {
+      const id  = (row[0] || '').trim();
+      const qty = parseInt(row[1] || '0', 10);
+      if (id) stock[id] = isNaN(qty) ? 0 : qty;
+    });
+    return stock;
+  } catch(e) {
+    console.error('getStock:', e.message);
+    return {};
+  }
+}
+
+// Уменьшает количество товаров в листе "Склад" после оформления заказа
+async function decrementStock(items) {
+  if (!items || !items.length) return;
+  try {
+    const sheets = await getSheets();
+    // Читаем все строки A:B
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Склад!A:B'
+    });
+    const rows = res.data.values || [];
+    const updates = [];
+    items.forEach(item => {
+      const pid = item.product_id || item.id;
+      const qty = item.quantity || 1;
+      for (let i = 1; i < rows.length; i++) {  // i=1 пропускаем заголовок
+        if ((rows[i][0] || '').trim() === pid) {
+          const current = parseInt(rows[i][1] || '0', 10);
+          const newQty  = Math.max(0, current - qty);
+          updates.push({
+            range: `Склад!B${i + 1}`,
+            values: [[String(newQty)]]
+          });
+          rows[i][1] = String(newQty); // обновляем локально для следующей итерации
+          break;
+        }
+      }
+    });
+    if (!updates.length) return;
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: SPREADSHEET_ID,
+      requestBody: {
+        valueInputOption: 'USER_ENTERED',
+        data: updates
+      }
+    });
+    console.log(`Stock decremented for ${updates.length} items`);
+  } catch(e) {
+    console.error('decrementStock:', e.message);
+  }
+}
+
 // ─── Маршруты ─────────────────────────────────────────────────────────────────
 
 // Telegram webhook — отвечаем 200 сразу, обрабатываем асинхронно
@@ -767,6 +852,12 @@ app.post('/order', (req, res) => {
   }
   if (!body || (!body.phone && !body.items)) return;
   handleOrder(body).catch(e => console.error('order err:', e));
+});
+
+// Склад — текущие остатки товаров
+app.get('/api/stock', async (req, res) => {
+  const stock = await getStock();
+  res.json({ ok: true, stock });
 });
 
 // Проверка работоспособности
