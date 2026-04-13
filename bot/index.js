@@ -866,6 +866,69 @@ app.get('/api/stock', async (req, res) => {
   res.json({ ok: true, stock });
 });
 
+// Диагностика Google Sheets
+app.get('/api/test-sheets', async (req, res) => {
+  const result = { spreadsheetId: SPREADSHEET_ID ? SPREADSHEET_ID.slice(0,8) + '...' : 'NOT SET', steps: [] };
+  try {
+    // Шаг 1: парсим credentials
+    let creds;
+    try {
+      creds = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+      result.steps.push({ step: 'parse_credentials', ok: true, client_email: creds.client_email });
+    } catch(e) {
+      result.steps.push({ step: 'parse_credentials', ok: false, error: e.message });
+      return res.json({ ok: false, result });
+    }
+
+    // Шаг 2: auth
+    let sheets;
+    try {
+      sheetsApi = null; // сбросить кэш, чтобы создать заново
+      sheets = await getSheets();
+      result.steps.push({ step: 'auth', ok: true });
+    } catch(e) {
+      result.steps.push({ step: 'auth', ok: false, error: e.message });
+      return res.json({ ok: false, result });
+    }
+
+    // Шаг 3: читаем список листов
+    try {
+      const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
+      const sheetNames = (meta.data.sheets || []).map(s => s.properties.title);
+      result.steps.push({ step: 'get_spreadsheet', ok: true, sheets: sheetNames });
+    } catch(e) {
+      result.steps.push({ step: 'get_spreadsheet', ok: false, error: e.message });
+      return res.json({ ok: false, result });
+    }
+
+    // Шаг 4: читаем первую строку основного листа
+    try {
+      const r = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'A1:N1' });
+      result.steps.push({ step: 'read_A1:N1', ok: true, values: r.data.values || [] });
+    } catch(e) {
+      result.steps.push({ step: 'read_A1:N1', ok: false, error: e.message });
+    }
+
+    // Шаг 5: пробуем записать тестовую строку
+    try {
+      const now = new Date().toISOString();
+      const appendRes = await sheets.spreadsheets.values.append({
+        spreadsheetId:    SPREADSHEET_ID,
+        range:            'A:N',
+        valueInputOption: 'USER_ENTERED',
+        requestBody:      { values: [['TEST_ROW', now, 'diagnostic endpoint']] }
+      });
+      result.steps.push({ step: 'append_test_row', ok: true, updatedRange: appendRes.data.updates?.updatedRange });
+    } catch(e) {
+      result.steps.push({ step: 'append_test_row', ok: false, error: e.message, code: e.code });
+    }
+
+    res.json({ ok: true, result });
+  } catch(e) {
+    res.json({ ok: false, error: e.message, result });
+  }
+});
+
 // Проверка работоспособности
 app.get('/', (req, res) => res.send('MaminHleb bot is running ✓'));
 
