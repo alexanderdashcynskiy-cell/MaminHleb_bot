@@ -943,11 +943,12 @@
       }
     }
 
-    // Проверка: есть ли товар в наличии (ключ = название товара из листа Склад)
-    // undefined = товар не найден в листе = считаем в наличии (не ограничиваем)
+    // Проверка: есть ли товар в наличии (ключ = название в нижнем регистре)
+    // undefined = товара нет в листе Склад = считаем в наличии (не ограничиваем)
     function inStock(productName) {
-      if (!(productName in stockData)) return true;
-      return stockData[productName] > 0;
+      const key = (productName || '').trim().toLowerCase();
+      if (!(key in stockData)) return true;
+      return stockData[key] > 0;
     }
 
     // ── Init ───────────────────────────────────────────────────────────────────
@@ -1266,6 +1267,9 @@
             targetScreen.style.height = '100%';
           } else {
             targetScreen.style.display = 'block';
+          }
+          if (screenName === 'main') {
+            fetchStock(); // обновляем остатки каждый раз при возврате на главный экран
           }
           if (screenName === 'cart') {
             updateCartUI();

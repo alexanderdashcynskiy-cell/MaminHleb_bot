@@ -777,8 +777,8 @@ async function getStock() {
     const rows = res.data.values || [];
     const stock = {};
     rows.forEach(row => {
-      const name      = (row[0] || '').trim();
-      const remaining = parseInt(row[3] || '0', 10); // колонка D = Остаток
+      const name      = (row[0] || '').trim().toLowerCase(); // нормализуем регистр
+      const remaining = parseInt(row[3] || '0', 10);         // колонка D = Остаток
       if (name) stock[name] = isNaN(remaining) ? 0 : remaining;
     });
     return stock;
@@ -801,10 +801,10 @@ async function decrementStock(items) {
     const updates = [];
 
     items.forEach(item => {
-      const name = (item.product_name || '').trim();
+      const name = (item.product_name || '').trim().toLowerCase();
       const qty  = item.quantity || 1;
       for (let i = 1; i < rows.length; i++) {  // i=1 — пропускаем заголовок
-        if ((rows[i][0] || '').trim() === name) {
+        if ((rows[i][0] || '').trim().toLowerCase() === name) {
           const sold      = parseInt(rows[i][2] || '0', 10); // C = Продано
           const remaining = parseInt(rows[i][3] || '0', 10); // D = Остаток
           const newSold      = sold + qty;
