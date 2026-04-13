@@ -435,16 +435,16 @@
      <div id="cart-summary" style="background:#fff;border-radius:16px;padding:16px 18px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
        <span style="font-size:14px;color:#aaa;">Товары в заказе <span id="cart-items-count">0</span> шт.</span>
-       <span style="font-size:14px;color:#555;" id="cart-subtotal-display">0.00 р</span>
+       <span style="font-size:14px;color:#555;" id="cart-subtotal-display">0.00 Br</span>
       </div>
       <div id="cart-delivery-cost-row" style="display:none;justify-content:space-between;align-items:center;margin-bottom:10px;">
        <span style="font-size:14px;color:#aaa;">Доставка</span>
-       <span style="font-size:14px;color:#555;">+3.50 р</span>
+       <span style="font-size:14px;color:#555;">+3.50 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 0 12 14" style="display:inline-block;width:0.75em;height:0.92em;vertical-align:-0.12em;fill:currentColor"><rect x="0" y="0" width="2" height="14"/><rect x="0" y="0" width="10.5" height="1.8"/><rect x="-1" y="5.5" width="9" height="1.5"/><path d="M2 7 H5.5 A3.7 3.45 0 0 1 5.5 14 H2 Z"/></svg></span>
       </div>
       <div style="height:1px;background:#F0F0F0;margin-bottom:14px;"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
        <span style="font-size:17px;font-weight:700;color:#2D2D2D;">Итого</span>
-       <span style="font-size:22px;font-weight:800;color:#C9A227;"><span id="cart-total-full">0.00</span> р</span>
+       <span style="font-size:22px;font-weight:800;color:#C9A227;"><span id="cart-total-full">0.00</span> <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 0 12 14" style="display:inline-block;width:0.75em;height:0.92em;vertical-align:-0.12em;fill:currentColor"><rect x="0" y="0" width="2" height="14"/><rect x="0" y="0" width="10.5" height="1.8"/><rect x="-1" y="5.5" width="9" height="1.5"/><path d="M2 7 H5.5 A3.7 3.45 0 0 1 5.5 14 H2 Z"/></svg></span>
       </div>
      </div>
      <!-- Кнопка -->
@@ -553,7 +553,7 @@
       <div style="background:linear-gradient(135deg,rgba(201,162,39,0.12),rgba(212,165,116,0.12));border-radius:16px;padding:16px 18px;margin-bottom:16px;border:1px solid rgba(201,162,39,0.2);">
        <div style="display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:15px;font-weight:700;color:#3d1f0a;">Итого к оплате:</span>
-        <span style="font-size:22px;font-weight:800;color:#C9A227;"><span id="checkout-total">0.00</span> р</span>
+        <span style="font-size:22px;font-weight:800;color:#C9A227;"><span id="checkout-total">0.00</span> <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 0 12 14" style="display:inline-block;width:0.75em;height:0.92em;vertical-align:-0.12em;fill:currentColor"><rect x="0" y="0" width="2" height="14"/><rect x="0" y="0" width="10.5" height="1.8"/><rect x="-1" y="5.5" width="9" height="1.5"/><path d="M2 7 H5.5 A3.7 3.45 0 0 1 5.5 14 H2 Z"/></svg></span>
        </div>
       </div>
 
@@ -692,7 +692,7 @@
    <button id="detail-add-btn" onclick="addProductFromDetail()" style="width:100%;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:20px 0;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;transition:transform 0.15s ease;">
     <span style="flex:1;text-align:center;font-size:18px;font-weight:700;color:#fff;letter-spacing:0.2px;pointer-events:none;">В корзину</span>
     <span style="width:1px;height:20px;background:rgba(255,255,255,0.35);flex-shrink:0;pointer-events:none;"></span>
-    <span style="flex:1;text-align:center;font-size:18px;font-weight:700;color:#fff;pointer-events:none;"><span id="detail-card-price">0.00</span> р</span>
+    <span style="flex:1;text-align:center;font-size:18px;font-weight:700;color:#fff;pointer-events:none;"><span id="detail-card-price">0.00</span> <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 0 12 14" style="display:inline-block;width:0.75em;height:0.92em;vertical-align:-0.12em;fill:currentColor"><rect x="0" y="0" width="2" height="14"/><rect x="0" y="0" width="10.5" height="1.8"/><rect x="-1" y="5.5" width="9" height="1.5"/><path d="M2 7 H5.5 A3.7 3.45 0 0 1 5.5 14 H2 Z"/></svg></span>
    </button>
    <!-- Счётчик −/+ — появляется когда товар уже в корзине -->
    <div id="detail-qty-controls" style="display:none;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:10px 20px;align-items:center;justify-content:space-between;">
@@ -734,7 +734,7 @@
    <div id="float-cart-items" class="flex-1 space-y-1 p-3 overflow-y-auto"></div>
    <div id="float-cart-empty" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px;"><span class="text-4xl mb-2">🥐</span><p class="text-caramel text-xs font-semibold">Корзина пуста</p><p class="text-xs text-coffee/50 mt-1">Добавьте товары!</p></div>
    <div class="border-t border-beige p-4 bg-gradient-to-br from-gold/10 to-caramel/10 flex-shrink-0">
-    <div class="flex justify-between items-center mb-3"><span class="font-bold text-coffee">Итого:</span><span class="text-xl font-bold text-gold" id="float-cart-total">0.00 р</span></div>
+    <div class="flex justify-between items-center mb-3"><span class="font-bold text-coffee">Итого:</span><span class="text-xl font-bold text-gold" id="float-cart-total">0.00</span></div>
     <button onclick="goToCart()" class="w-full bg-gradient-to-r from-gold to-caramel text-white font-bold py-2 rounded-xl hover:shadow-lg transition-all">Оформить →</button>
    </div>
   </div>
@@ -749,7 +749,7 @@
       <div class="text-center pb-4 border-b border-beige"><p class="text-xs text-caramel/70 mb-1">Номер заказа</p><p id="receipt-order-id" class="text-2xl font-bold text-coffee font-montserrat tracking-wider">#2024001</p><p id="receipt-date" class="text-xs text-caramel/70 mt-2"></p></div>
       <div class="bg-beige/20 rounded-2xl p-4 text-sm space-y-2"><div class="flex justify-between"><span class="text-coffee/70">Имя:</span><span id="receipt-customer-name" class="font-semibold text-coffee">—</span></div><div class="flex justify-between"><span class="text-coffee/70">Телефон:</span><span id="receipt-customer-phone" class="font-semibold text-coffee">—</span></div></div>
       <div><h3 class="text-xs font-bold text-caramel/70 mb-3 uppercase tracking-wider">Состав заказа</h3><div id="receipt-items" class="space-y-2"></div></div>
-      <div class="bg-beige/20 rounded-2xl p-4 space-y-2"><div class="flex justify-between text-sm"><span class="text-coffee/70">Сумма товаров:</span><span id="receipt-subtotal" class="font-semibold text-coffee">0.00 р</span></div><div class="flex justify-between text-lg font-bold text-gold border-t border-beige/50 pt-2"><span class="text-coffee">Итого:</span><span id="receipt-total">0.00 р</span></div></div>
+      <div class="bg-beige/20 rounded-2xl p-4 space-y-2"><div class="flex justify-between text-sm"><span class="text-coffee/70">Сумма товаров:</span><span id="receipt-subtotal" class="font-semibold text-coffee">0.00 Br</span></div><div class="flex justify-between text-lg font-bold text-gold border-t border-beige/50 pt-2"><span class="text-coffee">Итого:</span><span id="receipt-total">0.00 Br</span></div></div>
       <div class="bg-gradient-to-br from-gold/5 to-caramel/5 rounded-2xl p-4 border border-gold/20"><h3 class="text-xs font-bold text-caramel/70 mb-3 uppercase tracking-wider">Способ получения</h3><div id="receipt-delivery" class="text-sm text-coffee space-y-1"></div></div>
       <div id="receipt-bonus" class="hidden bg-gradient-to-r from-gold/20 to-caramel/20 rounded-2xl p-4 text-center border border-gold/30"><p class="text-2xl mb-2">☕</p><p class="text-xs text-caramel/70 mb-1">Вы получили бонусов кофе</p><p id="receipt-bonus-count" class="text-2xl font-bold text-gold">0</p></div>
       <div class="text-center pt-4"><p class="text-xs text-caramel/60 mb-3">Спасибо за выбор «Мамина Хлеба»!</p><p class="text-xs text-caramel/50">Приложение отправит SMS с уведомлением</p></div>
@@ -785,7 +785,7 @@
      <div><label class="block text-sm font-semibold text-coffee mb-2">Ваше имя*</label><input type="text" id="preorder-name" placeholder="Введите имя" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Номер телефона*</label><input type="tel" id="preorder-phone" placeholder="+375 (XX) XXX-XX-XX" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" oninput="formatPhone(this)" maxlength="19" required></div>
      <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="preorder-note" placeholder="Ваши пожелания..." rows="2" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none"></textarea></div>
-     <div class="bg-gradient-to-br from-gold/10 to-caramel/10 rounded-2xl p-4 border-2 border-gold/40"><div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого:</span><span class="text-2xl font-bold text-gold"><span id="preorder-total">0.00</span> р</span></div></div>
+     <div class="bg-gradient-to-br from-gold/10 to-caramel/10 rounded-2xl p-4 border-2 border-gold/40"><div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого:</span><span class="text-2xl font-bold text-gold"><span id="preorder-total">0.00</span> <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 0 12 14" style="display:inline-block;width:0.75em;height:0.92em;vertical-align:-0.12em;fill:currentColor"><rect x="0" y="0" width="2" height="14"/><rect x="0" y="0" width="10.5" height="1.8"/><rect x="-1" y="5.5" width="9" height="1.5"/><path d="M2 7 H5.5 A3.7 3.45 0 0 1 5.5 14 H2 Z"/></svg></span></div></div>
      <button type="submit" id="submit-preorder-btn" class="w-full text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all" style="background:linear-gradient(90deg,#C9A227,#D4A574);touch-action:manipulation;">Забронировать предзаказ</button>
     </form>
    </div>
@@ -926,6 +926,7 @@
     };
 
     // ── State ──────────────────────────────────────────────────────────────────
+    const BYN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 0 12 14" style="display:inline-block;width:0.75em;height:0.92em;vertical-align:-0.12em;fill:currentColor"><rect x="0" y="0" width="2" height="14"/><rect x="0" y="0" width="10.5" height="1.8"/><rect x="-1" y="5.5" width="9" height="1.5"/><path d="M2 7 H5.5 A3.7 3.45 0 0 1 5.5 14 H2 Z"/></svg>';
     let cart = [];
     let currentCategory = 'all';
     // FIX #1: correct slide count = 3
@@ -1159,8 +1160,8 @@
               </div>
               <div class="flex items-center justify-between gap-2 mt-1 card-btn-zone" data-pid="${p.id}">
                 ${(() => { const disc = happyPrice(p); return disc < p.price
-                  ? `<div><span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} р</span><br><span class="font-bold ${compact ? 'text-sm' : 'text-base'}" style="color:#E05252;font-family:'Montserrat',sans-serif;">${disc.toFixed(2)} <span style="font-size:11px;">р</span></span></div>`
-                  : `<span class="font-bold text-coffee ${compact ? 'text-sm' : 'text-base'}" style="font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} <span style="font-size:11px;font-weight:600;color:#D4A574;">р</span></span>`; })()}
+                  ? `<div><span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} ${BYN}</span><br><span class="font-bold ${compact ? 'text-sm' : 'text-base'}" style="color:#E05252;font-family:'Montserrat',sans-serif;">${disc.toFixed(2)} <span style="font-size:11px;">${BYN}</span></span></div>`
+                  : `<span class="font-bold text-coffee ${compact ? 'text-sm' : 'text-base'}" style="font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} <span style="font-size:11px;font-weight:600;color:#D4A574;">${BYN}</span></span>`; })()}
                 ${cardBtnHTML(p.id, quantity, compact)}
               </div>
             </div>
@@ -1379,7 +1380,7 @@
       document.getElementById('cart-pickup-info').style.display = deliveryMethod === 'pickup' ? 'flex' : 'none';
       footer.style.display = 'block';
       document.getElementById('cart-items-count').textContent = count;
-      document.getElementById('cart-subtotal-display').textContent = subtotal.toFixed(2) + ' р';
+      document.getElementById('cart-subtotal-display').innerHTML = subtotal.toFixed(2) + ' ' + BYN;
       itemsContainer.innerHTML = cart.map(function(item) {
         var product = productsById.get(item.product_id);
         var sizeOrWeight = item.selected_size || (product && product.weight) || '';
@@ -1410,7 +1411,7 @@
           + '<span style="font-weight:700;font-size:14px;color:#3d1f0a;min-width:14px;text-align:center;">' + item.quantity + '</span>'
           + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;line-height:1;">+</button>'
           + '</div>'
-          + '<div style="background:#f2ece4;border-radius:10px;padding:4px 10px;font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#a07b10;white-space:nowrap;">' + (item.price * item.quantity).toFixed(2) + ' р</div>'
+          + '<div style="background:#f2ece4;border-radius:10px;padding:4px 10px;font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#a07b10;white-space:nowrap;">' + (item.price * item.quantity).toFixed(2) + ' ' + BYN + '</div>'
           + '</div>'
           + '</div></div>';
       }).join('');
@@ -1750,16 +1751,16 @@
       document.getElementById('receipt-customer-name').textContent = customerName;
       document.getElementById('receipt-customer-phone').textContent = customerPhone;
       const subtotal = method === 'delivery' ? total - DELIVERY_COST : total;
-      document.getElementById('receipt-subtotal').textContent = subtotal.toFixed(2) + ' р';
-      document.getElementById('receipt-total').textContent = total.toFixed(2) + ' р';
+      document.getElementById('receipt-subtotal').innerHTML = subtotal.toFixed(2) + ' ' + BYN;
+      document.getElementById('receipt-total').innerHTML = total.toFixed(2) + ' ' + BYN;
       document.getElementById('receipt-items').innerHTML = cartSnapshot.map(item => `
         <div class="flex justify-between text-xs text-coffee/80">
           <span>${item.product_name} × ${item.quantity}</span>
-          <span>${(item.price * item.quantity).toFixed(2)} р</span>
+          <span>${(item.price * item.quantity).toFixed(2)} ${BYN}</span>
         </div>`).join('');
       document.getElementById('receipt-delivery').innerHTML = method === 'pickup'
         ? `<p>📍 г. Витебск, ул. Ленина 74</p><p class="font-semibold text-coffee mt-2">🕐 Время получения: ${pickupTime}</p>`
-        : `<p>🚗 Доставка на адрес:</p><p class="font-semibold text-coffee mt-1">${address}</p><p>⏱️ Доставка за 30-40 минут</p><p class="mt-2 text-sm border-t border-gold/20 pt-2">Стоимость доставки: ${DELIVERY_COST.toFixed(2)} р</p>`;
+        : `<p>🚗 Доставка на адрес:</p><p class="font-semibold text-coffee mt-1">${address}</p><p>⏱️ Доставка за 30-40 минут</p><p class="mt-2 text-sm border-t border-gold/20 pt-2">Стоимость доставки: ${DELIVERY_COST.toFixed(2)} ${BYN}</p>`;
       showScreen('receipt');
     }
 
@@ -1788,7 +1789,7 @@
       document.getElementById('float-cart-count').textContent = count;
       document.getElementById('float-cart-badge-count').textContent = count;
       if (badge) { badge.style.display = 'flex'; badge.style.flexDirection = 'row'; badge.style.alignItems = 'center'; badge.style.justifyContent = 'center'; }
-      document.getElementById('float-cart-total').textContent = total.toFixed(2) + ' р';
+      document.getElementById('float-cart-total').innerHTML = total.toFixed(2) + ' ' + BYN;
       emptyState.style.display = 'none';
       itemsContainer.innerHTML = cart.map(item => {
         const product = productsById.get(item.product_id);
@@ -1798,7 +1799,7 @@
             <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-beige flex items-center justify-center text-2xl">${product.image}</div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-semibold text-coffee truncate">${item.product_name}</p>
-              <p class="text-xs text-caramel">${item.price.toFixed(2)} р × ${item.quantity}</p>
+              <p class="text-xs text-caramel">${item.price.toFixed(2)} ${BYN} × ${item.quantity}</p>
             </div>
             <div class="flex items-center gap-1">
               <button onclick="updateQuantity('${item.product_id}', -1, '${item.selected_size || ''}')" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">−</button>
@@ -1847,7 +1848,7 @@
               <div class="flex-1 px-2 pt-2 pb-2 flex flex-col justify-between gap-1">
                 <h3 class="font-bold text-coffee leading-tight" onclick="showProductDetail('${p.id}')" style="font-family:'Playfair Display',serif;font-size:13px;cursor:pointer;">${p.name}</h3>
                 <div class="flex items-center justify-between gap-1 mt-0.5">
-                  <span class="font-bold text-caramel" style="font-family:'Montserrat',sans-serif;font-size:12px;">${p.price.toFixed(2)} р</span>
+                  <span class="font-bold text-caramel" style="font-family:'Montserrat',sans-serif;font-size:12px;">${p.price.toFixed(2)} ${BYN}</span>
                   <div class="preorder-btn-zone flex-shrink-0" data-pid="${p.id}" data-price="${p.price}" style="display:flex;align-items:center;justify-content:flex-end;"></div>
                 </div>
               </div>
@@ -1942,12 +1943,12 @@
       document.getElementById('receipt-date').textContent = new Date().toLocaleString('ru-RU');
       document.getElementById('receipt-customer-name').textContent = customerName;
       document.getElementById('receipt-customer-phone').textContent = customerPhone;
-      document.getElementById('receipt-subtotal').textContent = total.toFixed(2) + ' р';
-      document.getElementById('receipt-total').textContent = total.toFixed(2) + ' р';
+      document.getElementById('receipt-subtotal').innerHTML = total.toFixed(2) + ' ' + BYN;
+      document.getElementById('receipt-total').innerHTML = total.toFixed(2) + ' ' + BYN;
       document.getElementById('receipt-items').innerHTML = cartSnapshot.map(item => `
         <div class="flex justify-between text-xs text-coffee/80">
           <span>${item.product_name} × ${item.quantity}</span>
-          <span>${(item.price * item.quantity).toFixed(2)} р</span>
+          <span>${(item.price * item.quantity).toFixed(2)} ${BYN}</span>
         </div>`).join('');
       document.getElementById('receipt-delivery').innerHTML = `<p>🌅 Утренний предзаказ</p><p class="font-semibold text-coffee mt-2">📍 г. Витебск, ул. Ленина 74</p><p class="font-semibold text-coffee">🕐 Время получения: ${time}</p>`;
       showScreen('receipt');
