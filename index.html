@@ -1130,12 +1130,12 @@
 
     function cardBtnHTML(pid, quantity, compact = false) {
       if (quantity > 0) return `
-        <div class="flex items-center gap-1 rounded-full px-1.5 py-1" style="background:rgba(212,165,116,0.12);">
-          <button onclick="updateQuantity('${pid}',-1)" class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm" style="background:rgba(212,165,116,0.3);color:#6B4423;touch-action:manipulation;">−</button>
-          <span class="w-4 text-center font-bold text-coffee text-xs">${quantity}</span>
-          <button onclick="updateQuantity('${pid}',1)" class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm text-white" style="background:linear-gradient(135deg,#C9A227,#D4A574);touch-action:manipulation;">+</button>
+        <div style="display:flex;align-items:center;gap:4px;background:rgba(212,165,116,0.18);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:50px;padding:4px 6px;border:1px solid rgba(255,255,255,0.55);box-shadow:0 2px 8px rgba(180,130,60,0.12),inset 0 1px 2px rgba(255,255,255,0.55);">
+          <button onclick="updateQuantity('${pid}',-1)" style="width:24px;height:24px;border-radius:50%;background:rgba(212,165,116,0.35);color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;box-shadow:inset 0 1px 3px rgba(255,255,255,0.7),0 2px 4px rgba(0,0,0,0.08);">−</button>
+          <span style="min-width:16px;text-align:center;font-weight:800;color:#6B4423;font-size:12px;">${quantity}</span>
+          <button onclick="updateQuantity('${pid}',1)" style="width:24px;height:24px;border-radius:50%;position:relative;overflow:hidden;background:linear-gradient(135deg,#C9A227,#D4A574);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;box-shadow:0 3px 8px rgba(201,162,39,0.38),inset 0 1px 2px rgba(255,255,255,0.6);"><span style="position:relative;z-index:1;">+</span><div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,0.35) 0%,transparent 60%);pointer-events:none;border-radius:50%;"></div></button>
         </div>`;
-      return `<button onclick="addToCart('${pid}')" class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-md" style="background:linear-gradient(135deg,#C9A227,#D4A574);touch-action:manipulation;">+</button>`;
+      return `<button onclick="addToCart('${pid}')" style="width:36px;height:36px;border-radius:50%;position:relative;overflow:hidden;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;flex-shrink:0;box-shadow:0 4px 14px rgba(201,162,39,0.42),inset 0 1px 2px rgba(255,255,255,0.55),inset 0 -2px 4px rgba(0,0,0,0.1);"><span style="position:relative;z-index:1;line-height:1;">+</span><div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,0.35) 0%,transparent 60%);pointer-events:none;border-radius:50%;"></div></button>`;
     }
 
     function updateProductCardButtons(productId, flash = false) {
