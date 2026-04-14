@@ -125,21 +125,22 @@ async function getSheets() {
 
 async function appendRow(values) {
   const sheets = await getSheets();
-  await sheets.spreadsheets.values.append({
-    spreadsheetId:    SPREADSHEET_ID,
-    range:            ordersRange('A:N'),
-    valueInputOption: 'USER_ENTERED',
-    insertDataOption: 'INSERT_ROWS',
-    requestBody:      { values: [values] }
-  });
-  // Надёжно: считаем реальное количество строк в колонке A
+  // Считаем реальное число заполненных строк в колонке A — без зависимости от
+  // форматирования и пустых строк, которые путают values.append
   const meta = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
     range:         ordersRange('A:A')
   });
-  const rowCount = meta.data.values ? meta.data.values.length : 0;
-  console.log('appendRow rowCount:', rowCount, 'sheet:', ORDERS_SHEET_NAME || '(first sheet)');
-  return rowCount;
+  const filled  = meta.data.values ? meta.data.values.length : 0;
+  const nextRow = Math.max(filled + 1, 2); // минимум строка 2 (строка 1 — заголовки)
+  await sheets.spreadsheets.values.update({
+    spreadsheetId:    SPREADSHEET_ID,
+    range:            ordersRange(`A${nextRow}`),
+    valueInputOption: 'USER_ENTERED',
+    requestBody:      { values: [values] }
+  });
+  console.log(`appendRow → row ${nextRow} (sheet: ${ORDERS_SHEET_NAME || 'first'})`);
+  return nextRow;
 }
 
 async function updateCell(row, col, value) {
