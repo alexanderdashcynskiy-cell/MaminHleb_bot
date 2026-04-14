@@ -213,9 +213,9 @@ async function handleOrder(body) {
     const payLabel = body.payment === 'card' ? '💳 Картой' : body.payment === 'cash' ? '💵 Наличными' : '';
     deliveryBlock = `*АДРЕС ДОСТАВКИ:*\n🚕 ${body.address}${payLabel ? `\n${payLabel}` : ''}`;
   } else if (body.time && body.time !== 'undefined') {
-    deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, пр-т Московский 130\n🕐 Время: ${body.time}`;
+    deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74\n🕐 Время: ${body.time}`;
   } else {
-    deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, пр-т Московский 130`;
+    deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74`;
   }
   // deliveryInfo нужен для совместимости с fallback-проверкой типа заказа
   const deliveryInfo = deliveryBlock;
@@ -588,8 +588,8 @@ async function handleCallback(cb) {
       // Самовывоз: завершаем сразу, отправляем оценку
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
       const readyText = orderType === 'preorder'
-        ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
-        : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130\n\n⭐ *Оцените качество обслуживания:*`;
+        ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
+        : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\n⭐ *Оцените качество обслуживания:*`;
       const r = await notifyClient(clientId, readyText, ratingKeyboard(sheetRow || rowNum));
       if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
       if (sheetRow) await updateCell(sheetRow, 12, '🍞 Готов');
