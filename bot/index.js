@@ -231,7 +231,7 @@ async function handleOrder(body) {
       !isPreorder ? '✅ Заказ'      : '',
       isPreorder  ? '📌 Предзаказ' : '',
       clientName,
-      body.phone || '-',
+      "'" + (body.phone || '-'),
       clientId,
       itemsText,
       totalStr,
