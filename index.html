@@ -444,7 +444,7 @@
       </div>
      </div>
      <!-- Кнопка -->
-     <button id="cart-checkout-btn" onclick="startCheckout()" style="width:100%;position:relative;overflow:hidden;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 0;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:800;color:#fff;letter-spacing:0.05em;box-shadow:0 6px 24px rgba(201,162,39,0.38);transition:transform 0.15s ease;"><span style="position:relative;z-index:1;">Оформить заказ</span><div style="position:absolute;inset:0;background:linear-gradient(to right,transparent,rgba(255,255,255,0.28),transparent);transform:translateX(-100%) skewX(-12deg);animation:cat-shimmer 3s ease-in-out infinite;pointer-events:none;"></div></button>
+     <button id="cart-checkout-btn" onclick="startCheckout()" class="active:scale-95" style="width:100%;position:relative;overflow:hidden;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:18px 0;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:17px;font-weight:800;color:#fff;letter-spacing:0.05em;box-shadow:0 6px 24px rgba(201,162,39,0.38);transition:transform 0.15s cubic-bezier(0.34,1.56,0.64,1);transform-origin:center;"><span style="position:relative;z-index:1;">Оформить заказ</span><div style="position:absolute;inset:0;background:linear-gradient(to right,transparent,rgba(255,255,255,0.28),transparent);transform:translateX(-100%) skewX(-12deg);animation:cat-shimmer 3s ease-in-out infinite;pointer-events:none;"></div></button>
     </div>
    </div>
 
@@ -683,6 +683,11 @@
       <button onclick="detailChangeQty(-1)" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.25);border:none;cursor:pointer;touch-action:manipulation;font-size:22px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;">−</button>
       <span id="detail-qty-count" style="font-size:20px;font-weight:700;color:#fff;min-width:32px;text-align:center;pointer-events:none;">1</span>
       <button onclick="detailChangeQty(1)" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.25);border:none;cursor:pointer;touch-action:manipulation;font-size:22px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;">+</button>
+     </div>
+     <!-- Состояние "нет в наличии" — показывается вместо кнопки -->
+     <div id="detail-oos-wrap" style="display:none;width:100%;background:rgba(0,0,0,0.05);border-radius:50px;padding:16px 24px;align-items:center;justify-content:space-between;">
+      <span style="font-size:14px;font-weight:700;color:#aaa;font-family:'Montserrat',sans-serif;pointer-events:none;">Товар закончился 🔥</span>
+      <span id="detail-oos-price" style="font-size:17px;font-weight:700;color:#aaa;font-family:'Montserrat',sans-serif;pointer-events:none;"></span>
      </div>
     </div>
 
@@ -1345,6 +1350,12 @@
       const cartItem = cart.find(item => item.product_id === p.id);
       const quantity = cartItem ? cartItem.quantity : 0;
       const available = inStock(p.name);
+      // Бейдж остатка: показываем только когда товар есть в листе Склад
+      const stockKey = (p.name || '').trim().toLowerCase();
+      const stockQty = (stockKey in stockData) ? stockData[stockKey] : undefined;
+      const stockBadge = (stockQty !== undefined && stockQty > 0)
+        ? `<p style="font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:${stockQty <= 3 ? '#e06520' : '#6aaa6a'};">${stockQty <= 3 ? `⚠ Осталось: ${stockQty} шт.` : `В наличии: ${stockQty} шт.`}</p>`
+        : '';
       const imgHTML = productImages[p.id]
         ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige\\'>${p.image}</div>'">`
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
@@ -1365,6 +1376,7 @@
               <div onclick="showProductDetail('${p.id}')" style="cursor:pointer;">
                 <h3 class="font-bold text-coffee leading-tight ${compact ? 'text-xs' : 'text-sm'}" style="font-family:'Playfair Display',serif;">${p.name}</h3>
                 <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${weightInfo}</p>
+                ${stockBadge}
               </div>
               <div class="flex items-center justify-between gap-2 mt-1 card-btn-zone" data-pid="${p.id}">
                 ${available ? (() => { const disc = happyPrice(p); return disc < p.price
@@ -1455,8 +1467,26 @@
           sizeSection.style.display = 'none';
           delete document.getElementById('detail-add-btn').dataset.selectedSize;
         }
-        const addWrap = document.getElementById('detail-add-wrap');
-        if (addWrap) addWrap.style.display = _productDetailSource === 'preorder' ? 'none' : 'block';
+        const addWrap      = document.getElementById('detail-add-wrap');
+        const addBtn       = document.getElementById('detail-add-btn');
+        const qtyControls  = document.getElementById('detail-qty-controls');
+        const oosWrap      = document.getElementById('detail-oos-wrap');
+        const oosPriceEl   = document.getElementById('detail-oos-price');
+        const available    = inStock(product.name);
+        if (_productDetailSource === 'preorder') {
+          if (addWrap) addWrap.style.display = 'none';
+        } else if (!available) {
+          if (addWrap)     { addWrap.style.display = 'block'; }
+          if (addBtn)      { addBtn.style.display = 'none'; }
+          if (qtyControls) { qtyControls.style.display = 'none'; }
+          if (oosWrap)     { oosWrap.style.display = 'flex'; }
+          // Показываем цену рядом с сообщением о недоступности
+          if (oosPriceEl)  { oosPriceEl.innerHTML = product.price.toFixed(2) + ' ' + BYN; }
+        } else {
+          if (addWrap)  { addWrap.style.display = 'block'; }
+          if (addBtn)   { addBtn.style.display = 'flex'; }
+          if (oosWrap)  { oosWrap.style.display = 'none'; }
+        }
         openProductModal();
         setTimeout(updateDetailQtyControls, 0);
       } catch(e) {
