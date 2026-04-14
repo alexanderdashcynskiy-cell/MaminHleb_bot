@@ -20,12 +20,20 @@ app.use((req, res, next) => {
   next();
 });
 
-const BOT_TOKEN        = (process.env.BOT_TOKEN        || '').trim();
-const ADMIN_ID         = (process.env.ADMIN_ID         || '').trim();
-const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
-const PREORDER_CHAT_ID = (process.env.PREORDER_CHAT_ID || '').trim();
-const SPREADSHEET_ID   = (process.env.SPREADSHEET_ID   || '').trim();
-const PORT             = process.env.PORT || 3000;
+const BOT_TOKEN          = (process.env.BOT_TOKEN          || '').trim();
+const ADMIN_ID           = (process.env.ADMIN_ID           || '').trim();
+const DELIVERY_CHAT_ID   = (process.env.DELIVERY_CHAT_ID   || '').trim();
+const PREORDER_CHAT_ID   = (process.env.PREORDER_CHAT_ID   || '').trim();
+const SPREADSHEET_ID     = (process.env.SPREADSHEET_ID     || '').trim();
+// Название листа с заказами. Если не задан — пишет в первый лист.
+// Пример в Railway: ORDERS_SHEET_NAME=Заказы
+const ORDERS_SHEET_NAME  = (process.env.ORDERS_SHEET_NAME  || '').trim();
+const PORT               = process.env.PORT || 3000;
+
+// Строит полный range для листа с заказами: "SheetName!A:N" или просто "A:N"
+function ordersRange(range) {
+  return ORDERS_SHEET_NAME ? `${ORDERS_SHEET_NAME}!${range}` : range;
+}
 
 // ─── Состояние (память + файл) ────────────────────────────────────────────────
 const STATE_FILE = './state.json';
@@ -68,7 +76,7 @@ async function initOrderCounter() {
     const sheets = await getSheets();
     const meta = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'A:A'
+      range: ordersRange('A:A')
     });
     const rowCount = meta.data.values ? meta.data.values.length : 0;
     const orderCount = Math.max(0, rowCount - 1); // минус строка заголовка
@@ -119,17 +127,18 @@ async function appendRow(values) {
   const sheets = await getSheets();
   await sheets.spreadsheets.values.append({
     spreadsheetId:    SPREADSHEET_ID,
-    range:            'A:N',
+    range:            ordersRange('A:N'),
     valueInputOption: 'USER_ENTERED',
+    insertDataOption: 'INSERT_ROWS',
     requestBody:      { values: [values] }
   });
   // Надёжно: считаем реальное количество строк в колонке A
   const meta = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range:         'A:A'
+    range:         ordersRange('A:A')
   });
   const rowCount = meta.data.values ? meta.data.values.length : 0;
-  console.log('appendRow rowCount:', rowCount);
+  console.log('appendRow rowCount:', rowCount, 'sheet:', ORDERS_SHEET_NAME || '(first sheet)');
   return rowCount;
 }
 
@@ -138,7 +147,7 @@ async function updateCell(row, col, value) {
   const colLetter = String.fromCharCode(64 + col); // 1=A, 10=J, 12=L
   await sheets.spreadsheets.values.update({
     spreadsheetId:   SPREADSHEET_ID,
-    range:           `${colLetter}${row}`,
+    range:           ordersRange(`${colLetter}${row}`),
     valueInputOption: 'USER_ENTERED',
     requestBody:     { values: [[value]] }
   });
@@ -765,20 +774,20 @@ app.post('/reply', async (req, res) => {
 
 // ─── Склад (контроль наличия товаров) ────────────────────────────────────────
 // Структура листа "Склад":
-//   A = Название товара  B = Начальный запас  C = Продано  D = Остаток на складе
+//   A = Название товара  B = Количество (остаток)
 
 async function getStock() {
   try {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A2:D'
+      range: 'Склад!A2:B'
     });
     const rows = res.data.values || [];
     const stock = {};
     rows.forEach(row => {
-      const name      = (row[0] || '').trim();
-      const remaining = parseInt(row[3] || '0', 10); // колонка D = Остаток
+      const name      = (row[0] || '').trim().toLowerCase(); // нормализуем регистр
+      const remaining = parseInt(row[1] || '0', 10);         // колонка B = Количество
       if (name) stock[name] = isNaN(remaining) ? 0 : remaining;
     });
     return stock;
@@ -788,34 +797,30 @@ async function getStock() {
   }
 }
 
-// Уменьшает остаток: C (Продано) += qty, D (Остаток) -= qty
+// Уменьшает остаток: B (Количество) -= qty
 async function decrementStock(items) {
   if (!items || !items.length) return;
   try {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A:D'
+      range: 'Склад!A:B'
     });
     const rows = res.data.values || [];
     const updates = [];
 
     items.forEach(item => {
-      const name = (item.product_name || '').trim();
+      const name = (item.product_name || '').trim().toLowerCase();
       const qty  = item.quantity || 1;
       for (let i = 1; i < rows.length; i++) {  // i=1 — пропускаем заголовок
-        if ((rows[i][0] || '').trim() === name) {
-          const sold      = parseInt(rows[i][2] || '0', 10); // C = Продано
-          const remaining = parseInt(rows[i][3] || '0', 10); // D = Остаток
-          const newSold      = sold + qty;
+        if ((rows[i][0] || '').trim().toLowerCase() === name) {
+          const remaining    = parseInt(rows[i][1] || '0', 10); // B = Количество
           const newRemaining = Math.max(0, remaining - qty);
           updates.push(
-            { range: `Склад!C${i + 1}`, values: [[String(newSold)]] },
-            { range: `Склад!D${i + 1}`, values: [[String(newRemaining)]] }
+            { range: `Склад!B${i + 1}`, values: [[String(newRemaining)]] }
           );
           // Обновляем локально чтобы не было двойного декремента для одного товара
-          rows[i][2] = String(newSold);
-          rows[i][3] = String(newRemaining);
+          rows[i][1] = String(newRemaining);
           break;
         }
       }
@@ -829,7 +834,7 @@ async function decrementStock(items) {
         data: updates
       }
     });
-    console.log(`Stock decremented for ${updates.length / 2} items`);
+    console.log(`Stock decremented for ${updates.length} items`);
   } catch(e) {
     console.error('decrementStock:', e.message);
   }
@@ -864,6 +869,73 @@ app.post('/order', (req, res) => {
 app.get('/api/stock', async (req, res) => {
   const stock = await getStock();
   res.json({ ok: true, stock });
+});
+
+// Диагностика Google Sheets
+app.get('/api/test-sheets', async (req, res) => {
+  const result = { spreadsheetId: SPREADSHEET_ID ? SPREADSHEET_ID.slice(0,8) + '...' : 'NOT SET', steps: [] };
+  try {
+    // Шаг 1: парсим credentials
+    let creds;
+    try {
+      creds = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+      result.steps.push({ step: 'parse_credentials', ok: true, client_email: creds.client_email });
+    } catch(e) {
+      result.steps.push({ step: 'parse_credentials', ok: false, error: e.message });
+      return res.json({ ok: false, result });
+    }
+
+    // Шаг 2: auth
+    let sheets;
+    try {
+      sheetsApi = null; // сбросить кэш, чтобы создать заново
+      sheets = await getSheets();
+      result.steps.push({ step: 'auth', ok: true });
+    } catch(e) {
+      result.steps.push({ step: 'auth', ok: false, error: e.message });
+      return res.json({ ok: false, result });
+    }
+
+    // Шаг 3: читаем список листов
+    try {
+      const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
+      const sheetNames = (meta.data.sheets || []).map(s => s.properties.title);
+      result.steps.push({ step: 'get_spreadsheet', ok: true, sheets: sheetNames });
+    } catch(e) {
+      result.steps.push({ step: 'get_spreadsheet', ok: false, error: e.message });
+      return res.json({ ok: false, result });
+    }
+
+    // Шаг 4: читаем первую строку листа заказов
+    const testRange = ordersRange('A1:N1');
+    result.ordersSheet = ORDERS_SHEET_NAME || '(первый лист)';
+    result.ordersRange = testRange;
+    try {
+      const r = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: testRange });
+      result.steps.push({ step: 'read_A1:N1', ok: true, values: r.data.values || [] });
+    } catch(e) {
+      result.steps.push({ step: 'read_A1:N1', ok: false, error: e.message });
+    }
+
+    // Шаг 5: пробуем записать тестовую строку в лист заказов
+    try {
+      const now = new Date().toISOString();
+      const appendRes = await sheets.spreadsheets.values.append({
+        spreadsheetId:    SPREADSHEET_ID,
+        range:            ordersRange('A:N'),
+        valueInputOption: 'USER_ENTERED',
+        insertDataOption: 'INSERT_ROWS',
+        requestBody:      { values: [['TEST_ROW', now, 'diagnostic endpoint']] }
+      });
+      result.steps.push({ step: 'append_test_row', ok: true, updatedRange: appendRes.data.updates?.updatedRange });
+    } catch(e) {
+      result.steps.push({ step: 'append_test_row', ok: false, error: e.message, code: e.code });
+    }
+
+    res.json({ ok: true, result });
+  } catch(e) {
+    res.json({ ok: false, error: e.message, result });
+  }
 });
 
 // Проверка работоспособности
