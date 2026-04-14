@@ -20,12 +20,20 @@ app.use((req, res, next) => {
   next();
 });
 
-const BOT_TOKEN        = (process.env.BOT_TOKEN        || '').trim();
-const ADMIN_ID         = (process.env.ADMIN_ID         || '').trim();
-const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
-const PREORDER_CHAT_ID = (process.env.PREORDER_CHAT_ID || '').trim();
-const SPREADSHEET_ID   = (process.env.SPREADSHEET_ID   || '').trim();
-const PORT             = process.env.PORT || 3000;
+const BOT_TOKEN          = (process.env.BOT_TOKEN          || '').trim();
+const ADMIN_ID           = (process.env.ADMIN_ID           || '').trim();
+const DELIVERY_CHAT_ID   = (process.env.DELIVERY_CHAT_ID   || '').trim();
+const PREORDER_CHAT_ID   = (process.env.PREORDER_CHAT_ID   || '').trim();
+const SPREADSHEET_ID     = (process.env.SPREADSHEET_ID     || '').trim();
+// Название листа с заказами. Если не задан — пишет в первый лист.
+// Пример в Railway: ORDERS_SHEET_NAME=Заказы
+const ORDERS_SHEET_NAME  = (process.env.ORDERS_SHEET_NAME  || '').trim();
+const PORT               = process.env.PORT || 3000;
+
+// Строит полный range для листа с заказами: "SheetName!A:N" или просто "A:N"
+function ordersRange(range) {
+  return ORDERS_SHEET_NAME ? `${ORDERS_SHEET_NAME}!${range}` : range;
+}
 
 // ─── Состояние (память + файл) ────────────────────────────────────────────────
 const STATE_FILE = './state.json';
@@ -68,7 +76,7 @@ async function initOrderCounter() {
     const sheets = await getSheets();
     const meta = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'A:A'
+      range: ordersRange('A:A')
     });
     const rowCount = meta.data.values ? meta.data.values.length : 0;
     const orderCount = Math.max(0, rowCount - 1); // минус строка заголовка
@@ -119,17 +127,18 @@ async function appendRow(values) {
   const sheets = await getSheets();
   await sheets.spreadsheets.values.append({
     spreadsheetId:    SPREADSHEET_ID,
-    range:            'A:N',
+    range:            ordersRange('A:N'),
     valueInputOption: 'USER_ENTERED',
+    insertDataOption: 'INSERT_ROWS',
     requestBody:      { values: [values] }
   });
   // Надёжно: считаем реальное количество строк в колонке A
   const meta = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range:         'A:A'
+    range:         ordersRange('A:A')
   });
   const rowCount = meta.data.values ? meta.data.values.length : 0;
-  console.log('appendRow rowCount:', rowCount);
+  console.log('appendRow rowCount:', rowCount, 'sheet:', ORDERS_SHEET_NAME || '(first sheet)');
   return rowCount;
 }
 
@@ -138,7 +147,7 @@ async function updateCell(row, col, value) {
   const colLetter = String.fromCharCode(64 + col); // 1=A, 10=J, 12=L
   await sheets.spreadsheets.values.update({
     spreadsheetId:   SPREADSHEET_ID,
-    range:           `${colLetter}${row}`,
+    range:           ordersRange(`${colLetter}${row}`),
     valueInputOption: 'USER_ENTERED',
     requestBody:     { values: [[value]] }
   });
@@ -897,21 +906,25 @@ app.get('/api/test-sheets', async (req, res) => {
       return res.json({ ok: false, result });
     }
 
-    // Шаг 4: читаем первую строку основного листа
+    // Шаг 4: читаем первую строку листа заказов
+    const testRange = ordersRange('A1:N1');
+    result.ordersSheet = ORDERS_SHEET_NAME || '(первый лист)';
+    result.ordersRange = testRange;
     try {
-      const r = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'A1:N1' });
+      const r = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: testRange });
       result.steps.push({ step: 'read_A1:N1', ok: true, values: r.data.values || [] });
     } catch(e) {
       result.steps.push({ step: 'read_A1:N1', ok: false, error: e.message });
     }
 
-    // Шаг 5: пробуем записать тестовую строку
+    // Шаг 5: пробуем записать тестовую строку в лист заказов
     try {
       const now = new Date().toISOString();
       const appendRes = await sheets.spreadsheets.values.append({
         spreadsheetId:    SPREADSHEET_ID,
-        range:            'A:N',
+        range:            ordersRange('A:N'),
         valueInputOption: 'USER_ENTERED',
+        insertDataOption: 'INSERT_ROWS',
         requestBody:      { values: [['TEST_ROW', now, 'diagnostic endpoint']] }
       });
       result.steps.push({ step: 'append_test_row', ok: true, updatedRange: appendRes.data.updates?.updatedRange });
