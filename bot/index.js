@@ -213,9 +213,9 @@ async function handleOrder(body) {
     const payLabel = body.payment === 'card' ? '💳 Картой' : body.payment === 'cash' ? '💵 Наличными' : '';
     deliveryBlock = `*АДРЕС ДОСТАВКИ:*\n🚕 ${body.address}${payLabel ? `\n${payLabel}` : ''}`;
   } else if (body.time && body.time !== 'undefined') {
-    deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, пр-т Московский 130\n🕐 Время: ${body.time}`;
+    deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74\n🕐 Время: ${body.time}`;
   } else {
-    deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, пр-т Московский 130`;
+    deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74`;
   }
   // deliveryInfo нужен для совместимости с fallback-проверкой типа заказа
   const deliveryInfo = deliveryBlock;
@@ -588,8 +588,8 @@ async function handleCallback(cb) {
       // Самовывоз: завершаем сразу, отправляем оценку
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
       const readyText = orderType === 'preorder'
-        ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
-        : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, пр-т Московский 130\n\n⭐ *Оцените качество обслуживания:*`;
+        ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
+        : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\n⭐ *Оцените качество обслуживания:*`;
       const r = await notifyClient(clientId, readyText, ratingKeyboard(sheetRow || rowNum));
       if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
       if (sheetRow) await updateCell(sheetRow, 12, '🍞 Готов');
@@ -958,8 +958,11 @@ app.get('/api/test-sheets', async (req, res) => {
   }
 });
 
-// Проверка работоспособности
-app.get('/', (req, res) => res.send('MaminHleb bot is running ✓'));
+// Мини-апп — отдаём index.html из корня проекта
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, '..', 'index.html')));
+
+// Проверка работоспособности (для Railway / мониторинга)
+app.get('/health', (req, res) => res.send('MaminHleb bot is running ✓'));
 
 // ─── Установка вебхука (вызывается один раз при старте) ───────────────────────
 async function setWebhook() {
@@ -1050,6 +1053,45 @@ setInterval(() => {
     sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
   }
 }, 60000);
+
+// ─── Поллинг ответов из колонки K → клиенту ──────────────────────────────────
+// Каждые 2 минуты проверяем: есть ли в K текст, а в M ещё нет "✅ Ответили"
+// Если да — отправляем сообщение клиенту и ставим отметку в M
+async function pollReplies() {
+  try {
+    const sheets = await getSheets();
+    // Читаем F:M (F=ID Telegram, K=Ваш ответ, M=Статус ответа)
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range:         ordersRange('F2:M')
+    });
+    const rows = res.data.values || [];
+    for (let i = 0; i < rows.length; i++) {
+      const telegramId = (rows[i][0] || '').trim(); // F
+      const replyText  = (rows[i][5] || '').trim(); // K (F+5)
+      const status     = (rows[i][7] || '').trim(); // M (F+7)
+      if (!telegramId || !replyText || status === '✅ Ответили') continue;
+      const sheetRow = i + 2; // строка 1 — заголовок, i начинается с 0
+      const result = await tg('sendMessage', {
+        chat_id:    String(telegramId),
+        text:       `✉️ *Сообщение от пекарни «Мамин Хлеб»:*\n\n${replyText}`,
+        parse_mode: 'Markdown'
+      });
+      if (result.ok) {
+        await updateCell(sheetRow, 13, '✅ Ответили'); // колонка M
+        console.log(`Reply sent → telegramId=${telegramId} row=${sheetRow}`);
+      } else {
+        console.error(`Reply failed → telegramId=${telegramId} row=${sheetRow}:`, result.description);
+      }
+    }
+  } catch(e) {
+    console.error('pollReplies:', e.message);
+  }
+}
+
+setInterval(() => {
+  pollReplies().catch(e => console.error('pollReplies interval:', e));
+}, 2 * 60 * 1000); // каждые 2 минуты
 
 // ─── Запуск ───────────────────────────────────────────────────────────────────
 
