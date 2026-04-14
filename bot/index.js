@@ -238,8 +238,8 @@ async function handleOrder(body) {
       !isPreorder ? '✅ Заказ'      : '',
       isPreorder  ? '📌 Предзаказ' : '',
       clientName,
-      clientId,
       body.phone || '-',
+      clientId,
       itemsText,
       totalStr,
       deliveryBlock,
@@ -1005,7 +1005,7 @@ async function sendHappyHourNotifications() {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: ordersRange('E2:E')  // колонка E (telegramId), начиная со 2-й строки
+      range: ordersRange('F2:F')  // колонка F (ID Telegram), начиная со 2-й строки
     });
     const rows = res.data.values || [];
     const seen = new Set();
@@ -1056,7 +1056,7 @@ setInterval(() => {
 // Заголовки листа с заказами (14 колонок A–N)
 const ORDERS_HEADERS = [
   'Дата', '📦 ЗАКАЗ', '⏳ ПРЕДЗАКАЗ', 'Имя', 'Телефон',
-  'Column 13', 'Состав заказа', 'Сумма', 'Адрес/время',
+  'ID Telegram', 'Состав заказа', 'Сумма', 'Адрес/время',
   'Отзывы', 'Ваш ответ', 'Статус заказа', 'Статус ответа', 'Примечание'
 ];
 
