@@ -797,14 +797,14 @@ async function getStock() {
   }
 }
 
-// Уменьшает остаток: B (Количество) -= qty
+// Уменьшает остаток: B (Количество) -= qty, C (Продано) += qty
 async function decrementStock(items) {
   if (!items || !items.length) return;
   try {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A:B'
+      range: 'Склад!A:C'
     });
     const rows = res.data.values || [];
     const updates = [];
@@ -815,12 +815,16 @@ async function decrementStock(items) {
       for (let i = 1; i < rows.length; i++) {  // i=1 — пропускаем заголовок
         if ((rows[i][0] || '').trim().toLowerCase() === name) {
           const remaining    = parseInt(rows[i][1] || '0', 10); // B = Количество
+          const sold         = parseInt(rows[i][2] || '0', 10); // C = Продано
           const newRemaining = Math.max(0, remaining - qty);
+          const newSold      = sold + qty;
           updates.push(
-            { range: `Склад!B${i + 1}`, values: [[String(newRemaining)]] }
+            { range: `Склад!B${i + 1}`, values: [[String(newRemaining)]] },
+            { range: `Склад!C${i + 1}`, values: [[String(newSold)]] }
           );
           // Обновляем локально чтобы не было двойного декремента для одного товара
           rows[i][1] = String(newRemaining);
+          rows[i][2] = String(newSold);
           break;
         }
       }
@@ -834,7 +838,7 @@ async function decrementStock(items) {
         data: updates
       }
     });
-    console.log(`Stock decremented for ${updates.length} items`);
+    console.log(`Stock updated for ${updates.length / 2} items`);
   } catch(e) {
     console.error('decrementStock:', e.message);
   }
