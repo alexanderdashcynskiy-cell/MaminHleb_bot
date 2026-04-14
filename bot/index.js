@@ -69,15 +69,6 @@ function getNextOrderNum() {
   return n;
 }
 
-// Атомарный счётчик строк таблицы (синхронный — без чтения таблицы при каждом заказе)
-// sheet_row_counter хранит номер ПОСЛЕДНЕЙ записанной строки (1 = заголовок)
-// Первый вызов вернёт 2 (первая строка данных), следующий — 3 и т.д.
-function getNextSheetRow() {
-  const last = parseInt(getProp('sheet_row_counter') || '1');
-  const next = Math.max(last + 1, 2); // минимум строка 2 (строка 1 — заголовки)
-  setProp('sheet_row_counter', String(next));
-  return next;
-}
 
 // Инициализация счётчика из Google Sheets при старте (если state.json пуст/сброшен)
 async function initOrderCounter() {
@@ -141,17 +132,19 @@ async function getSheets() {
 
 async function appendRow(values) {
   const sheets = await getSheets();
-  // Используем синхронный счётчик из state.json — не читаем таблицу каждый раз.
-  // Это исключает ошибку, когда чтение A:A возвращало ~40000 строк из-за форматирования.
-  const nextRow = getNextSheetRow();
-  await sheets.spreadsheets.values.update({
+  const res = await sheets.spreadsheets.values.append({
     spreadsheetId:    SPREADSHEET_ID,
-    range:            ordersRange(`A${nextRow}`),
+    range:            ordersRange('A:N'),
     valueInputOption: 'USER_ENTERED',
+    insertDataOption: 'INSERT_ROWS',
     requestBody:      { values: [values] }
   });
-  console.log(`appendRow → row ${nextRow} (sheet: ${ORDERS_SHEET_NAME || 'first'})`);
-  return nextRow;
+  // Получаем номер строки из ответа: "Заказы!A5:N5" → 5
+  const updatedRange = res.data.updates?.updatedRange || '';
+  const match = updatedRange.match(/(\d+):[A-Z]+\d+$/) || updatedRange.match(/(\d+)$/);
+  const row = match ? parseInt(match[1]) : 0;
+  console.log(`appendRow → row ${row} (${updatedRange})`);
+  return row;
 }
 
 async function updateCell(row, col, value) {
@@ -1126,22 +1119,9 @@ async function initOrdersSheet() {
   }
 }
 
-// Сбрасывает счётчик строки если он попал в «неверную» зону (>9999),
-// например из-за чтения неправильного листа. Вызывается один раз при старте.
-function sanitizeSheetRowCounter() {
-  const val = parseInt(getProp('sheet_row_counter') || '0');
-  if (val > 9999 || val < 1) {
-    setProp('sheet_row_counter', '1');
-    console.log(`sheet_row_counter was ${val} — reset to 1 (next order → row 2)`);
-  } else {
-    console.log(`sheet_row_counter = ${val} (next order → row ${val + 1})`);
-  }
-}
-
 loadState();
 app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
-  sanitizeSheetRowCounter();
   await initOrdersSheet();
   await initOrderCounter();
   await setWebhook();
