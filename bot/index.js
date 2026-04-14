@@ -1051,6 +1051,45 @@ setInterval(() => {
   }
 }, 60000);
 
+// ─── Поллинг ответов из колонки K → клиенту ──────────────────────────────────
+// Каждые 2 минуты проверяем: есть ли в K текст, а в M ещё нет "✅ Ответили"
+// Если да — отправляем сообщение клиенту и ставим отметку в M
+async function pollReplies() {
+  try {
+    const sheets = await getSheets();
+    // Читаем F:M (F=ID Telegram, K=Ваш ответ, M=Статус ответа)
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range:         ordersRange('F2:M')
+    });
+    const rows = res.data.values || [];
+    for (let i = 0; i < rows.length; i++) {
+      const telegramId = (rows[i][0] || '').trim(); // F
+      const replyText  = (rows[i][5] || '').trim(); // K (F+5)
+      const status     = (rows[i][7] || '').trim(); // M (F+7)
+      if (!telegramId || !replyText || status === '✅ Ответили') continue;
+      const sheetRow = i + 2; // строка 1 — заголовок, i начинается с 0
+      const result = await tg('sendMessage', {
+        chat_id:    String(telegramId),
+        text:       `✉️ *Сообщение от пекарни «Мамин Хлеб»:*\n\n${replyText}`,
+        parse_mode: 'Markdown'
+      });
+      if (result.ok) {
+        await updateCell(sheetRow, 13, '✅ Ответили'); // колонка M
+        console.log(`Reply sent → telegramId=${telegramId} row=${sheetRow}`);
+      } else {
+        console.error(`Reply failed → telegramId=${telegramId} row=${sheetRow}:`, result.description);
+      }
+    }
+  } catch(e) {
+    console.error('pollReplies:', e.message);
+  }
+}
+
+setInterval(() => {
+  pollReplies().catch(e => console.error('pollReplies interval:', e));
+}, 2 * 60 * 1000); // каждые 2 минуты
+
 // ─── Запуск ───────────────────────────────────────────────────────────────────
 
 // Заголовки листа с заказами (14 колонок A–N)
