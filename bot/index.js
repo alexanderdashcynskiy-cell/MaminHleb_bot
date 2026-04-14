@@ -90,8 +90,14 @@ async function initOrderCounter() {
     });
     const rowCount = meta.data.values ? meta.data.values.length : 0;
     const orderCount = Math.max(0, rowCount - 1); // минус строка заголовка
-    setProp('order_counter', String(orderCount));
-    console.log(`Order counter initialized from Sheets: ${orderCount}`);
+    // Нереально большое число — скорее всего читаем не тот лист (напр. Склад)
+    if (orderCount > 9999) {
+      console.warn(`initOrderCounter: got ${orderCount} rows — wrong sheet? defaulting to 0`);
+      setProp('order_counter', '0');
+    } else {
+      setProp('order_counter', String(orderCount));
+      console.log(`Order counter initialized from Sheets: ${orderCount}`);
+    }
   } catch(e) {
     console.error('initOrderCounter:', e.message);
   }
@@ -405,9 +411,13 @@ async function notifyClient(clientId, text, keyboard) {
 async function deleteStoredMsg(key) {
   const raw = getProp(key);
   if (!raw) return;
-  const info = JSON.parse(raw);
-  await tg('deleteMessage', { chat_id: info.chatId, message_id: info.msgId });
-  delProp(key);
+  try {
+    const info = JSON.parse(raw);
+    await tg('deleteMessage', { chat_id: info.chatId, message_id: info.msgId });
+  } catch(e) {
+    console.error(`deleteStoredMsg(${key}):`, e.message);
+  }
+  delProp(key); // удаляем в любом случае, чтобы не повторять
 }
 
 // Кнопки для рейтинга
@@ -619,7 +629,7 @@ async function handleCallback(cb) {
           { text: '✅ Доставлен', callback_data: `done_${rowNum}_${clientId}` }
         ]]}
       });
-      if (dr.ok) setProp(`delivery_msg_${rowNum}`, JSON.stringify({ chatId: DELIVERY_CHAT_ID, msgId: dr.result.message_id }));
+      if (dr?.ok) setProp(`delivery_msg_${rowNum}`, JSON.stringify({ chatId: DELIVERY_CHAT_ID, msgId: dr.result.message_id }));
     }
 
     // Уведомление клиенту
@@ -995,7 +1005,7 @@ async function sendHappyHourNotifications() {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'E2:E'  // колонка E, начиная со 2-й строки (без заголовка)
+      range: ordersRange('E2:E')  // колонка E (telegramId), начиная со 2-й строки
     });
     const rows = res.data.values || [];
     const seen = new Set();
@@ -1010,9 +1020,16 @@ async function sendHappyHourNotifications() {
     `🌆 *Добрый вечер!*\n\n` +
     `Настало время счастливого часа — скидка *30%* на всю оставшуюся продукцию для самовывоза.\n\n` +
     `Успейте забрать! 🥐`;
-  for (const cid of clients) {
-    try { await tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' }); }
-    catch(e) { console.error(`happyHour notify ${cid}:`, e.message); }
+  // Параллельная рассылка пакетами по 25 (лимит Telegram: 30 сообщ/сек)
+  const BATCH = 25;
+  for (let i = 0; i < clients.length; i += BATCH) {
+    await Promise.all(
+      clients.slice(i, i + BATCH).map(cid =>
+        tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' })
+          .catch(e => console.error(`happyHour notify ${cid}:`, e.message))
+      )
+    );
+    if (i + BATCH < clients.length) await new Promise(r => setTimeout(r, 1100));
   }
 }
 

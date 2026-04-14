@@ -935,6 +935,7 @@
     async function fetchStock() {
       try {
         const res  = await fetch(`${API_BASE}/api/stock`);
+        if (!res.ok) return;
         const json = await res.json();
         if (json.ok && json.stock) {
           stockData = json.stock;
@@ -1407,9 +1408,6 @@
         const compact = zone.closest('.flex-shrink-0') !== null && zone.closest('.flex-shrink-0').dataset.pid !== undefined;
         const btn = zone.querySelector('button, div.flex');
         if (btn) btn.outerHTML = cardBtnHTML(productId, qty, compact);
-        const card = zone.closest('.product-card');
-        if (card) {
-        }
       });
     }
 
@@ -1542,7 +1540,7 @@
         if (selectedSize) item.selected_size = selectedSize;
         cart.push(item);
       }
-      setTimeout(() => { updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId, true); updateDetailQtyControls(); }, 0);
+      updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId, true); updateDetailQtyControls();
     }
 
     function updateDetailQtyControls() {
@@ -1695,10 +1693,15 @@
       }
     }
 
-    // Обновлять раз в минуту
+    // Обновлять баннер раз в минуту; перерисовывать карточки только при смене состояния happy hour
+    let _lastHappyHourActive = getHappyHour().active;
     setInterval(() => {
       updateHappyHourBanner();
-      renderProducts(); renderBestsellers(); updateCartUI(); updateFloatingCart();
+      const nowActive = getHappyHour().active;
+      if (nowActive !== _lastHappyHourActive) {
+        _lastHappyHourActive = nowActive;
+        renderProducts(); renderBestsellers(); updateCartUI(); updateFloatingCart();
+      }
     }, 60000);
 
     // ── Checkout ───────────────────────────────────────────────────────────────
@@ -1811,7 +1814,7 @@
       'ул. Урицкого','ул. Фестивальная','ул. Фрунзе',
       'ул. Чапаева','ул. Черняховского','ул. Чехова','ул. Чкалова',
       // Ш / Э / Я
-      'ул. Шагала','ул. Шевченко','ул. Шевченко','ул. Энгельса',
+      'ул. Шагала','ул. Шевченко','ул. Энгельса',
       'ул. Якуба Коласа','ул. Янки Купалы','ул. Янопольская','ул. Ясная',
       'ул. Яблоневая','ул. Ягодная',
       // Микрорайоны и специфичные
@@ -1889,8 +1892,8 @@
       document.getElementById('checkout-pickup-time').value = time;
       const disp = document.getElementById('pickup-time-display');
       if (disp) { disp.textContent = '🕐 ' + time; disp.style.color = '#3d2010'; }
-      renderPickupChips();
-      setTimeout(() => { const chips = document.getElementById('pickup-time-chips'); if (chips) chips.style.display = 'none'; }, 150);
+      const chips = document.getElementById('pickup-time-chips');
+      if (chips) chips.style.display = 'none';
     }
 
     function startCheckout() {
