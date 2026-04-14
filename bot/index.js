@@ -1029,9 +1029,42 @@ setInterval(() => {
 }, 60000);
 
 // ─── Запуск ───────────────────────────────────────────────────────────────────
+
+// Заголовки листа с заказами (14 колонок A–N)
+const ORDERS_HEADERS = [
+  'Дата', '📦 ЗАКАЗ', '⏳ ПРЕДЗАКАЗ', 'Имя', 'Телефон',
+  'Column 13', 'Состав заказа', 'Сумма', 'Адрес/время',
+  'Отзывы', 'Ваш ответ', 'Статус заказа', 'Статус ответа', 'Примечание'
+];
+
+// Пишет заголовки в строку 1, если лист пустой
+async function initOrdersSheet() {
+  try {
+    const sheets = await getSheets();
+    const check = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: ordersRange('A1')
+    });
+    if (check.data.values && check.data.values.length > 0) {
+      console.log('Orders sheet: headers already exist');
+      return;
+    }
+    await sheets.spreadsheets.values.update({
+      spreadsheetId:    SPREADSHEET_ID,
+      range:            ordersRange('A1'),
+      valueInputOption: 'USER_ENTERED',
+      requestBody:      { values: [ORDERS_HEADERS] }
+    });
+    console.log('Orders sheet: headers written to row 1');
+  } catch(e) {
+    console.error('initOrdersSheet:', e.message);
+  }
+}
+
 loadState();
 app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
+  await initOrdersSheet();
   await initOrderCounter();
   await setWebhook();
 });
