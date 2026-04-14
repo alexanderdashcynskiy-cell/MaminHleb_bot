@@ -958,8 +958,11 @@ app.get('/api/test-sheets', async (req, res) => {
   }
 });
 
+// Мини-апп — отдаём index.html (лежит рядом с index.js в bot/)
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
 // Проверка работоспособности
-app.get('/', (req, res) => res.send('MaminHleb bot is running ✓'));
+app.get('/health', (req, res) => res.send('MaminHleb bot is running ✓'));
 
 // ─── Установка вебхука (вызывается один раз при старте) ───────────────────────
 async function setWebhook() {
