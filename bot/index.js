@@ -69,6 +69,16 @@ function getNextOrderNum() {
   return n;
 }
 
+// Атомарный счётчик строк таблицы (синхронный — без чтения таблицы при каждом заказе)
+// sheet_row_counter хранит номер ПОСЛЕДНЕЙ записанной строки (1 = заголовок)
+// Первый вызов вернёт 2 (первая строка данных), следующий — 3 и т.д.
+function getNextSheetRow() {
+  const last = parseInt(getProp('sheet_row_counter') || '1');
+  const next = Math.max(last + 1, 2); // минимум строка 2 (строка 1 — заголовки)
+  setProp('sheet_row_counter', String(next));
+  return next;
+}
+
 // Инициализация счётчика из Google Sheets при старте (если state.json пуст/сброшен)
 async function initOrderCounter() {
   if (parseInt(getProp('order_counter') || '0') > 0) return;
@@ -80,8 +90,14 @@ async function initOrderCounter() {
     });
     const rowCount = meta.data.values ? meta.data.values.length : 0;
     const orderCount = Math.max(0, rowCount - 1); // минус строка заголовка
-    setProp('order_counter', String(orderCount));
-    console.log(`Order counter initialized from Sheets: ${orderCount}`);
+    // Нереально большое число — скорее всего читаем не тот лист (напр. Склад)
+    if (orderCount > 9999) {
+      console.warn(`initOrderCounter: got ${orderCount} rows — wrong sheet? defaulting to 0`);
+      setProp('order_counter', '0');
+    } else {
+      setProp('order_counter', String(orderCount));
+      console.log(`Order counter initialized from Sheets: ${orderCount}`);
+    }
   } catch(e) {
     console.error('initOrderCounter:', e.message);
   }
@@ -125,21 +141,17 @@ async function getSheets() {
 
 async function appendRow(values) {
   const sheets = await getSheets();
-  await sheets.spreadsheets.values.append({
+  // Используем синхронный счётчик из state.json — не читаем таблицу каждый раз.
+  // Это исключает ошибку, когда чтение A:A возвращало ~40000 строк из-за форматирования.
+  const nextRow = getNextSheetRow();
+  await sheets.spreadsheets.values.update({
     spreadsheetId:    SPREADSHEET_ID,
-    range:            ordersRange('A:N'),
+    range:            ordersRange(`A${nextRow}`),
     valueInputOption: 'USER_ENTERED',
-    insertDataOption: 'INSERT_ROWS',
     requestBody:      { values: [values] }
   });
-  // Надёжно: считаем реальное количество строк в колонке A
-  const meta = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range:         ordersRange('A:A')
-  });
-  const rowCount = meta.data.values ? meta.data.values.length : 0;
-  console.log('appendRow rowCount:', rowCount, 'sheet:', ORDERS_SHEET_NAME || '(first sheet)');
-  return rowCount;
+  console.log(`appendRow → row ${nextRow} (sheet: ${ORDERS_SHEET_NAME || 'first'})`);
+  return nextRow;
 }
 
 async function updateCell(row, col, value) {
@@ -399,9 +411,13 @@ async function notifyClient(clientId, text, keyboard) {
 async function deleteStoredMsg(key) {
   const raw = getProp(key);
   if (!raw) return;
-  const info = JSON.parse(raw);
-  await tg('deleteMessage', { chat_id: info.chatId, message_id: info.msgId });
-  delProp(key);
+  try {
+    const info = JSON.parse(raw);
+    await tg('deleteMessage', { chat_id: info.chatId, message_id: info.msgId });
+  } catch(e) {
+    console.error(`deleteStoredMsg(${key}):`, e.message);
+  }
+  delProp(key); // удаляем в любом случае, чтобы не повторять
 }
 
 // Кнопки для рейтинга
@@ -613,7 +629,7 @@ async function handleCallback(cb) {
           { text: '✅ Доставлен', callback_data: `done_${rowNum}_${clientId}` }
         ]]}
       });
-      if (dr.ok) setProp(`delivery_msg_${rowNum}`, JSON.stringify({ chatId: DELIVERY_CHAT_ID, msgId: dr.result.message_id }));
+      if (dr?.ok) setProp(`delivery_msg_${rowNum}`, JSON.stringify({ chatId: DELIVERY_CHAT_ID, msgId: dr.result.message_id }));
     }
 
     // Уведомление клиенту
@@ -797,14 +813,14 @@ async function getStock() {
   }
 }
 
-// Уменьшает остаток: B (Количество) -= qty
+// Уменьшает остаток: B (Количество) -= qty, C (Продано) += qty
 async function decrementStock(items) {
   if (!items || !items.length) return;
   try {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A:B'
+      range: 'Склад!A:C'
     });
     const rows = res.data.values || [];
     const updates = [];
@@ -815,12 +831,16 @@ async function decrementStock(items) {
       for (let i = 1; i < rows.length; i++) {  // i=1 — пропускаем заголовок
         if ((rows[i][0] || '').trim().toLowerCase() === name) {
           const remaining    = parseInt(rows[i][1] || '0', 10); // B = Количество
+          const sold         = parseInt(rows[i][2] || '0', 10); // C = Продано
           const newRemaining = Math.max(0, remaining - qty);
+          const newSold      = sold + qty;
           updates.push(
-            { range: `Склад!B${i + 1}`, values: [[String(newRemaining)]] }
+            { range: `Склад!B${i + 1}`, values: [[String(newRemaining)]] },
+            { range: `Склад!C${i + 1}`, values: [[String(newSold)]] }
           );
           // Обновляем локально чтобы не было двойного декремента для одного товара
           rows[i][1] = String(newRemaining);
+          rows[i][2] = String(newSold);
           break;
         }
       }
@@ -834,7 +854,7 @@ async function decrementStock(items) {
         data: updates
       }
     });
-    console.log(`Stock decremented for ${updates.length} items`);
+    console.log(`Stock updated for ${updates.length / 2} items`);
   } catch(e) {
     console.error('decrementStock:', e.message);
   }
@@ -985,7 +1005,7 @@ async function sendHappyHourNotifications() {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'E2:E'  // колонка E, начиная со 2-й строки (без заголовка)
+      range: ordersRange('E2:E')  // колонка E (telegramId), начиная со 2-й строки
     });
     const rows = res.data.values || [];
     const seen = new Set();
@@ -1000,9 +1020,16 @@ async function sendHappyHourNotifications() {
     `🌆 *Добрый вечер!*\n\n` +
     `Настало время счастливого часа — скидка *30%* на всю оставшуюся продукцию для самовывоза.\n\n` +
     `Успейте забрать! 🥐`;
-  for (const cid of clients) {
-    try { await tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' }); }
-    catch(e) { console.error(`happyHour notify ${cid}:`, e.message); }
+  // Параллельная рассылка пакетами по 25 (лимит Telegram: 30 сообщ/сек)
+  const BATCH = 25;
+  for (let i = 0; i < clients.length; i += BATCH) {
+    await Promise.all(
+      clients.slice(i, i + BATCH).map(cid =>
+        tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' })
+          .catch(e => console.error(`happyHour notify ${cid}:`, e.message))
+      )
+    );
+    if (i + BATCH < clients.length) await new Promise(r => setTimeout(r, 1100));
   }
 }
 
@@ -1025,9 +1052,55 @@ setInterval(() => {
 }, 60000);
 
 // ─── Запуск ───────────────────────────────────────────────────────────────────
+
+// Заголовки листа с заказами (14 колонок A–N)
+const ORDERS_HEADERS = [
+  'Дата', '📦 ЗАКАЗ', '⏳ ПРЕДЗАКАЗ', 'Имя', 'Телефон',
+  'Column 13', 'Состав заказа', 'Сумма', 'Адрес/время',
+  'Отзывы', 'Ваш ответ', 'Статус заказа', 'Статус ответа', 'Примечание'
+];
+
+// Пишет заголовки в строку 1, если лист пустой
+async function initOrdersSheet() {
+  try {
+    const sheets = await getSheets();
+    const check = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: ordersRange('A1')
+    });
+    if (check.data.values && check.data.values.length > 0) {
+      console.log('Orders sheet: headers already exist');
+      return;
+    }
+    await sheets.spreadsheets.values.update({
+      spreadsheetId:    SPREADSHEET_ID,
+      range:            ordersRange('A1'),
+      valueInputOption: 'USER_ENTERED',
+      requestBody:      { values: [ORDERS_HEADERS] }
+    });
+    console.log('Orders sheet: headers written to row 1');
+  } catch(e) {
+    console.error('initOrdersSheet:', e.message);
+  }
+}
+
+// Сбрасывает счётчик строки если он попал в «неверную» зону (>9999),
+// например из-за чтения неправильного листа. Вызывается один раз при старте.
+function sanitizeSheetRowCounter() {
+  const val = parseInt(getProp('sheet_row_counter') || '0');
+  if (val > 9999 || val < 1) {
+    setProp('sheet_row_counter', '1');
+    console.log(`sheet_row_counter was ${val} — reset to 1 (next order → row 2)`);
+  } else {
+    console.log(`sheet_row_counter = ${val} (next order → row ${val + 1})`);
+  }
+}
+
 loadState();
 app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
+  sanitizeSheetRowCounter();
+  await initOrdersSheet();
   await initOrderCounter();
   await setWebhook();
 });
