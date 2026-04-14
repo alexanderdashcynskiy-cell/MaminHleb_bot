@@ -958,8 +958,11 @@ app.get('/api/test-sheets', async (req, res) => {
   }
 });
 
-// Проверка работоспособности
-app.get('/', (req, res) => res.send('MaminHleb bot is running ✓'));
+// Мини-апп — отдаём index.html из корня проекта
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, '..', 'index.html')));
+
+// Проверка работоспособности (для Railway / мониторинга)
+app.get('/health', (req, res) => res.send('MaminHleb bot is running ✓'));
 
 // ─── Установка вебхука (вызывается один раз при старте) ───────────────────────
 async function setWebhook() {
