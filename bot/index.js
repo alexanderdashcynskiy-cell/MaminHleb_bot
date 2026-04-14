@@ -765,20 +765,20 @@ app.post('/reply', async (req, res) => {
 
 // ─── Склад (контроль наличия товаров) ────────────────────────────────────────
 // Структура листа "Склад":
-//   A = Название товара  B = Начальный запас  C = Продано  D = Остаток на складе
+//   A = Название товара  B = Количество (остаток)
 
 async function getStock() {
   try {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A2:D'
+      range: 'Склад!A2:B'
     });
     const rows = res.data.values || [];
     const stock = {};
     rows.forEach(row => {
       const name      = (row[0] || '').trim().toLowerCase(); // нормализуем регистр
-      const remaining = parseInt(row[3] || '0', 10);         // колонка D = Остаток
+      const remaining = parseInt(row[1] || '0', 10);         // колонка B = Количество
       if (name) stock[name] = isNaN(remaining) ? 0 : remaining;
     });
     return stock;
@@ -788,14 +788,14 @@ async function getStock() {
   }
 }
 
-// Уменьшает остаток: C (Продано) += qty, D (Остаток) -= qty
+// Уменьшает остаток: B (Количество) -= qty
 async function decrementStock(items) {
   if (!items || !items.length) return;
   try {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A:D'
+      range: 'Склад!A:B'
     });
     const rows = res.data.values || [];
     const updates = [];
@@ -805,17 +805,13 @@ async function decrementStock(items) {
       const qty  = item.quantity || 1;
       for (let i = 1; i < rows.length; i++) {  // i=1 — пропускаем заголовок
         if ((rows[i][0] || '').trim().toLowerCase() === name) {
-          const sold      = parseInt(rows[i][2] || '0', 10); // C = Продано
-          const remaining = parseInt(rows[i][3] || '0', 10); // D = Остаток
-          const newSold      = sold + qty;
+          const remaining    = parseInt(rows[i][1] || '0', 10); // B = Количество
           const newRemaining = Math.max(0, remaining - qty);
           updates.push(
-            { range: `Склад!C${i + 1}`, values: [[String(newSold)]] },
-            { range: `Склад!D${i + 1}`, values: [[String(newRemaining)]] }
+            { range: `Склад!B${i + 1}`, values: [[String(newRemaining)]] }
           );
           // Обновляем локально чтобы не было двойного декремента для одного товара
-          rows[i][2] = String(newSold);
-          rows[i][3] = String(newRemaining);
+          rows[i][1] = String(newRemaining);
           break;
         }
       }
@@ -829,7 +825,7 @@ async function decrementStock(items) {
         data: updates
       }
     });
-    console.log(`Stock decremented for ${updates.length / 2} items`);
+    console.log(`Stock decremented for ${updates.length} items`);
   } catch(e) {
     console.error('decrementStock:', e.message);
   }
