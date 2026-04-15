@@ -1389,7 +1389,7 @@
                   ? `<div style="white-space:nowrap;"><span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} ${BYN}</span><br><span class="font-bold ${compact ? 'text-sm' : 'text-base'}" style="color:#E05252;font-family:'Montserrat',sans-serif;white-space:nowrap;">${disc.toFixed(2)} ${BYN}</span></div>`
                   : `<span class="font-bold text-coffee ${compact ? 'text-sm' : 'text-base'}" style="font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} ${BYN}</span>`; })()
                   : `<span style="font-size:${compact?'9px':'11px'};color:#aaa;font-family:'Montserrat',sans-serif;">Нет в наличии</span>`}
-                <div class="card-btn-zone" data-pid="${p.id}" data-compact="${compact ? '1' : '0'}" style="flex-shrink:0;position:relative;z-index:2;">
+                <div class="card-btn-zone" data-pid="${p.id}" data-compact="${compact ? '1' : '0'}" style="flex-shrink:0;position:relative;z-index:2;min-width:80px;display:flex;justify-content:flex-end;align-items:center;">
                   ${available ? cardBtnHTML(p.id, quantity, compact) : ''}
                 </div>
               </div>
