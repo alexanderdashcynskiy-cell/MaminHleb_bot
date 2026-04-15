@@ -205,7 +205,7 @@ async function handleOrder(body) {
 
   // Запись в Google Sheets
   const now     = new Date();
-  const dateStr = now.toLocaleString('ru-RU', { timeZone: 'Europe/Kyiv' });
+  const dateStr = now.toLocaleString('ru-RU', { timeZone: 'Europe/Minsk' });
 
   const newRow = await appendRow([
     dateStr,
@@ -791,7 +791,7 @@ async function setWebhook() {
   console.log('setWebhook:', JSON.stringify(res));
 }
 
-// ─── Ежедневный check-in в 22:00 ─────────────────────────────────────────────
+// ─── Ежедневный check-in в 06:00 (время Минска) ──────────────────────────────
 let checkinSentDate = '';
 setInterval(() => {
   const now = new Date();
