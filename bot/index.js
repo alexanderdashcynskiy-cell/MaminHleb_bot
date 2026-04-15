@@ -139,20 +139,30 @@ async function appendRow(values) {
     insertDataOption: 'INSERT_ROWS',
     requestBody:      { values: [values] }
   });
-  // Получаем номер строки из ответа: "Заказы!A5:N5" → 5
+  // Получаем номер строки из ответа: "Заказы!A5:N5" или "A5" → 5 (первое число)
   const updatedRange = res.data.updates?.updatedRange || '';
-  const match = updatedRange.match(/(\d+):[A-Z]+\d+$/) || updatedRange.match(/(\d+)$/);
-  const row = match ? parseInt(match[1]) : 0;
+  const match = updatedRange.match(/[A-Z]+(\d+)/);
+  const row = match ? parseInt(match[1], 10) : 0;
   console.log(`appendRow → row ${row} (${updatedRange})`);
   return row;
 }
 
+// Преобразует индекс колонки (1-based) в буквенное обозначение: 1→A, 26→Z, 27→AA
+function colLetter(col) {
+  let s = '';
+  while (col > 0) {
+    const m = (col - 1) % 26;
+    s = String.fromCharCode(65 + m) + s;
+    col = Math.floor((col - 1) / 26);
+  }
+  return s;
+}
+
 async function updateCell(row, col, value) {
   const sheets = await getSheets();
-  const colLetter = String.fromCharCode(64 + col); // 1=A, 10=J, 12=L
   await sheets.spreadsheets.values.update({
     spreadsheetId:   SPREADSHEET_ID,
-    range:           ordersRange(`${colLetter}${row}`),
+    range:           ordersRange(`${colLetter(col)}${row}`),
     valueInputOption: 'USER_ENTERED',
     requestBody:     { values: [[value]] }
   });
@@ -222,7 +232,7 @@ async function handleOrder(body) {
 
   // Запись в Google Sheets (с защитой от сбоя)
   const now     = new Date();
-  const dateStr = now.toLocaleString('ru-RU', { timeZone: 'Europe/Kyiv' });
+  const dateStr = now.toLocaleString('ru-RU', { timeZone: 'Europe/Minsk' });
 
   let sheetRow = 0;
   try {
@@ -432,7 +442,10 @@ async function sendAdminCheckin() {
     text:       `☀️ Доброе утро!\n\nКто сегодня работает администратором?\nВведите ваше имя:`,
     parse_mode: 'Markdown'
   });
-  if (r.ok) setProp(`pending_checkin_${ADMIN_ID}`, JSON.stringify({ promptMsgId: r.result.message_id }));
+  if (r.ok) {
+    setProp(`pending_checkin_${ADMIN_ID}`, JSON.stringify({ promptMsgId: r.result.message_id }));
+    setProp('checkin_msg', JSON.stringify({ chatId: ADMIN_ID, msgId: r.result.message_id }));
+  }
 }
 
 // ─── Обработка кнопок ─────────────────────────────────────────────────────────
@@ -976,23 +989,30 @@ async function setWebhook() {
   console.log('setWebhook:', JSON.stringify(res));
 }
 
-// ─── Ежедневный check-in в 22:00 ─────────────────────────────────────────────
-let checkinSentDate = '';
+// Формирует ключ дня в минском времени: "2026-04-15" (месяц 1-based с нулём)
+function mskDateKey() {
+  const msk = new Date(Date.now() + 3 * 3600 * 1000);
+  const yyyy = msk.getUTCFullYear();
+  const mm = String(msk.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(msk.getUTCDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// ─── Ежедневный check-in в 06:00 Минск (UTC+3) ───────────────────────────────
+// Персистентный флаг — не шлёт повторно при перезапуске, но если пропустили
+// окно из-за рестарта в 06:00-06:59, шлёт в течение дня до 09:00.
 setInterval(() => {
-  const now = new Date();
-  const msk = new Date(now.getTime() + 3 * 3600 * 1000);
+  const msk = new Date(Date.now() + 3 * 3600 * 1000);
   const h   = msk.getUTCHours();
-  const m   = msk.getUTCMinutes();
-  const dateKey = `${msk.getUTCFullYear()}-${msk.getUTCMonth()}-${msk.getUTCDate()}`;
-  if (h === 6 && m < 5 && checkinSentDate !== dateKey) {
-    checkinSentDate = dateKey;
+  const dateKey = mskDateKey();
+  if (h >= 6 && h < 9 && getProp('checkin_sent_date') !== dateKey) {
+    setProp('checkin_sent_date', dateKey);
     sendAdminCheckin().catch(e => console.error('checkin err:', e));
   }
 }, 60000);
 
 // ─── Happy Hour уведомления ───────────────────────────────────────────────────
 // Пн–Пт 19:00 и Сб–Вс 17:00 (время Минска UTC+3) — рассылка всем клиентам
-let happyHourSentDate = '';
 
 async function sendHappyHourNotifications() {
   // Читаем всех клиентов из Google Sheets колонка E (telegramId)
@@ -1030,19 +1050,18 @@ async function sendHappyHourNotifications() {
 }
 
 setInterval(() => {
-  const now = new Date();
-  // Belarus = UTC+3 постоянно (без DST) — не зависит от ICU данных сервера
-  const msk = new Date(now.getTime() + 3 * 3600 * 1000);
+  // Belarus = UTC+3 постоянно (без DST)
+  const msk = new Date(Date.now() + 3 * 3600 * 1000);
   const day = msk.getUTCDay();      // 0=Вс … 6=Сб
   const h   = msk.getUTCHours();
-  const m   = msk.getUTCMinutes();
-  const dateKey = `${msk.getUTCFullYear()}-${msk.getUTCMonth()}-${msk.getUTCDate()}`;
+  const dateKey = mskDateKey();
   const isWeekday = day >= 1 && day <= 5;
   const isWeekend = day === 0 || day === 6;
-  // Проверяем первые 5 минут счастливого часа — не пропустим даже при перезапуске бота
-  const isHappyStart = (isWeekday && h === 19 && m < 5) || (isWeekend && h === 17 && m < 5);
-  if (isHappyStart && happyHourSentDate !== dateKey) {
-    happyHourSentDate = dateKey;
+  // Окно 1 час начиная с 19:00 (Пн-Пт) / 17:00 (Сб-Вс) — ловим даже после рестарта.
+  // Персистентный флаг в state.json предотвращает повторную рассылку в тот же день.
+  const isHappyWindow = (isWeekday && h === 19) || (isWeekend && h === 17);
+  if (isHappyWindow && getProp('happy_hour_sent_date') !== dateKey) {
+    setProp('happy_hour_sent_date', dateKey);
     sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
   }
 }, 60000);
