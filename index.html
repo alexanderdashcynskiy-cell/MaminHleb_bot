@@ -1372,7 +1372,7 @@
         </div>` : '';
       return `
         <div class="${compact ? 'flex-shrink-0 w-44' : ''}" data-pid="${p.id}" style="${!available ? 'opacity:0.55;' : ''}">
-          <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col">
+          <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col" style="isolation:isolate;">
             <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square group/img">
               <div class="w-full h-full">${imgHTML}</div>
               ${!compact && p.isNew && available ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
@@ -1389,7 +1389,7 @@
                   ? `<div style="white-space:nowrap;"><span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} ${BYN}</span><br><span class="font-bold ${compact ? 'text-sm' : 'text-base'}" style="color:#E05252;font-family:'Montserrat',sans-serif;white-space:nowrap;">${disc.toFixed(2)} ${BYN}</span></div>`
                   : `<span class="font-bold text-coffee ${compact ? 'text-sm' : 'text-base'}" style="font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} ${BYN}</span>`; })()
                   : `<span style="font-size:${compact?'9px':'11px'};color:#aaa;font-family:'Montserrat',sans-serif;">Нет в наличии</span>`}
-                <div class="card-btn-zone" data-pid="${p.id}" data-compact="${compact ? '1' : '0'}" style="flex-shrink:0;">
+                <div class="card-btn-zone" data-pid="${p.id}" data-compact="${compact ? '1' : '0'}" style="flex-shrink:0;position:relative;z-index:2;">
                   ${available ? cardBtnHTML(p.id, quantity, compact) : ''}
                 </div>
               </div>
@@ -1400,12 +1400,12 @@
 
     function cardBtnHTML(pid, quantity, compact = false) {
       if (quantity > 0) return `
-        <div style="display:flex;align-items:center;gap:4px;background:rgba(212,165,116,0.18);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:50px;padding:4px 6px;border:1px solid rgba(255,255,255,0.55);box-shadow:0 2px 8px rgba(180,130,60,0.12),inset 0 1px 2px rgba(255,255,255,0.55);">
-          <button onclick="updateQuantity('${pid}',-1)" style="width:24px;height:24px;border-radius:50%;background:rgba(212,165,116,0.35);color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;box-shadow:inset 0 1px 3px rgba(255,255,255,0.7),0 2px 4px rgba(0,0,0,0.08);">−</button>
+        <div style="display:flex;align-items:center;gap:4px;background:#f5ead8;border-radius:50px;padding:4px 6px;border:1px solid rgba(212,165,116,0.4);box-shadow:0 2px 6px rgba(180,130,60,0.1);">
+          <button onclick="updateQuantity('${pid}',-1)" style="width:24px;height:24px;border-radius:50%;background:#e8d4b8;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">−</button>
           <span style="min-width:16px;text-align:center;font-weight:800;color:#6B4423;font-size:12px;">${quantity}</span>
-          <button onclick="updateQuantity('${pid}',1)" style="width:24px;height:24px;border-radius:50%;position:relative;overflow:hidden;background:linear-gradient(135deg,#C9A227,#D4A574);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;box-shadow:0 3px 8px rgba(201,162,39,0.38),inset 0 1px 2px rgba(255,255,255,0.6);"><span style="position:relative;z-index:1;">+</span><div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,0.35) 0%,transparent 60%);pointer-events:none;border-radius:50%;"></div></button>
+          <button onclick="updateQuantity('${pid}',1)" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;box-shadow:0 2px 6px rgba(201,162,39,0.35);">+</button>
         </div>`;
-      return `<button onclick="addToCart('${pid}')" style="width:36px;height:36px;border-radius:50%;position:relative;overflow:hidden;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;flex-shrink:0;box-shadow:0 4px 14px rgba(201,162,39,0.42),inset 0 1px 2px rgba(255,255,255,0.55),inset 0 -2px 4px rgba(0,0,0,0.1);"><span style="position:relative;z-index:1;line-height:1;">+</span><div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,0.35) 0%,transparent 60%);pointer-events:none;border-radius:50%;"></div></button>`;
+      return `<button onclick="addToCart('${pid}')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;flex-shrink:0;box-shadow:0 4px 12px rgba(201,162,39,0.4);">+</button>`;
     }
 
     function updateProductCardButtons(productId) {
