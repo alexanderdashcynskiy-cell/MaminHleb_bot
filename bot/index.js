@@ -135,8 +135,7 @@ async function appendRow(values) {
   const res = await sheets.spreadsheets.values.append({
     spreadsheetId:    SPREADSHEET_ID,
     range:            ordersRange('A:N'),
-    valueInputOption: 'USER_ENTERED',
-    insertDataOption: 'INSERT_ROWS',
+    valueInputOption: 'RAW',
     requestBody:      { values: [values] }
   });
   // Получаем номер строки из ответа: "Заказы!A5:N5" или "A5" → 5 (первое число)
@@ -241,7 +240,7 @@ async function handleOrder(body) {
       !isPreorder ? '✅ Заказ'      : '',
       isPreorder  ? '📌 Предзаказ' : '',
       clientName,
-      "'" + (body.phone || '-'),
+      body.phone || '-',
       clientId,
       itemsText,
       totalStr,
