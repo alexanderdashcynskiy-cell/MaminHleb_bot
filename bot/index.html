@@ -1384,12 +1384,14 @@
                 <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${weightInfo}</p>
                 ${stockBadge}
               </div>
-              <div class="flex items-center justify-between gap-2 mt-1 card-btn-zone" data-pid="${p.id}" data-compact="${compact ? '1' : '0'}">
+              <div class="flex items-center justify-between gap-2 mt-1">
                 ${available ? (() => { const disc = happyPrice(p); return disc < p.price
                   ? `<div style="white-space:nowrap;"><span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} ${BYN}</span><br><span class="font-bold ${compact ? 'text-sm' : 'text-base'}" style="color:#E05252;font-family:'Montserrat',sans-serif;white-space:nowrap;">${disc.toFixed(2)} ${BYN}</span></div>`
                   : `<span class="font-bold text-coffee ${compact ? 'text-sm' : 'text-base'}" style="font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} ${BYN}</span>`; })()
                   : `<span style="font-size:${compact?'9px':'11px'};color:#aaa;font-family:'Montserrat',sans-serif;">Нет в наличии</span>`}
-                ${available ? cardBtnHTML(p.id, quantity, compact) : ''}
+                <div class="card-btn-zone" data-pid="${p.id}" data-compact="${compact ? '1' : '0'}" style="flex-shrink:0;">
+                  ${available ? cardBtnHTML(p.id, quantity, compact) : ''}
+                </div>
               </div>
             </div>
           </div>
