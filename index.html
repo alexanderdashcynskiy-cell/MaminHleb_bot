@@ -907,7 +907,7 @@
 
     // ── State ──────────────────────────────────────────────────────────────────
     const BYN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display:inline-block;width:0.85em;height:0.85em;vertical-align:-0.1em;fill:currentColor"><rect x="8" y="4" width="2" height="16"/><rect x="8" y="4" width="10" height="2"/><rect x="5" y="14" width="7" height="2"/><path d="M8 10L13 10A5 5 0 0 1 13 20L8 20L8 18L13 18A3 3 0 0 0 13 12L8 12Z"/></svg>';
-    let cart = [];
+    let cart = (function() { try { return JSON.parse(localStorage.getItem('mh_cart') || '[]'); } catch(e) { return []; } })();
     let currentCategory = 'all';
     // FIX #1: correct slide count = 3
     const TOTAL_SLIDES = 3;
@@ -1523,6 +1523,7 @@
     }
 
     function updateCartUI() {
+      try { localStorage.setItem('mh_cart', JSON.stringify(cart)); } catch(e) {}
       let count = 0, subtotal = 0;
       for (let ci = 0; ci < cart.length; ci++) { count += cart[ci].quantity; subtotal += cart[ci].price * cart[ci].quantity; }
       const total = subtotal + (deliveryMethod === 'delivery' ? DELIVERY_COST : 0);
@@ -1584,7 +1585,6 @@
           + '</div>'
           + '</div></div>';
       }).join('');
-
     }
 
     // ── Happy Hour ─────────────────────────────────────────────────────────────
