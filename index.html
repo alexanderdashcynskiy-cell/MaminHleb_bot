@@ -916,7 +916,7 @@
       if (s == null) return '';
       return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
     }
-    let cart = [];
+    let cart = (function() { try { return JSON.parse(localStorage.getItem('mh_cart') || '[]'); } catch(e) { return []; } })();
     let currentCategory = 'all';
     // FIX #1: correct slide count = 3
     const TOTAL_SLIDES = 3;
@@ -1607,6 +1607,7 @@
     }
 
     function updateCartUI() {
+      try { localStorage.setItem('mh_cart', JSON.stringify(cart)); } catch(e) {}
       const badgeCount    = document.getElementById('cart-badge-count');
       const totalFull     = document.getElementById('cart-total-full');
       const itemsContainer= document.getElementById('cart-items-full');
@@ -1687,13 +1688,16 @@
 
     function getHappyHour() {
       const now = new Date();
-      const day = now.getDay();            // 0=Sun,1=Mon…6=Sat
-      const h   = now.getHours();
+      // Минск = UTC+3 постоянно (без перехода на летнее время)
+      const msk = new Date(now.getTime() + 3 * 3600 * 1000);
+      const day = msk.getUTCDay();        // 0=Sun,1=Mon…6=Sat
+      const h   = msk.getUTCHours();
+      const m   = msk.getUTCMinutes();
       const weekday = day >= 1 && day <= 5;
       const weekend = day === 0 || day === 6;
       const active  = (weekday && h >= 19 && h < 20) || (weekend && h >= 17 && h < 18);
       const endH    = weekday ? 20 : 18;
-      const minLeft = active ? (endH * 60) - (h * 60 + now.getMinutes()) : 0;
+      const minLeft = active ? (endH * 60) - (h * 60 + m) : 0;
       return { active, minLeft };
     }
 

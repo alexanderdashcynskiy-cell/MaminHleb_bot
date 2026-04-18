@@ -1,0 +1,6 @@
+node_modules/
+bot/node_modules/
+.env
+bot/.env
+state.json
+bot/state.json
