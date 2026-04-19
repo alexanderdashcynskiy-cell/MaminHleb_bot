@@ -1285,6 +1285,10 @@
           }
           if (screenName === 'cart') {
             updateCartUI();
+            var _fc = document.getElementById('floating-cart');
+            var _ov = document.getElementById('floating-cart-overlay');
+            if (_fc) _fc.style.transform = 'translateX(100%)';
+            if (_ov) _ov.style.display = 'none';
           }
           if (screenName === 'bestsellers') {
             var bGrid = document.getElementById('bestsellers-grid');
@@ -2108,7 +2112,13 @@
       if (overlay) overlay.style.display = isClosed ? 'block' : 'none';
     }
 
-    function goToCart() { showScreen('cart'); }
+    function goToCart() {
+      const fc = document.getElementById('floating-cart');
+      const ov = document.getElementById('floating-cart-overlay');
+      if (fc) fc.style.transform = 'translateX(100%)';
+      if (ov) ov.style.display = 'none';
+      showScreen('cart');
+    }
 
     // ── Preorder ───────────────────────────────────────────────────────────────
 
