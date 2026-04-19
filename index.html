@@ -1937,7 +1937,7 @@
       if (chips) chips.style.display = 'none';
       document.getElementById('address-section').style.display = deliveryMethod === 'delivery' ? 'block' : 'none';
       document.getElementById('payment-section').style.display = deliveryMethod === 'delivery' ? 'block' : 'none';
-      ['checkout-address','checkout-building','checkout-entrance','checkout-floor','checkout-apartment'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      ['checkout-name','checkout-phone','checkout-address','checkout-building','checkout-entrance','checkout-floor','checkout-apartment','checkout-note'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       const dd = document.getElementById('address-dropdown');
       if (dd) dd.style.display = 'none';
       selectPayment('');
@@ -2091,7 +2091,7 @@
       if (overlay) overlay.style.display = isClosed ? 'block' : 'none';
     }
 
-    function goToCart() { toggleFloatingCart(); showScreen('cart'); }
+    function goToCart() { showScreen('cart'); }
 
     // ── Preorder ───────────────────────────────────────────────────────────────
 
