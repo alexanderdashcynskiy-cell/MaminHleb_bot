@@ -194,7 +194,7 @@ async function handleOrder(body) {
     if (Array.isArray(parsed)) {
       itemsText = parsed.map(i => {
         total += i.price * i.quantity;
-        return `◆ ${i.product_name} x${i.quantity} — ${(i.price * i.quantity).toFixed(2)} руб.`;
+        return `◆ ${i.product_name} x${i.quantity} — ${(i.price * i.quantity).toFixed(2)} Br`;
       }).join('\n');
     } else {
       itemsText = String(body.items || '');
@@ -203,7 +203,9 @@ async function handleOrder(body) {
     itemsText = String(body.items || '');
   }
 
-  const totalStr = (total > 0 ? total.toFixed(2) : Number(body.total || 0).toFixed(2)) + ' руб.';
+  const totalVal  = (total > 0 ? total : Number(body.total || 0)).toFixed(2);
+  const totalStr  = totalVal + ' Br';  // для Telegram-сообщений
+  const totalForSheet = totalVal;      // для Google Sheets — только число
 
   // Блок доставки / предзаказа
   let deliveryBlock = '';
@@ -231,22 +233,24 @@ async function handleOrder(body) {
   const orderNum = getNextOrderNum();
 
   // Запись в Google Sheets (с защитой от сбоя)
-  const now     = new Date();
-  const dateStr = now.toLocaleString('ru-RU', { timeZone: 'Europe/Minsk' });
+  const now = new Date();
+  const mskNow = new Date(now.getTime() + 3 * 3600 * 1000);
+  const _p = n => String(n).padStart(2, '0');
+  const dateStr = `${_p(mskNow.getUTCDate())}.${_p(mskNow.getUTCMonth()+1)}.${mskNow.getUTCFullYear()} ${_p(mskNow.getUTCHours())}:${_p(mskNow.getUTCMinutes())}`;
 
   let sheetRow = 0;
   try {
     sheetRow = await appendRow([
       dateStr,
-      !isPreorder ? '✅ Заказ'      : '',
-      isPreorder  ? '📌 Предзаказ' : '',
+      !isPreorder ? 'Заказ'     : '',
+      isPreorder  ? 'Предзаказ' : '',
       clientName,
-      "'" + (body.phone || '-'),
+      body.phone || '-',
       clientId,
       itemsText,
-      totalStr,
+      totalForSheet,
       deliveryBlock,
-      '', '', '🟡 Новый', '',
+      '', '', 'Новый', '',
       noteStr
     ]);
     if (!sheetRow) console.warn(`Order #${orderNum}: appendRow returned 0`);
@@ -553,7 +557,7 @@ async function handleCallback(cb) {
     const r = await notifyClient(clientId, acceptText);
     if (r?.ok) setProp(`accept_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
-    if (sheetRow) await updateCell(sheetRow, 12, '✅ Принят');
+    if (sheetRow) await updateCell(sheetRow, 12, 'Принят');
     return;
   }
 
@@ -569,7 +573,7 @@ async function handleCallback(cb) {
       `👨‍🍳 *Заказ №${orderNum} готовится!*\n\nМы уже работаем над вашим заказом. Скоро сообщим о готовности.`);
     if (r?.ok) setProp(`working_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
-    if (sheetRow) await updateCell(sheetRow, 12, '👨‍🍳 В работе');
+    if (sheetRow) await updateCell(sheetRow, 12, 'В работе');
     return;
   }
 
@@ -589,7 +593,7 @@ async function handleCallback(cb) {
       const r = await notifyClient(clientId,
         `🍞 *Заказ №${orderNum} готов!*\n\nПередаём курьеру — скоро будет у вас.`);
       if (r?.ok) setProp(`ready_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-      if (sheetRow) await updateCell(sheetRow, 12, '🍞 Готов');
+      if (sheetRow) await updateCell(sheetRow, 12, 'Готов');
     } else {
       // Самовывоз: завершаем сразу, отправляем оценку
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
@@ -598,7 +602,7 @@ async function handleCallback(cb) {
         : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\n⭐ *Оцените качество обслуживания:*`;
       const r = await notifyClient(clientId, readyText, ratingKeyboard(sheetRow || rowNum));
       if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-      if (sheetRow) await updateCell(sheetRow, 12, '🍞 Готов');
+      if (sheetRow) await updateCell(sheetRow, 12, 'Готов');
     }
     return;
   }
@@ -642,7 +646,7 @@ async function handleCallback(cb) {
     await notifyClient(clientId,
       `🚗 *Заказ №${orderNum} отправлен!*\n\n⏱ Ориентировочное время доставки: *30–45 минут* в зависимости от загруженности.\nПо приезде заказа, курьер с вами свяжется!\n\nС уважением команда «Мамин Хлеб»\nЕсли возникли вопросы звоните по номеру:\n☎️ +375(29)722-20-22`);
 
-    if (sheetRow) await updateCell(sheetRow, 12, '🚗 В доставке');
+    if (sheetRow) await updateCell(sheetRow, 12, 'В доставке');
     return;
   }
 
@@ -671,13 +675,13 @@ async function handleCallback(cb) {
       ratingKeyboard(sheetRow || rowNum));
     if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
-    if (sheetRow) await updateCell(sheetRow, 12, '✅ Доставлен');
+    if (sheetRow) await updateCell(sheetRow, 12, 'Доставлен');
     return;
   }
 
   // ── 5. Отклонить / Отменить ───────────────────────────────────────────────
   if (action === 'decline' || action === 'cancel') {
-    const label = action === 'cancel' ? '🚫 Отменён' : '❌ Отклонён';
+    const label = action === 'cancel' ? 'Отменён' : 'Отклонён';
     const clientText = action === 'cancel'
       ? `🚫 *Ваш заказ №${orderNum} отменён.*\n\nПриносим извинения. Обратитесь к нам напрямую.`
       : `❌ *Ваш заказ №${orderNum} отклонён.*\n\nПриносим извинения. Свяжитесь с нами.`;
@@ -713,7 +717,7 @@ async function handleCallback(cb) {
       `🔄 *Ваш заказ №${orderNum} снова в обработке.*\n\nСкоро свяжемся с вами!`);
     if (r?.ok) setProp(`restore_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
 
-    if (sheetRow) await updateCell(sheetRow, 12, '🟡 Новый');
+    if (sheetRow) await updateCell(sheetRow, 12, 'Новый');
     delProp(`decline_msg_${rowNum}`);
     return;
   }
