@@ -132,19 +132,22 @@ async function getSheets() {
 
 async function appendRow(values) {
   const sheets = await getSheets();
-  const res = await sheets.spreadsheets.values.append({
+  // Определяем следующую пустую строку по количеству значений в колонке A
+  const colA = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range:         ordersRange('A:A')
+  });
+  const existingRows = colA.data.values ? colA.data.values.length : 0;
+  const nextRow = existingRows + 1;
+  const range = ordersRange(`A${nextRow}:N${nextRow}`);
+  await sheets.spreadsheets.values.update({
     spreadsheetId:    SPREADSHEET_ID,
-    range:            ordersRange('A:N'),
+    range,
     valueInputOption: 'USER_ENTERED',
-    insertDataOption: 'OVERWRITE',
     requestBody:      { values: [values] }
   });
-  // Получаем номер строки из ответа: "Заказы!A5:N5" или "A5" → 5 (первое число)
-  const updatedRange = res.data.updates?.updatedRange || '';
-  const match = updatedRange.match(/[A-Z]+(\d+)/);
-  const row = match ? parseInt(match[1], 10) : 0;
-  console.log(`appendRow → row ${row} (${updatedRange})`);
-  return row;
+  console.log(`appendRow → row ${nextRow} (${range})`);
+  return nextRow;
 }
 
 // Преобразует индекс колонки (1-based) в буквенное обозначение: 1→A, 26→Z, 27→AA
