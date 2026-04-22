@@ -585,20 +585,17 @@ async function handleCallback(cb) {
     await deleteStoredMsg(`accept_msg_${rowNum}`);
     await deleteStoredMsg(`working_msg_${rowNum}`);
 
-    const isDeliveryOrder = orderType === 'delivery' || adminBase.includes('ДОСТАВКА');
+    const isDeliveryOrder = orderType === 'delivery';
     console.log(`ready: rowNum=${rowNum} orderType=${orderType} isDeliveryOrder=${isDeliveryOrder}`);
 
     if (isDeliveryOrder) {
-      // Доставка: ждём подтверждения курьера
+      // Доставка: ждём подтверждения курьера — клиента не уведомляем заранее
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [[
         { text: '🚗 Отправить доставку', callback_data: `courier_${rowNum}_${clientId}` }
       ]], adminBody);
-      const r = await notifyClient(clientId,
-        `🍞 *Заказ №${orderNum} готов!*\n\nПередаём курьеру — скоро будет у вас.`);
-      if (r?.ok) setProp(`ready_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
       if (sheetRow) await updateCell(sheetRow, 12, 'Готов');
     } else {
-      // Самовывоз: завершаем сразу, отправляем оценку
+      // Самовывоз или предзаказ: завершаем сразу, отправляем оценку клиенту
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
       const readyText = orderType === 'preorder'
         ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
@@ -610,8 +607,12 @@ async function handleCallback(cb) {
     return;
   }
 
-  // ── 4a. Передан курьеру (доставка) ───────────────────────────────────────
+  // ── 4a. Передан курьеру (только доставка) ────────────────────────────────
   if (action === 'courier') {
+    if (orderType !== 'delivery') {
+      console.warn(`courier action for non-delivery order ${rowNum}, orderType=${orderType} — skipped`);
+      return;
+    }
     await deleteStoredMsg(`ready_msg_${rowNum}`);
 
     // У админа — статус «В доставке», кнопок нет
