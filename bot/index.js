@@ -136,7 +136,7 @@ async function appendRow(values) {
     spreadsheetId:    SPREADSHEET_ID,
     range:            ordersRange('A:N'),
     valueInputOption: 'USER_ENTERED',
-    insertDataOption: 'INSERT_ROWS',
+    insertDataOption: 'OVERWRITE',
     requestBody:      { values: [values] }
   });
   // Получаем номер строки из ответа: "Заказы!A5:N5" или "A5" → 5 (первое число)
@@ -975,7 +975,7 @@ app.get('/api/test-sheets', async (req, res) => {
         spreadsheetId:    SPREADSHEET_ID,
         range:            ordersRange('A:N'),
         valueInputOption: 'USER_ENTERED',
-        insertDataOption: 'INSERT_ROWS',
+        insertDataOption: 'OVERWRITE',
         requestBody:      { values: [['TEST_ROW', now, 'diagnostic endpoint']] }
       });
       result.steps.push({ step: 'append_test_row', ok: true, updatedRange: appendRes.data.updates?.updatedRange });
