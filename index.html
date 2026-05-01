@@ -959,6 +959,9 @@
     let preorderTime = null;
     // Остатки товаров со склада: { [product_id]: quantity }
     let stockData = {};
+    // Флаги из Склада: id товаров, явно отмеченных как «Новинка» / «Хит продаж»
+    let _featuredNew = [];        // product ids
+    let _featuredBestsellers = [];
 
     // ── Stock ──────────────────────────────────────────────────────────────────
     const API_BASE = 'https://maminhlebbot-production.up.railway.app';
@@ -984,10 +987,22 @@
               }
             });
           }
-          // Перерисовываем карточки, чтобы показать актуальный остаток
+          // Применяем флаги «Новинка» / «Хит продаж» из Склада
+          if (json.flags && typeof json.flags === 'object') {
+            _featuredNew = [];
+            _featuredBestsellers = [];
+            Object.entries(json.flags).forEach(([nameLower, f]) => {
+              const prod = products.find(p => p.name.toLowerCase() === nameLower);
+              if (!prod) return;
+              if (f.isNew === true)      { prod.isNew = true;  _featuredNew.push(prod.id); }
+              if (f.isNew === false)       prod.isNew = false;
+              if (f.bestseller === true) { prod.bestseller = true;  _featuredBestsellers.push(prod.id); }
+              if (f.bestseller === false)  prod.bestseller = false;
+            });
+          }
+          // Перерисовываем карточки, чтобы показать актуальный остаток и новые флаги
           renderBestsellers();
-          const filtered = products.filter(p => currentCategory === 'all' || p.category === currentCategory);
-          document.getElementById('products-grid').innerHTML = filtered.map(p => productCardHTML(p, false)).join('');
+          renderProducts();
         }
       } catch(e) {
         console.log('fetchStock failed (offline?):', e.message);
@@ -1331,7 +1346,11 @@
           }
           if (screenName === 'bestsellers') {
             var bGrid = document.getElementById('bestsellers-grid');
-            if (bGrid) bGrid.innerHTML = products.filter(function(p) { return p.bestseller; }).map(function(p) { return productCardHTML(p, false); }).join('');
+            if (bGrid) {
+              var defaultIds = ['pastry-cheese', 'pastry-sausage', 'pastry-khachapuri', 'piroshki-meat', 'coffee-cappuccino'];
+              var bIds = _featuredBestsellers.length > 0 ? _featuredBestsellers : defaultIds;
+              bGrid.innerHTML = products.filter(function(p) { return bIds.includes(p.id); }).map(function(p) { return productCardHTML(p, false); }).join('');
+            }
           }
           if (screenName === 'preorder') {
             preorderCart = [];
@@ -1386,9 +1405,14 @@
     }
 
     function renderProducts() {
-      const filtered = currentCategory === 'all'
-        ? products.filter(p => p.isNew === true)
-        : products.filter(p => p.category === currentCategory);
+      let filtered;
+      if (currentCategory === 'all') {
+        filtered = _featuredNew.length > 0
+          ? products.filter(p => _featuredNew.includes(p.id))
+          : products.filter(p => p.isNew === true);
+      } else {
+        filtered = products.filter(p => p.category === currentCategory);
+      }
       const grid = document.getElementById('products-grid');
       grid.innerHTML = filtered.map(p => productCardHTML(p, false)).join('');
     }
@@ -1462,7 +1486,8 @@
     }
 
     function renderBestsellers() {
-      const ids = ['pastry-cheese', 'pastry-sausage', 'pastry-khachapuri', 'piroshki-meat', 'coffee-cappuccino'];
+      const defaultIds = ['pastry-cheese', 'pastry-sausage', 'pastry-khachapuri', 'piroshki-meat', 'coffee-cappuccino'];
+      const ids = _featuredBestsellers.length > 0 ? _featuredBestsellers : defaultIds;
       const container = document.getElementById('bestsellers-items');
       container.innerHTML = products.filter(p => ids.includes(p.id)).map(p => productCardHTML(p, true)).join('');
     }
@@ -1474,7 +1499,9 @@
     function searchProducts() {
       const query = document.getElementById('search-input').value.toLowerCase().trim();
       const filtered = !query
-        ? (currentCategory === 'all' ? products.filter(p => p.isNew) : products.filter(p => p.category === currentCategory))
+        ? (currentCategory === 'all'
+            ? (_featuredNew.length > 0 ? products.filter(p => _featuredNew.includes(p.id)) : products.filter(p => p.isNew))
+            : products.filter(p => p.category === currentCategory))
         : products.filter(p => p.name.toLowerCase().includes(query) || p.description.toLowerCase().includes(query));
       document.getElementById('products-grid').innerHTML = filtered.map(p => productCardHTML(p, false)).join('');
     }
