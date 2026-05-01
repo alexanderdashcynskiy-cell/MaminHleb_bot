@@ -808,22 +808,39 @@ app.post('/reply', async (req, res) => {
 //   D = Цена (если заполнена — товар появится в приложении динамически)
 //   E = Категория (bread/pies/cakes/pastries/pizza/desserts/buns)
 //   F = Эмодзи  G = Описание  H = Вес/Объём
+//   I = Новинка (да/yes/1 → появится в блоке «Новинки»)
+//   J = Хит продаж (да/yes/1 → появится в «Хит продаж»)
+
+function parseFlag(val) {
+  if (!val && val !== 0) return undefined;
+  return ['да', 'yes', '1', 'true', '+'].includes(String(val).toLowerCase().trim());
+}
 
 async function getStock() {
   try {
     const sheets = await getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A2:H'
+      range: 'Склад!A2:J'
     });
     const rows = res.data.values || [];
     const stock = {};
     const catalog = [];
+    const flags = {};
     rows.forEach(row => {
       const name      = (row[0] || '').trim();
       const nameLower = name.toLowerCase();
       const remaining = parseInt(row[1] || '0', 10);
       if (nameLower) stock[nameLower] = isNaN(remaining) ? 0 : remaining;
+
+      // Флаги «Новинка» (I) и «Хит продаж» (J)
+      const isNew      = parseFlag(row[8]);
+      const bestseller = parseFlag(row[9]);
+      if (nameLower && (isNew !== undefined || bestseller !== undefined)) {
+        flags[nameLower] = {};
+        if (isNew      !== undefined) flags[nameLower].isNew      = isNew;
+        if (bestseller !== undefined) flags[nameLower].bestseller = bestseller;
+      }
 
       // Динамический товар: заполнены Цена (D) и Категория (E)
       const price    = parseFloat((row[3] || '').replace(',', '.'));
@@ -837,14 +854,16 @@ async function getStock() {
           image:       (row[5] || '🍞').trim(),
           description: (row[6] || '').trim(),
           weight:      (row[7] || '').trim() || null,
-          isDynamic:   true
+          isDynamic:   true,
+          isNew:       isNew === true,
+          bestseller:  bestseller === true
         });
       }
     });
-    return { stock, catalog };
+    return { stock, catalog, flags };
   } catch(e) {
     console.error('getStock:', e.message);
-    return { stock: {}, catalog: [] };
+    return { stock: {}, catalog: [], flags: {} };
   }
 }
 
@@ -922,8 +941,8 @@ app.post('/order', (req, res) => {
 
 // Склад — текущие остатки товаров
 app.get('/api/stock', async (req, res) => {
-  const { stock, catalog } = await getStock();
-  res.json({ ok: true, stock, catalog });
+  const { stock, catalog, flags } = await getStock();
+  res.json({ ok: true, stock, catalog, flags });
 });
 
 // Диагностика Google Sheets
