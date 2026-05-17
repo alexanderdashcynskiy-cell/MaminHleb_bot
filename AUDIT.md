@@ -4,7 +4,7 @@
 **Версия аудита:** 2.0 (дополнен внешним списком проблем)  
 **Роль аудитора:** Senior Frontend/Backend Developer, UI/UX Designer, Cybersecurity Specialist (12 лет опыта)  
 **Проекты:** 3 компонента в 2 репозиториях  
-**Итоговое число проблем:** 200 (CRM: 91 + Bot Backend: 55 + Mini App: 46 + Cross: 5 + уточнения v2.1: +3)  
+**Итоговое число проблем:** 202 (CRM: 93 + Bot Backend: 55 + Mini App: 46 + Cross: 5 + уточнения v2.1: +3)  
 **Метод:** Полное чтение всех исходных файлов + внешний список + финальная верификация каждого утверждения  
 **Ветка:** `claude/audit-white-fox-dashboard-W4DAS`
 
@@ -96,6 +96,7 @@
 | 15 | `src/types.ts` | 54–56 | `Comment.replied` и `Comment.replyText` определены, но `/api/data` их **не возвращает** — ответы теряются при обновлении |
 | 16 | `server.ts` | 381 | `chronOrders.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())` — использует голый `new Date()` без fallback-парсера; строки из Sheets в формате DD.MM.YYYY дают `NaN`, сортировка нестабильна. Клиентский `parseDate` (src/App.tsx:207) имеет корректный fallback, но серверный код его не вызывает |
 | 17 | `server.ts` | 415 | В вычислении `growthLevel`: `orders.filter(o => new Date(o.time).toLocaleDateString('ru-RU') === today)` — `new Date("12.05.2026")` = Invalid Date; `todayTotal` всегда 0 при DD.MM.YYYY датах из Sheets; `growthLevel` всегда `-100%` |
+| 18 | `server.ts` | 422 + `src/App.tsx` | `/api/data` **никогда не возвращает** поле `historicalReports`. Сервер читает лист «отчетность» (строка 312) но использует данные только для `settings.*` мультипликаторов. Клиент проверяет `data.historicalReports` — условие всегда `false`, `historicalReports` state всегда `[]`. Все вычисления «вчера» в `todayAnalytics` (строка 1326: `historicalReports.find(r => r.date === yStr)`) и в `chartData` (строка 1482) всегда дают `undefined` → `growthLevel` всегда `"0%"`, сравнение день/день полностью нерабочее |
 | 18 | `src/App.tsx` | 2339 | Pickup alert проверяет `order.pickupTime`, но сервер **не заполняет** `pickupTime` — уведомления самовывоза никогда не сработают |
 | 19 | `src/App.tsx` | 2352 | Номер заказа в уведомлении = `order.id + 2` — не совпадает с реальным `orderNumber`, ломается при сортировках |
 | 20 | `src/App.tsx` | 1888 | Frontend ожидает `data.colFound === false`, но сервер **никогда не возвращает** это поле — сценарий «колонка не найдена» недостижим |
@@ -155,7 +156,7 @@
 | 6 | `tsconfig.json` | — | Нет `"strict": true` — TypeScript не проверяет `null`/`undefined` |
 | 7 | `tsconfig.json` | 16 | `allowJs: true` без `checkJs` — JS helper-скрипты не проверяются |
 | 8 | `server.ts` | 807–812 | Dev и prod bootstrap в одном файле; `path.resolve('dist/index.html')` зависит от CWD — запуск из другой директории ломает static fallback |
-| 9 | `.env.example` | — | Отсутствуют: `TELEGRAM_CLIENT_CHAT_ID`, `READ_ONLY`, `PORT` |
+| 9 | `.env.example` | — | Отсутствуют: `TELEGRAM_CLIENT_CHAT_ID` (server.ts:93), `TELEGRAM_CHAT_ID` (server.ts:450 — получатель `/api/telegram-report`), `READ_ONLY`, `PORT` |
 
 ---
 
@@ -477,14 +478,15 @@
 | Категория | CRM | Mini App | Bot | Cross | Итого |
 |-----------|-----|----------|-----|-------|-------|
 | 🔴 Критические | 11 | 5 | 9 | — | **25** |
+
 | 🔐 Безопасность | 13 | 8 | 8 | 1 | **30** |
-| 🐛 Баги/Логика | 24 | 12 | 14 | — | **50** |
+| 🐛 Баги/Логика | 26 | 12 | 14 | — | **52** |
 | 🎨 UI/UX | 13 | 7 | — | — | **20** |
 | 📦 Данные | 10 | 5 | 7 | 2 | **24** |
 | 🚀 Деплой/Сборка | 9 | 4 | 4 | 2 | **19** |
 | 💀 Мёртвый код | 10 | 3 | 4 | — | **17** |
 | 📝 Архитектура | 10 | 2 | 5 | — | **17** |
-| **Итого** | **100** | **46** | **51** | **5** | **202** |
+| **Итого** | **102** | **46** | **51** | **5** | **204** |
 
 ---
 
