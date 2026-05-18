@@ -10,6 +10,8 @@
 
 > **Что изменилось в v2.3 (финальная верификация bot backend):** Все 55 пунктов бота верифицированы по коду `bot/index.js` и `bot/.env.example` — расхождений не найдено. Bot Critical #3 (строка 792: `/reply` без аутентификации), Critical #4 (строка 949: `/api/test-sheets` пишет TEST_ROW в продакшн-таблицу), Security #6 (строки 146, 169, 758, 907, 1180: `USER_ENTERED` повсеместно), Bug #1 (строки 132–149: race condition в `appendRow`), Bug #11 (строка 884: `item.quantity || 1` принимает отрицательные значения), Deploy #2 (`.env.example` не содержит `DELIVERY_CHAT_ID`, `PREORDER_CHAT_ID`, `ORDERS_SHEET_NAME`, `PORT`), Dead #4 (`node-fetch: ^2.7.0` в `package.json`) — все подтверждены реальным кодом. Mini App секция также дополнительно верифицирована по `bot/index.html` (2341 строка): Security #2 (строки 1366, 1454–1456, 2109: `p.name`/`p.image` без escHtml), Security #3 (строка 2032: `address` через innerHTML), Security #4 (строка 2248: `r.text`/`r.name` через innerHTML), Bug #2 (строка 1605: `removeFromCart` игнорирует `selected_size`), Bug #6 (строка 1980: `sendOrderToServer` внутри `setTimeout(1500)`) — все подтверждены.
 
+> **Что изменилось в v2.2 (дополнение CRM):** +2 пропущенных бага в CRM (итого CRM: 93). CRM Bug #18 (`/api/data` никогда не возвращает `historicalReports` — `growthLevel` всегда `"0%"`, сравнение день/день полностью нерабочее). CRM Deploy #9 уточнён: добавлен `TELEGRAM_CHAT_ID` (server.ts:450) в список отсутствующих переменных `.env.example`.
+
 > **Что изменилось в v2.1 (финальная верификация):** Исправлены 3 ошибочных утверждения из v2.0 и добавлен 1 пропущенный реальный баг. Убраны ложные criticals #9, #10, #11 (механизм был описан неверно), их заменили точные формулировки реальных проблем.
 
 ---
@@ -221,12 +223,12 @@
 | # | Файл | Строка | Проблема |
 |---|------|--------|----------|
 | 1 | `bot/index.html` | 7–8 | Telegram SDK + Tailwind CDN без SRI (`integrity`) — supply-chain атака меняет Mini App без предупреждения |
-| 2 | `bot/index.html` | 1525 / `index.html` | `product.name` и `product.image` вставляются в HTML-строку без `escHtml` — XSS через названия товаров из Google Sheets |
+| 2 | `bot/index.html` | 1366, 1454–1456, 2109 | `product.name` и `product.image` вставляются в HTML-строку без `escHtml` — XSS через названия товаров из Google Sheets |
 | 3 | `bot/index.html` | 2032 | Адрес доставки выводится через `innerHTML` без экранирования — пользовательский адрес может внедрить HTML в чек |
 | 4 | `bot/index.html` | 2248 | `renderReviews()` рендерит `r.text` через `innerHTML` — stored/self XSS через пользовательские отзывы |
 | 5 | `bot/index.html` | 2311 | API URL захардкожен в клиенте как production Railway URL — нельзя разделить dev/prod, домен открыт для прямых POST атак |
 | 6 | `bot/index.html` | 2316 | Заказ отправляется как `text/plain` — обходит CORS preflight, делая endpoint `/order` ещё проще для злоупотребления |
-| 7 | `bot/index.html` | 1433 | `onerror` у изображений переписывает `innerHTML` — при внешних `p.image` URL усиливает XSS-риск |
+| 7 | `bot/index.html` | 1366 | `onerror` у изображений переписывает `innerHTML` — при внешних `p.image` URL усиливает XSS-риск |
 | 8 | `index.html` | 945 | Корзина хранится в `localStorage` без TTL — на общем устройстве остаются данные о покупках пользователя |
 
 ---
