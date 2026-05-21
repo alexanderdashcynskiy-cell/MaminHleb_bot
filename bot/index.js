@@ -1,11 +1,11 @@
 'use strict';
 require('dotenv').config();
 
-const express  = require('express');
-const fetch    = require('node-fetch');
+const express    = require('express');
+const fetch      = require('node-fetch');
 const { google } = require('googleapis');
-const fs       = require('fs');
-const path     = require('path');
+const path       = require('path');
+const { Pool }   = require('pg');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -35,32 +35,43 @@ function ordersRange(range) {
   return ORDERS_SHEET_NAME ? `${ORDERS_SHEET_NAME}!${range}` : range;
 }
 
-// ─── Состояние (память + файл) ────────────────────────────────────────────────
-const STATE_FILE = './state.json';
-const store      = new Map();
-const cbSeen     = new Set();
+// ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
+const store  = new Map();
+const cbSeen = new Set();
 
-function loadState() {
-  try {
-    if (fs.existsSync(STATE_FILE)) {
-      const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-      Object.entries(data).forEach(([k, v]) => store.set(k, v));
-      console.log(`State loaded: ${store.size} keys`);
-    }
-  } catch(e) { console.error('loadState:', e.message); }
+// PostgreSQL pool — DATABASE_URL задаётся автоматически Railway
+const pgPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+});
+
+async function initDB() {
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS bot_state (
+      key   VARCHAR(512) PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
+  const res = await pgPool.query('SELECT key, value FROM bot_state');
+  res.rows.forEach(row => store.set(row.key, row.value));
+  console.log(`PostgreSQL state loaded: ${store.size} keys`);
 }
 
-function saveState() {
-  try {
-    const obj = {};
-    store.forEach((v, k) => { obj[k] = v; });
-    fs.writeFileSync(STATE_FILE, JSON.stringify(obj));
-  } catch(e) { console.error('saveState:', e.message); }
+function getProp(key) { return store.get(key) || null; }
+
+function setProp(key, value) {
+  store.set(key, value);
+  pgPool.query(
+    'INSERT INTO bot_state (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+    [key, String(value)]
+  ).catch(e => console.error('setProp DB:', e.message));
 }
 
-function getProp(key)        { return store.get(key) || null; }
-function setProp(key, value) { store.set(key, value); saveState(); }
-function delProp(key)        { store.delete(key); saveState(); }
+function delProp(key) {
+  store.delete(key);
+  pgPool.query('DELETE FROM bot_state WHERE key = $1', [key])
+    .catch(e => console.error('delProp DB:', e.message));
+}
 
 // Атомарный счётчик заказов (синхронный — без гонок в event loop Node.js)
 function getNextOrderNum() {
@@ -1186,9 +1197,9 @@ async function initOrdersSheet() {
   }
 }
 
-loadState();
 app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
+  await initDB();
   await initOrdersSheet();
   await initOrderCounter();
   await setWebhook();
