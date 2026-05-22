@@ -10,7 +10,17 @@ const { Pool }   = require('pg');
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.text({ type: 'text/plain', limit: '10mb' }));
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
+
+const IMAGES_DIR = path.join(__dirname, 'public/images');
+const fs = require('fs');
+console.log('__dirname:', __dirname);
+console.log('cwd:', process.cwd());
+console.log('IMAGES_DIR:', IMAGES_DIR);
+console.log('IMAGES_DIR exists:', fs.existsSync(IMAGES_DIR));
+if (fs.existsSync(IMAGES_DIR)) {
+  console.log('IMAGES_DIR files:', fs.readdirSync(IMAGES_DIR).slice(0, 5));
+}
+app.use('/images', express.static(IMAGES_DIR));
 
 // CORS — Mini App шлёт запросы из браузера
 app.use((req, res, next) => {
