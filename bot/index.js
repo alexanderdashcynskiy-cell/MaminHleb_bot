@@ -1,26 +1,15 @@
 'use strict';
 require('dotenv').config();
 
-const express    = require('express');
-const fetch      = require('node-fetch');
-const { google } = require('googleapis');
-const path       = require('path');
-const { Pool }   = require('pg');
+const express  = require('express');
+const fetch    = require('node-fetch');
+const path     = require('path');
+const { Pool } = require('pg');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.text({ type: 'text/plain', limit: '10mb' }));
-
-const IMAGES_DIR = path.join(__dirname, 'public/images');
-const fs = require('fs');
-console.log('__dirname:', __dirname);
-console.log('cwd:', process.cwd());
-console.log('IMAGES_DIR:', IMAGES_DIR);
-console.log('IMAGES_DIR exists:', fs.existsSync(IMAGES_DIR));
-if (fs.existsSync(IMAGES_DIR)) {
-  console.log('IMAGES_DIR files:', fs.readdirSync(IMAGES_DIR).slice(0, 5));
-}
-app.use('/images', express.static(IMAGES_DIR));
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 // CORS — Mini App шлёт запросы из браузера
 app.use((req, res, next) => {
@@ -30,26 +19,16 @@ app.use((req, res, next) => {
   next();
 });
 
-const BOT_TOKEN          = (process.env.BOT_TOKEN          || '').trim();
-const ADMIN_ID           = (process.env.ADMIN_ID           || '').trim();
-const DELIVERY_CHAT_ID   = (process.env.DELIVERY_CHAT_ID   || '').trim();
-const PREORDER_CHAT_ID   = (process.env.PREORDER_CHAT_ID   || '').trim();
-const SPREADSHEET_ID     = (process.env.SPREADSHEET_ID     || '').trim();
-// Название листа с заказами. Если не задан — пишет в первый лист.
-// Пример в Railway: ORDERS_SHEET_NAME=Заказы
-const ORDERS_SHEET_NAME  = (process.env.ORDERS_SHEET_NAME  || '').trim();
-const PORT               = process.env.PORT || 3000;
-
-// Строит полный range для листа с заказами: "SheetName!A:N" или просто "A:N"
-function ordersRange(range) {
-  return ORDERS_SHEET_NAME ? `${ORDERS_SHEET_NAME}!${range}` : range;
-}
+const BOT_TOKEN        = (process.env.BOT_TOKEN        || '').trim();
+const ADMIN_ID         = (process.env.ADMIN_ID         || '').trim();
+const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
+const PREORDER_CHAT_ID = (process.env.PREORDER_CHAT_ID || '').trim();
+const PORT             = process.env.PORT || 3000;
 
 // ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
 const store  = new Map();
 const cbSeen = new Set();
 
-// PostgreSQL pool — DATABASE_URL задаётся Railway при подключении плагина Postgres
 const pgPool = process.env.DATABASE_URL
   ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
   : null;
@@ -101,31 +80,6 @@ function getNextOrderNum() {
   return n;
 }
 
-
-// Инициализация счётчика из Google Sheets при старте (если state.json пуст/сброшен)
-async function initOrderCounter() {
-  if (parseInt(getProp('order_counter') || '0') > 0) return;
-  try {
-    const sheets = await getSheets();
-    const meta = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: ordersRange('A:A')
-    });
-    const rowCount = meta.data.values ? meta.data.values.length : 0;
-    const orderCount = Math.max(0, rowCount - 1); // минус строка заголовка
-    // Нереально большое число — скорее всего читаем не тот лист (напр. Склад)
-    if (orderCount > 9999) {
-      console.warn(`initOrderCounter: got ${orderCount} rows — wrong sheet? defaulting to 0`);
-      setProp('order_counter', '0');
-    } else {
-      setProp('order_counter', String(orderCount));
-      console.log(`Order counter initialized from Sheets: ${orderCount}`);
-    }
-  } catch(e) {
-    console.error('initOrderCounter:', e.message);
-  }
-}
-
 // ─── Telegram API ─────────────────────────────────────────────────────────────
 const TG_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
@@ -143,67 +97,11 @@ async function tg(method, payload) {
   }
 }
 
-// Параллельная отправка — аналог UrlFetchApp.fetchAll
 async function tgAll(calls) {
   return Promise.all(calls.map(([method, payload]) => tg(method, payload)));
 }
 
-// ─── Google Sheets ────────────────────────────────────────────────────────────
-let sheetsApi = null;
-
-async function getSheets() {
-  if (sheetsApi) return sheetsApi;
-  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets']
-  });
-  sheetsApi = google.sheets({ version: 'v4', auth });
-  return sheetsApi;
-}
-
-async function appendRow(values) {
-  const sheets = await getSheets();
-  // Определяем следующую пустую строку по количеству значений в колонке A
-  const colA = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range:         ordersRange('A:A')
-  });
-  const existingRows = colA.data.values ? colA.data.values.length : 0;
-  const nextRow = existingRows + 1;
-  const range = ordersRange(`A${nextRow}:N${nextRow}`);
-  await sheets.spreadsheets.values.update({
-    spreadsheetId:    SPREADSHEET_ID,
-    range,
-    valueInputOption: 'USER_ENTERED',
-    requestBody:      { values: [values] }
-  });
-  console.log(`appendRow → row ${nextRow} (${range})`);
-  return nextRow;
-}
-
-// Преобразует индекс колонки (1-based) в буквенное обозначение: 1→A, 26→Z, 27→AA
-function colLetter(col) {
-  let s = '';
-  while (col > 0) {
-    const m = (col - 1) % 26;
-    s = String.fromCharCode(65 + m) + s;
-    col = Math.floor((col - 1) / 26);
-  }
-  return s;
-}
-
-async function updateCell(row, col, value) {
-  const sheets = await getSheets();
-  await sheets.spreadsheets.values.update({
-    spreadsheetId:   SPREADSHEET_ID,
-    range:           ordersRange(`${colLetter(col)}${row}`),
-    valueInputOption: 'USER_ENTERED',
-    requestBody:     { values: [[value]] }
-  });
-}
-
-// ─── Дедупликация заказов (файловое хранилище — работает между экземплярами) ──
+// ─── Дедупликация заказов ─────────────────────────────────────────────────────
 function isDuplicateOrder(body) {
   const raw = String(body.items || '').replace(/\s+/g, '').slice(0, 80);
   const key = `dup_${body.phone}_${String(body.total)}_${raw}`;
@@ -221,7 +119,6 @@ async function handleOrder(body) {
   const clientId   = String(body.telegramId || '0');
   const clientName = body.name || 'Гость';
 
-  // Состав — новый стиль с ◆
   let itemsText = '';
   let total = 0;
   try {
@@ -238,11 +135,8 @@ async function handleOrder(body) {
     itemsText = String(body.items || '');
   }
 
-  const totalVal  = (total > 0 ? total : Number(body.total || 0)).toFixed(2);
-  const totalStr  = totalVal + ' Br';  // для Telegram-сообщений
-  const totalForSheet = totalVal;      // для Google Sheets — только число
+  const totalStr = (total > 0 ? total : Number(body.total || 0)).toFixed(2) + ' Br';
 
-  // Блок доставки / предзаказа
   let deliveryBlock = '';
   if (isPreorder && body.time && body.time !== 'undefined') {
     const [rawDate, rawTime] = body.time.split(' в ');
@@ -257,47 +151,11 @@ async function handleOrder(body) {
   } else {
     deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74`;
   }
-  // deliveryInfo нужен для совместимости с fallback-проверкой типа заказа
-  const deliveryInfo = deliveryBlock;
 
-  // Тексты
   const noteStr  = (body.note || '').trim();
   const noteLine = noteStr ? `\n💬 *ПРИМЕЧАНИЕ:* ${noteStr}\n` : '';
 
-  // Получаем номер заказа ДО записи в Sheets (чтобы всегда иметь ID)
   const orderNum = getNextOrderNum();
-
-  // Запись в Google Sheets (с защитой от сбоя)
-  const now = new Date();
-  const mskNow = new Date(now.getTime() + 3 * 3600 * 1000);
-  const _p = n => String(n).padStart(2, '0');
-  const dateStr = `${_p(mskNow.getUTCDate())}.${_p(mskNow.getUTCMonth()+1)}.${mskNow.getUTCFullYear()} ${_p(mskNow.getUTCHours())}:${_p(mskNow.getUTCMinutes())}`;
-
-  let sheetRow = 0;
-  try {
-    sheetRow = await appendRow([
-      dateStr,
-      !isPreorder ? 'Заказ'     : '',
-      isPreorder  ? 'Предзаказ' : '',
-      clientName,
-      body.phone || '-',
-      clientId,
-      itemsText,
-      totalForSheet,
-      deliveryBlock,
-      '', '', 'Новый', '',
-      noteStr
-    ]);
-    if (!sheetRow) console.warn(`Order #${orderNum}: appendRow returned 0`);
-  } catch(sheetErr) {
-    console.error(`Order #${orderNum}: appendRow failed — ${sheetErr.message}`);
-    sheetsApi = null; // сбрасываем кэш для следующей попытки
-  }
-
-  // sheetRow используется только для обновления ячеек статуса
-  // Основной ключ состояния — orderNum
-  const newRow = orderNum;
-  if (sheetRow) setProp(`sheet_row_${newRow}`, String(sheetRow));
 
   const receiptBase =
     `🧾 *${isPreorder ? 'ВАШ ПРЕДЗАКАЗ' : 'ВАШ ЗАКАЗ'} №${orderNum}*\n` +
@@ -311,17 +169,15 @@ async function handleOrder(body) {
     `💰 *Итого:* ${totalStr}\n` +
     noteLine;
 
-  // тип заказа — нужен для заголовка и кнопок
   const isDeliveryAddr = body.address && body.address !== 'Самовывоз' && body.address !== 'undefined';
   const orderType = isPreorder ? 'preorder'
     : (body.deliveryMethod === 'delivery' || isDeliveryAddr) ? 'delivery' : 'pickup';
-  setProp(`order_type_${newRow}`, orderType);
-  console.log(`Order ${orderNum} type=${orderType} deliveryMethod=${body.deliveryMethod} address=${body.address}`);
+  setProp(`order_type_${orderNum}`, orderType);
+  console.log(`Order ${orderNum} type=${orderType}`);
 
-  // Заголовок (меняется вместе со статусом) и тело (статично)
   const orderTypeLabel = isPreorder ? 'ПРЕДЗАКАЗ' : orderType === 'delivery' ? 'ДОСТАВКА' : 'НОВЫЙ ЗАКАЗ';
-  const adminHeader = `🥐 *${orderTypeLabel} — №${orderNum}*`;
-  const adminBody   =
+  const adminHeader    = `🥐 *${orderTypeLabel} — №${orderNum}*`;
+  const adminBody      =
     `\n*КЛИЕНТ:*\n` +
     `👤 ${clientName}\n` +
     `📞 ${body.phone || '—'}\n` +
@@ -332,24 +188,16 @@ async function handleOrder(body) {
     `💰 *Сумма заказа:* ${totalStr}` +
     noteLine;
 
-  const adminBase = adminHeader;
-
-  setProp(`receipt_base_${newRow}`, receiptBase);
-  setProp(`admin_base_${newRow}`,   adminBase);
-  setProp(`admin_body_${newRow}`,   adminBody);
-  setProp(`client_name_${newRow}`,  clientName);
-  setProp(`order_num_${newRow}`,     String(orderNum));
-  setProp(`order_phone_${newRow}`,   body.phone   || '—');
-  setProp(`order_address_${newRow}`, body.address || 'Самовывоз');
-  setProp(`order_total_${newRow}`,   totalStr);
-  setProp(`order_payment_${newRow}`, body.payment || '');
-  setProp(`order_note_${newRow}`,    (body.note || '').trim());
-
-  // Убавить остаток со склада
-  try {
-    const parsed = typeof body.items === 'string' ? JSON.parse(body.items) : body.items;
-    if (Array.isArray(parsed)) await decrementStock(parsed);
-  } catch(e) { console.error('decrementStock call:', e.message); }
+  setProp(`receipt_base_${orderNum}`, receiptBase);
+  setProp(`admin_base_${orderNum}`,   adminHeader);
+  setProp(`admin_body_${orderNum}`,   adminBody);
+  setProp(`client_name_${orderNum}`,  clientName);
+  setProp(`order_num_${orderNum}`,    String(orderNum));
+  setProp(`order_phone_${orderNum}`,  body.phone   || '—');
+  setProp(`order_address_${orderNum}`,body.address || 'Самовывоз');
+  setProp(`order_total_${orderNum}`,  totalStr);
+  setProp(`order_payment_${orderNum}`,body.payment || '');
+  setProp(`order_note_${orderNum}`,   noteStr);
 
   // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
@@ -362,7 +210,6 @@ async function handleOrder(body) {
     }
   }
 
-  // Параллельная отправка
   const calls = [];
   if (clientId !== '0') {
     calls.push(['sendMessage', {
@@ -373,7 +220,6 @@ async function handleOrder(body) {
   }
 
   if (isPreorder && PREORDER_CHAT_ID) {
-    // Предзаказ идёт ТОЛЬКО в чат предзаказов, не админу
     const [rawDate, rawTime] = (body.time || '').split(' в ');
     const dp = (rawDate || '').split('-');
     const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
@@ -389,19 +235,18 @@ async function handleOrder(body) {
       text:         preorderText,
       parse_mode:   'Markdown',
       reply_markup: { inline_keyboard: [[
-        { text: '✅ Принять заказ', callback_data: `accept_${newRow}_${clientId}` },
-        { text: '❌ Отклонить',     callback_data: `decline_${newRow}_${clientId}` }
+        { text: '✅ Принять заказ', callback_data: `accept_${orderNum}_${clientId}` },
+        { text: '❌ Отклонить',     callback_data: `decline_${orderNum}_${clientId}` }
       ]]}
     }]);
   } else {
-    // Обычный заказ или предзаказ без настроенного чата — идёт админу
     calls.push(['sendMessage', {
       chat_id:      ADMIN_ID,
-      text:         `${adminBase}\n🟡 Статус: Новый${adminBody}`,
+      text:         `${adminHeader}\n🟡 Статус: Новый${adminBody}`,
       parse_mode:   'Markdown',
       reply_markup: { inline_keyboard: [[
-        { text: '✅ Принять заказ', callback_data: `accept_${newRow}_${clientId}` },
-        { text: '❌ Отклонить',     callback_data: `decline_${newRow}_${clientId}` }
+        { text: '✅ Принять заказ', callback_data: `accept_${orderNum}_${clientId}` },
+        { text: '❌ Отклонить',     callback_data: `decline_${orderNum}_${clientId}` }
       ]]}
     }]);
   }
@@ -411,45 +256,40 @@ async function handleOrder(body) {
 
   if (clientId !== '0') {
     const r = responses[0];
-    if (r.ok) setProp(`receipt_${newRow}`,
+    if (r.ok) setProp(`receipt_${orderNum}`,
       JSON.stringify({ chatId: clientId, msgId: r.result.message_id }));
     offset = 1;
   }
 
   const adminR = responses[offset];
-  if (adminR.ok) {
+  if (adminR?.ok) {
     const chatId = (isPreorder && PREORDER_CHAT_ID) ? PREORDER_CHAT_ID : ADMIN_ID;
-    setProp(`admin_msg_${newRow}`, JSON.stringify({ chatId, msgId: adminR.result.message_id }));
+    setProp(`admin_msg_${orderNum}`, JSON.stringify({ chatId, msgId: adminR.result.message_id }));
   }
 }
 
 // ─── Вспомогательные функции статусов ────────────────────────────────────────
 
-// Обновить сообщение админа: новый текст + новые кнопки
-// adminBase = заголовок (первая строка), adminBody = тело сообщения
 async function editAdminMsg(adminChatId, adminMsgId, adminBase, statusLine, keyboard, adminBody) {
-  const body = adminBody || '';
   return tg('editMessageText', {
     chat_id:      adminChatId,
     message_id:   adminMsgId,
-    text:         `${adminBase}\n${statusLine}${body}`,
+    text:         `${adminBase}\n${statusLine}${adminBody || ''}`,
     parse_mode:   'Markdown',
     reply_markup: { inline_keyboard: keyboard }
   });
 }
 
-// Отправить уведомление клиенту (если есть)
 async function notifyClient(clientId, text, keyboard) {
   if (!clientId || clientId === '0') return null;
   return tg('sendMessage', {
-    chat_id:      String(clientId),
+    chat_id:    String(clientId),
     text,
-    parse_mode:   'Markdown',
+    parse_mode: 'Markdown',
     ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {})
   });
 }
 
-// Удалить сохранённое сообщение клиенту (если было)
 async function deleteStoredMsg(key) {
   const raw = getProp(key);
   if (!raw) return;
@@ -459,10 +299,9 @@ async function deleteStoredMsg(key) {
   } catch(e) {
     console.error(`deleteStoredMsg(${key}):`, e.message);
   }
-  delProp(key); // удаляем в любом случае, чтобы не повторять
+  delProp(key);
 }
 
-// Кнопки для рейтинга
 const RATING_KEYBOARD = [[
   { text: '1⭐', callback_data: 'rate_1_ROW' },
   { text: '2⭐', callback_data: 'rate_2_ROW' },
@@ -496,17 +335,15 @@ async function handleCallback(cb) {
   cbSeen.add(cb.id);
   if (cbSeen.size > 10000) Array.from(cbSeen).slice(0, 1000).forEach(id => cbSeen.delete(id));
 
-  const parts    = cb.data.split('_');
-  const action   = parts[0];
+  const parts  = cb.data.split('_');
+  const action = parts[0];
 
-  // Для всех кнопок кроме rate — отвечаем сразу (rate отвечает сам со своим текстом)
   if (action !== 'rate') {
     await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
   }
 
   // ── Check-in администратора ───────────────────────────────────────────────
   if (action === 'checkin') {
-    // Реагируем только на нажатие самого администратора
     if (String(cb.from.id) !== ADMIN_ID) return;
     const r = await tg('sendMessage', {
       chat_id:    ADMIN_ID,
@@ -514,7 +351,6 @@ async function handleCallback(cb) {
       parse_mode: 'Markdown'
     });
     setProp(`pending_checkin_${ADMIN_ID}`, JSON.stringify({ promptMsgId: r?.ok ? r.result.message_id : null }));
-    // Убираем кнопку с исходного сообщения
     const cm = getProp('checkin_msg');
     if (cm) {
       const { chatId, msgId } = JSON.parse(cm);
@@ -529,10 +365,8 @@ async function handleCallback(cb) {
     const ratingRow = parseInt(parts[2]);
     const starStr   = '⭐'.repeat(stars) + ` (${stars}/5)`;
 
-    // Визуальный ответ на нажатие
     await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: starStr, show_alert: false });
 
-    // Если уже показан запрос отзыва — только обновляем оценку, не дублируем сообщение
     const existingRaw = getProp(`pending_${cb.from.id}`);
     if (existingRaw) {
       try {
@@ -540,13 +374,11 @@ async function handleCallback(cb) {
         if (ep.reviewReqMsgId) {
           setProp(`pending_${cb.from.id}`,
             JSON.stringify({ stars, rowNum: ratingRow, reviewReqMsgId: ep.reviewReqMsgId }));
-          if (ratingRow > 0) await updateCell(ratingRow, 10, starStr);
           return;
         }
-      } catch(e) { /* устаревшее состояние — продолжаем */ }
+      } catch(e) {}
     }
 
-    // Удаляем сообщение с кнопками и просим отзыв
     const [, reviewRes] = await tgAll([
       ['deleteMessage', { chat_id: String(cb.from.id), message_id: cb.message.message_id }],
       ['sendMessage', {
@@ -561,20 +393,17 @@ async function handleCallback(cb) {
       rowNum:         ratingRow,
       reviewReqMsgId: reviewRes?.ok ? reviewRes.result.message_id : null
     }));
-    if (ratingRow > 0) await updateCell(ratingRow, 10, starStr);
     return;
   }
 
   const rowNum      = parseInt(parts[1]);
   const clientId    = parts[2];
-  // rowNum — это orderNum (из счётчика); sheetRow — строка в таблице для updateCell
-  const sheetRow    = parseInt(getProp(`sheet_row_${rowNum}`) || '0');
   const orderNum    = getProp(`order_num_${rowNum}`) || String(rowNum);
   const adminChatId = cb.message?.chat?.id || ADMIN_ID;
   const adminMsgId  = cb.message?.message_id;
   const adminBase   = getProp(`admin_base_${rowNum}`) || '';
   const adminBody   = getProp(`admin_body_${rowNum}`) || '';
-  const orderType   = getProp(`order_type_${rowNum}`) || 'pickup'; // delivery | pickup | preorder
+  const orderType   = getProp(`order_type_${rowNum}`) || 'pickup';
 
   // ── 1. Принять ────────────────────────────────────────────────────────────
   if (action === 'accept') {
@@ -591,8 +420,6 @@ async function handleCallback(cb) {
       : `✅ *Ваш заказ №${orderNum} принят!*\n\n🍞 Мы уже приступаем к приготовлению. Сообщим о готовности!`;
     const r = await notifyClient(clientId, acceptText);
     if (r?.ok) setProp(`accept_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-
-    if (sheetRow) await updateCell(sheetRow, 12, 'Принят');
     return;
   }
 
@@ -607,8 +434,6 @@ async function handleCallback(cb) {
     const r = await notifyClient(clientId,
       `👨‍🍳 *Заказ №${orderNum} готовится!*\n\nМы уже работаем над вашим заказом. Скоро сообщим о готовности.`);
     if (r?.ok) setProp(`working_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-
-    if (sheetRow) await updateCell(sheetRow, 12, 'В работе');
     return;
   }
 
@@ -618,23 +443,18 @@ async function handleCallback(cb) {
     await deleteStoredMsg(`working_msg_${rowNum}`);
 
     const isDeliveryOrder = orderType === 'delivery';
-    console.log(`ready: rowNum=${rowNum} orderType=${orderType} isDeliveryOrder=${isDeliveryOrder}`);
 
     if (isDeliveryOrder) {
-      // Доставка: ждём подтверждения курьера — клиента не уведомляем заранее
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [[
         { text: '🚗 Отправить доставку', callback_data: `courier_${rowNum}_${clientId}` }
       ]], adminBody);
-      if (sheetRow) await updateCell(sheetRow, 12, 'Готов');
     } else {
-      // Самовывоз или предзаказ: завершаем сразу, отправляем оценку клиенту
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
       const readyText = orderType === 'preorder'
         ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
         : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\n⭐ *Оцените качество обслуживания:*`;
-      const r = await notifyClient(clientId, readyText, ratingKeyboard(sheetRow || rowNum));
+      const r = await notifyClient(clientId, readyText, ratingKeyboard(rowNum));
       if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-      if (sheetRow) await updateCell(sheetRow, 12, 'Готов');
     }
     return;
   }
@@ -647,10 +467,8 @@ async function handleCallback(cb) {
     }
     await deleteStoredMsg(`ready_msg_${rowNum}`);
 
-    // У админа — статус «В доставке», кнопок нет
     await editAdminMsg(adminChatId, adminMsgId, adminBase, '🚗 В доставке', [], adminBody);
 
-    // Сообщение в чат доставки с кнопкой «Доставлен»
     if (DELIVERY_CHAT_ID) {
       const phone   = getProp(`order_phone_${rowNum}`)   || '—';
       const address = getProp(`order_address_${rowNum}`) || '—';
@@ -678,19 +496,15 @@ async function handleCallback(cb) {
       if (dr?.ok) setProp(`delivery_msg_${rowNum}`, JSON.stringify({ chatId: DELIVERY_CHAT_ID, msgId: dr.result.message_id }));
     }
 
-    // Уведомление клиенту
     await notifyClient(clientId,
       `🚗 *Заказ №${orderNum} отправлен!*\n\n⏱ Ориентировочное время доставки: *30–45 минут* в зависимости от загруженности.\nПо приезде заказа, курьер с вами свяжется!\n\nС уважением команда «Мамин Хлеб»\nЕсли возникли вопросы звоните по номеру:\n☎️ +375(29)722-20-22`);
-
-    if (sheetRow) await updateCell(sheetRow, 12, 'В доставке');
     return;
   }
 
-  // ── 4b. Доставлен (нажимает доставщик в чате доставки) ───────────────────
+  // ── 4b. Доставлен ─────────────────────────────────────────────────────────
   if (action === 'done') {
     await deleteStoredMsg(`ready_msg_${rowNum}`);
 
-    // Убрать кнопку из сообщения в чате доставки
     const deliveryMsgRaw = getProp(`delivery_msg_${rowNum}`);
     if (deliveryMsgRaw) {
       const dm = JSON.parse(deliveryMsgRaw);
@@ -698,20 +512,16 @@ async function handleCallback(cb) {
       delProp(`delivery_msg_${rowNum}`);
     }
 
-    // Обновить сообщение у АДМИНА (берём из state, т.к. callback пришёл из чата доставки)
     const adminMsgRaw = getProp(`admin_msg_${rowNum}`);
     const storedAdmin = adminMsgRaw ? JSON.parse(adminMsgRaw) : null;
     const targetChatId = storedAdmin ? storedAdmin.chatId : adminChatId;
     const targetMsgId  = storedAdmin ? storedAdmin.msgId  : adminMsgId;
     await editAdminMsg(targetChatId, targetMsgId, adminBase, '✅ Доставлен', [], adminBody);
 
-    // Уведомление клиенту + оценка
     const r = await notifyClient(clientId,
       `🎉 *Ваш заказ №${orderNum} доставлен!*\n\nСпасибо, что выбрали нас! 🍞\n\n⭐ *Оцените качество обслуживания:*`,
-      ratingKeyboard(sheetRow || rowNum));
+      ratingKeyboard(rowNum));
     if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-
-    if (sheetRow) await updateCell(sheetRow, 12, 'Доставлен');
     return;
   }
 
@@ -722,7 +532,6 @@ async function handleCallback(cb) {
       ? `🚫 *Ваш заказ №${orderNum} отменён.*\n\nПриносим извинения. Обратитесь к нам напрямую.`
       : `❌ *Ваш заказ №${orderNum} отклонён.*\n\nПриносим извинения. Свяжитесь с нами.`;
 
-    // Удаляем все промежуточные уведомления
     await Promise.all([
       deleteStoredMsg(`accept_msg_${rowNum}`),
       deleteStoredMsg(`working_msg_${rowNum}`),
@@ -735,8 +544,6 @@ async function handleCallback(cb) {
 
     const r = await notifyClient(clientId, clientText);
     if (r?.ok) setProp(`decline_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-
-    if (sheetRow) await updateCell(sheetRow, 12, label);
     return;
   }
 
@@ -752,24 +559,21 @@ async function handleCallback(cb) {
     const r = await notifyClient(clientId,
       `🔄 *Ваш заказ №${orderNum} снова в обработке.*\n\nСкоро свяжемся с вами!`);
     if (r?.ok) setProp(`restore_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-
-    if (sheetRow) await updateCell(sheetRow, 12, 'Новый');
     delProp(`decline_msg_${rowNum}`);
     return;
   }
 }
 
-// ─── Обработка текстовых сообщений (отзыв) ───────────────────────────────────
+// ─── Обработка текстовых сообщений (check-in + отзыв) ────────────────────────
 async function handleTextMessage(message) {
   const senderId = String(message.from.id);
   const msgText  = message.text.trim();
 
-  // Дедупликация
   const msgKey = `msg_${message.message_id}`;
   if (getProp(msgKey)) return;
   setProp(msgKey, '1');
 
-  // ── Check-in администратора (только для ADMIN_ID) ───────────────────────
+  // ── Check-in администратора ───────────────────────────────────────────────
   const checkinRaw = senderId === ADMIN_ID ? getProp(`pending_checkin_${ADMIN_ID}`) : null;
   if (checkinRaw) {
     const cd = JSON.parse(checkinRaw);
@@ -779,176 +583,32 @@ async function handleTextMessage(message) {
       text:       `✅ Записано! Сегодня работает: *${msgText}*`,
       parse_mode: 'Markdown'
     });
-    // Логируем в Google Sheets
-    try {
-      const sheets = await getSheets();
-      const now = new Date();
-      const dateStr = now.toLocaleString('ru-RU', { timeZone: 'Europe/Minsk' });
-      await sheets.spreadsheets.values.append({
-        spreadsheetId:    SPREADSHEET_ID,
-        range:            'Журнал!A:B',
-        valueInputOption: 'USER_ENTERED',
-        requestBody:      { values: [[dateStr, msgText]] }
-      });
-    } catch(e) { console.error('checkin sheet:', e.message); }
     delProp(`pending_checkin_${senderId}`);
     return;
   }
 
+  // ── Отзыв после оценки ────────────────────────────────────────────────────
   const pendingRaw = getProp(`pending_${senderId}`);
   if (!pendingRaw) return;
 
-  const data    = JSON.parse(pendingRaw);
-  const starStr = '⭐'.repeat(data.stars) + ` (${data.stars}/5)`;
-  const isSkip  = msgText === '/skip';
+  const data   = JSON.parse(pendingRaw);
+  const isSkip = msgText === '/skip';
 
   const calls = [];
   if (data.reviewReqMsgId) calls.push(['deleteMessage',
     { chat_id: senderId, message_id: data.reviewReqMsgId }]);
   calls.push(['sendMessage', {
     chat_id:    senderId,
-    text:       isSkip
-      ? '🙏 *Спасибо за оценку!* Рады видеть вас снова 🍞'
-      : '🙏 *Спасибо за отзыв!*',
+    text:       isSkip ? '🙏 *Спасибо за оценку!* Рады видеть вас снова 🍞' : '🙏 *Спасибо за отзыв!*',
     parse_mode: 'Markdown'
   }]);
 
-  if (calls.length > 0) await tgAll(calls);
-
-  await updateCell(data.rowNum, 10, isSkip ? starStr : `${starStr}\n💬 ${msgText}`);
+  await tgAll(calls);
   delProp(`pending_${senderId}`);
-}
-
-// ─── Ответ из Google Sheets колонки K → клиенту ───────────────────────────────
-// Этот маршрут вызывается вручную или через GAS-триггер
-app.post('/reply', async (req, res) => {
-  res.json({ ok: true });
-  const { telegramId, replyText, row } = req.body;
-  if (!telegramId || !replyText) return;
-  const result = await tg('sendMessage', {
-    chat_id:    String(telegramId),
-    text:       `✉️ *Сообщение от пекарни «Мамин Хлеб»:*\n\n${replyText}`,
-    parse_mode: 'Markdown'
-  });
-  // Если передан номер строки — обновляем колонку M (13)
-  if (row && result.ok) await updateCell(parseInt(row), 13, '✅ Ответили');
-});
-
-// ─── Склад (контроль наличия + динамический каталог) ─────────────────────────
-// Структура листа "Склад":
-//   A = Название товара  B = Количество (остаток)  C = Продано
-//   D = Цена (если заполнена — товар появится в приложении динамически)
-//   E = Категория (bread/pies/cakes/pastries/pizza/desserts/buns)
-//   F = Эмодзи  G = Описание  H = Вес/Объём
-//   I = Новинка (да/yes/1 → появится в блоке «Новинки»)
-//   J = Хит продаж (да/yes/1 → появится в «Хит продаж»)
-
-function parseFlag(val) {
-  if (!val && val !== 0) return undefined;
-  return ['да', 'yes', '1', 'true', '+'].includes(String(val).toLowerCase().trim());
-}
-
-async function getStock() {
-  try {
-    const sheets = await getSheets();
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A2:J'
-    });
-    const rows = res.data.values || [];
-    const stock = {};
-    const catalog = [];
-    const flags = {};
-    rows.forEach(row => {
-      const name      = (row[0] || '').trim();
-      const nameLower = name.toLowerCase();
-      const remaining = parseInt(row[1] || '0', 10);
-      if (nameLower) stock[nameLower] = isNaN(remaining) ? 0 : remaining;
-
-      // Флаги «Новинка» (I) и «Хит продаж» (J)
-      const isNew      = parseFlag(row[8]);
-      const bestseller = parseFlag(row[9]);
-      if (nameLower && (isNew !== undefined || bestseller !== undefined)) {
-        flags[nameLower] = {};
-        if (isNew      !== undefined) flags[nameLower].isNew      = isNew;
-        if (bestseller !== undefined) flags[nameLower].bestseller = bestseller;
-      }
-
-      // Динамический товар: заполнены Цена (D) и Категория (E)
-      const price    = parseFloat((row[3] || '').replace(',', '.'));
-      const category = (row[4] || '').trim();
-      if (!isNaN(price) && price > 0 && category) {
-        catalog.push({
-          id:          'dynamic-' + nameLower.replace(/[^a-zа-яё0-9]+/g, '-').replace(/^-|-$/g, ''),
-          name,
-          price,
-          category,
-          image:       (row[5] || '🍞').trim(),
-          description: (row[6] || '').trim(),
-          weight:      (row[7] || '').trim() || null,
-          isDynamic:   true,
-          isNew:       isNew === true,
-          bestseller:  bestseller === true
-        });
-      }
-    });
-    return { stock, catalog, flags };
-  } catch(e) {
-    console.error('getStock:', e.message);
-    return { stock: {}, catalog: [], flags: {} };
-  }
-}
-
-// Уменьшает остаток: B (Количество) -= qty, C (Продано) += qty
-async function decrementStock(items) {
-  if (!items || !items.length) return;
-  try {
-    const sheets = await getSheets();
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: 'Склад!A:C'
-    });
-    const rows = res.data.values || [];
-    const updates = [];
-
-    items.forEach(item => {
-      const name = (item.product_name || '').trim().toLowerCase();
-      const qty  = item.quantity || 1;
-      for (let i = 1; i < rows.length; i++) {  // i=1 — пропускаем заголовок
-        if ((rows[i][0] || '').trim().toLowerCase() === name) {
-          const remaining    = parseInt(rows[i][1] || '0', 10); // B = Количество
-          const sold         = parseInt(rows[i][2] || '0', 10); // C = Продано
-          const newRemaining = Math.max(0, remaining - qty);
-          const newSold      = sold + qty;
-          updates.push(
-            { range: `Склад!B${i + 1}`, values: [[String(newRemaining)]] },
-            { range: `Склад!C${i + 1}`, values: [[String(newSold)]] }
-          );
-          // Обновляем локально чтобы не было двойного декремента для одного товара
-          rows[i][1] = String(newRemaining);
-          rows[i][2] = String(newSold);
-          break;
-        }
-      }
-    });
-
-    if (!updates.length) return;
-    await sheets.spreadsheets.values.batchUpdate({
-      spreadsheetId: SPREADSHEET_ID,
-      requestBody: {
-        valueInputOption: 'USER_ENTERED',
-        data: updates
-      }
-    });
-    console.log(`Stock updated for ${updates.length / 2} items`);
-  } catch(e) {
-    console.error('decrementStock:', e.message);
-  }
 }
 
 // ─── Маршруты ─────────────────────────────────────────────────────────────────
 
-// Telegram webhook — отвечаем 200 сразу, обрабатываем асинхронно
 app.post('/webhook', (req, res) => {
   res.sendStatus(200);
   const body = req.body;
@@ -960,7 +620,6 @@ app.post('/webhook', (req, res) => {
   }
 });
 
-// Заказы из Mini App (Content-Type: text/plain с JSON-телом)
 app.post('/order', (req, res) => {
   res.json({ ok: true });
   let body = req.body;
@@ -971,86 +630,14 @@ app.post('/order', (req, res) => {
   handleOrder(body).catch(e => console.error('order err:', e));
 });
 
-// Склад — текущие остатки товаров
-app.get('/api/stock', async (req, res) => {
-  const { stock, catalog, flags } = await getStock();
-  res.json({ ok: true, stock, catalog, flags });
+app.get('/api/stock', (req, res) => {
+  res.json({ ok: true, stock: {}, catalog: [], flags: {} });
 });
 
-// Диагностика Google Sheets
-app.get('/api/test-sheets', async (req, res) => {
-  const result = { spreadsheetId: SPREADSHEET_ID ? SPREADSHEET_ID.slice(0,8) + '...' : 'NOT SET', steps: [] };
-  try {
-    // Шаг 1: парсим credentials
-    let creds;
-    try {
-      creds = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-      result.steps.push({ step: 'parse_credentials', ok: true, client_email: creds.client_email });
-    } catch(e) {
-      result.steps.push({ step: 'parse_credentials', ok: false, error: e.message });
-      return res.json({ ok: false, result });
-    }
-
-    // Шаг 2: auth
-    let sheets;
-    try {
-      sheetsApi = null; // сбросить кэш, чтобы создать заново
-      sheets = await getSheets();
-      result.steps.push({ step: 'auth', ok: true });
-    } catch(e) {
-      result.steps.push({ step: 'auth', ok: false, error: e.message });
-      return res.json({ ok: false, result });
-    }
-
-    // Шаг 3: читаем список листов
-    try {
-      const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
-      const sheetNames = (meta.data.sheets || []).map(s => s.properties.title);
-      result.steps.push({ step: 'get_spreadsheet', ok: true, sheets: sheetNames });
-    } catch(e) {
-      result.steps.push({ step: 'get_spreadsheet', ok: false, error: e.message });
-      return res.json({ ok: false, result });
-    }
-
-    // Шаг 4: читаем первую строку листа заказов
-    const testRange = ordersRange('A1:N1');
-    result.ordersSheet = ORDERS_SHEET_NAME || '(первый лист)';
-    result.ordersRange = testRange;
-    try {
-      const r = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: testRange });
-      result.steps.push({ step: 'read_A1:N1', ok: true, values: r.data.values || [] });
-    } catch(e) {
-      result.steps.push({ step: 'read_A1:N1', ok: false, error: e.message });
-    }
-
-    // Шаг 5: пробуем записать тестовую строку в лист заказов
-    try {
-      const now = new Date().toISOString();
-      const appendRes = await sheets.spreadsheets.values.append({
-        spreadsheetId:    SPREADSHEET_ID,
-        range:            ordersRange('A:N'),
-        valueInputOption: 'USER_ENTERED',
-        insertDataOption: 'OVERWRITE',
-        requestBody:      { values: [['TEST_ROW', now, 'diagnostic endpoint']] }
-      });
-      result.steps.push({ step: 'append_test_row', ok: true, updatedRange: appendRes.data.updates?.updatedRange });
-    } catch(e) {
-      result.steps.push({ step: 'append_test_row', ok: false, error: e.message, code: e.code });
-    }
-
-    res.json({ ok: true, result });
-  } catch(e) {
-    res.json({ ok: false, error: e.message, result });
-  }
-});
-
-// Мини-апп — отдаём index.html (лежит рядом с index.js в bot/)
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-
-// Проверка работоспособности
 app.get('/health', (req, res) => res.send('MaminHleb bot is running ✓'));
 
-// ─── Установка вебхука (вызывается один раз при старте) ───────────────────────
+// ─── Установка вебхука ────────────────────────────────────────────────────────
 async function setWebhook() {
   const RAILWAY_URL = process.env.RAILWAY_PUBLIC_DOMAIN
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
@@ -1069,18 +656,12 @@ async function setWebhook() {
   console.log('setWebhook:', JSON.stringify(res));
 }
 
-// Формирует ключ дня в минском времени: "2026-04-15" (месяц 1-based с нулём)
 function mskDateKey() {
   const msk = new Date(Date.now() + 3 * 3600 * 1000);
-  const yyyy = msk.getUTCFullYear();
-  const mm = String(msk.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(msk.getUTCDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
+  return `${msk.getUTCFullYear()}-${String(msk.getUTCMonth()+1).padStart(2,'0')}-${String(msk.getUTCDate()).padStart(2,'0')}`;
 }
 
-// ─── Ежедневный check-in в 06:00 Минск (UTC+3) ───────────────────────────────
-// Персистентный флаг — не шлёт повторно при перезапуске, но если пропустили
-// окно из-за рестарта в 06:00-06:59, шлёт в течение дня до 09:00.
+// ─── Check-in в 06:00 Минск каждый день ──────────────────────────────────────
 setInterval(() => {
   const msk = new Date(Date.now() + 3 * 3600 * 1000);
   const h   = msk.getUTCHours();
@@ -1092,37 +673,21 @@ setInterval(() => {
 }, 60000);
 
 // ─── Happy Hour уведомления ───────────────────────────────────────────────────
-// Пн–Пт 19:00 и Сб–Вс 17:00 (время Минска UTC+3) — рассылка всем клиентам
-
 async function sendHappyHourNotifications() {
-  // Читаем всех клиентов из Google Sheets колонка E (telegramId)
   let clients = [];
-  try {
-    const sheets = await getSheets();
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: ordersRange('F2:F')  // колонка F (ID Telegram), начиная со 2-й строки
-    });
-    const rows = res.data.values || [];
-    const seen = new Set();
-    rows.forEach(row => {
-      const id = (row[0] || '').trim();
-      if (id && id !== '0' && !seen.has(id)) { seen.add(id); clients.push(id); }
-    });
-  } catch(e) { console.error('happyHour getClients:', e.message); }
-  if (!clients.length) { console.log('happyHour: no clients to notify'); return; }
+  try { clients = JSON.parse(getProp('known_clients') || '[]'); } catch(e) {}
+  if (!clients.length) { console.log('happyHour: no clients'); return; }
   console.log(`happyHour: sending to ${clients.length} clients`);
   const text =
     `🌆 *Добрый вечер!*\n\n` +
     `Настало время счастливого часа — скидка *30%* на всю оставшуюся продукцию для самовывоза.\n\n` +
     `Успейте забрать! 🥐`;
-  // Параллельная рассылка пакетами по 25 (лимит Telegram: 30 сообщ/сек)
   const BATCH = 25;
   for (let i = 0; i < clients.length; i += BATCH) {
     await Promise.all(
       clients.slice(i, i + BATCH).map(cid =>
         tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' })
-          .catch(e => console.error(`happyHour notify ${cid}:`, e.message))
+          .catch(e => console.error(`happyHour ${cid}:`, e.message))
       )
     );
     if (i + BATCH < clients.length) await new Promise(r => setTimeout(r, 1100));
@@ -1130,98 +695,21 @@ async function sendHappyHourNotifications() {
 }
 
 setInterval(() => {
-  // Belarus = UTC+3 постоянно (без DST)
   const msk = new Date(Date.now() + 3 * 3600 * 1000);
-  const day = msk.getUTCDay();      // 0=Вс … 6=Сб
+  const day = msk.getUTCDay();
   const h   = msk.getUTCHours();
-  const dateKey = mskDateKey();
+  const dateKey   = mskDateKey();
   const isWeekday = day >= 1 && day <= 5;
   const isWeekend = day === 0 || day === 6;
-  // Окно 1 час начиная с 19:00 (Пн-Пт) / 17:00 (Сб-Вс) — ловим даже после рестарта.
-  // Персистентный флаг в state.json предотвращает повторную рассылку в тот же день.
-  const isHappyWindow = (isWeekday && h === 19) || (isWeekend && h === 17);
-  if (isHappyWindow && getProp('happy_hour_sent_date') !== dateKey) {
+  if (((isWeekday && h === 19) || (isWeekend && h === 17)) && getProp('happy_hour_sent_date') !== dateKey) {
     setProp('happy_hour_sent_date', dateKey);
     sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
   }
 }, 60000);
 
-// ─── Поллинг ответов из колонки K → клиенту ──────────────────────────────────
-// Каждые 2 минуты проверяем: есть ли в K текст, а в M ещё нет "✅ Ответили"
-// Если да — отправляем сообщение клиенту и ставим отметку в M
-async function pollReplies() {
-  try {
-    const sheets = await getSheets();
-    // Читаем F:M (F=ID Telegram, K=Ваш ответ, M=Статус ответа)
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range:         ordersRange('F2:M')
-    });
-    const rows = res.data.values || [];
-    for (let i = 0; i < rows.length; i++) {
-      const telegramId = (rows[i][0] || '').trim(); // F
-      const replyText  = (rows[i][5] || '').trim(); // K (F+5)
-      const status     = (rows[i][7] || '').trim(); // M (F+7)
-      if (!telegramId || !replyText || status === '✅ Ответили') continue;
-      const sheetRow = i + 2; // строка 1 — заголовок, i начинается с 0
-      const result = await tg('sendMessage', {
-        chat_id:    String(telegramId),
-        text:       `✉️ *Сообщение от пекарни «Мамин Хлеб»:*\n\n${replyText}`,
-        parse_mode: 'Markdown'
-      });
-      if (result.ok) {
-        await updateCell(sheetRow, 13, '✅ Ответили'); // колонка M
-        console.log(`Reply sent → telegramId=${telegramId} row=${sheetRow}`);
-      } else {
-        console.error(`Reply failed → telegramId=${telegramId} row=${sheetRow}:`, result.description);
-      }
-    }
-  } catch(e) {
-    console.error('pollReplies:', e.message);
-  }
-}
-
-setInterval(() => {
-  pollReplies().catch(e => console.error('pollReplies interval:', e));
-}, 2 * 60 * 1000); // каждые 2 минуты
-
 // ─── Запуск ───────────────────────────────────────────────────────────────────
-
-// Заголовки листа с заказами (14 колонок A–N)
-const ORDERS_HEADERS = [
-  'Дата', '📦 ЗАКАЗ', '⏳ ПРЕДЗАКАЗ', 'Имя', 'Телефон',
-  'ID Telegram', 'Состав заказа', 'Сумма', 'Адрес/время',
-  'Отзывы', 'Ваш ответ', 'Статус заказа', 'Статус ответа', 'Примечание'
-];
-
-// Пишет заголовки в строку 1, если лист пустой
-async function initOrdersSheet() {
-  try {
-    const sheets = await getSheets();
-    const check = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: ordersRange('A1')
-    });
-    if (check.data.values && check.data.values.length > 0) {
-      console.log('Orders sheet: headers already exist');
-      return;
-    }
-    await sheets.spreadsheets.values.update({
-      spreadsheetId:    SPREADSHEET_ID,
-      range:            ordersRange('A1'),
-      valueInputOption: 'USER_ENTERED',
-      requestBody:      { values: [ORDERS_HEADERS] }
-    });
-    console.log('Orders sheet: headers written to row 1');
-  } catch(e) {
-    console.error('initOrdersSheet:', e.message);
-  }
-}
-
 app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
   await initDB();
-  await initOrdersSheet();
-  await initOrderCounter();
   await setWebhook();
 });
