@@ -39,38 +39,49 @@ function ordersRange(range) {
 const store  = new Map();
 const cbSeen = new Set();
 
-// PostgreSQL pool — DATABASE_URL задаётся автоматически Railway
-const pgPool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
-});
+// PostgreSQL pool — DATABASE_URL задаётся Railway при подключении плагина Postgres
+const pgPool = process.env.DATABASE_URL
+  ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  : null;
 
 async function initDB() {
-  await pgPool.query(`
-    CREATE TABLE IF NOT EXISTS bot_state (
-      key   VARCHAR(512) PRIMARY KEY,
-      value TEXT NOT NULL
-    )
-  `);
-  const res = await pgPool.query('SELECT key, value FROM bot_state');
-  res.rows.forEach(row => store.set(row.key, row.value));
-  console.log(`PostgreSQL state loaded: ${store.size} keys`);
+  if (!pgPool) {
+    console.warn('DATABASE_URL not set — state stored in memory only (lost on restart)');
+    return;
+  }
+  try {
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS bot_state (
+        key   VARCHAR(512) PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    `);
+    const res = await pgPool.query('SELECT key, value FROM bot_state');
+    res.rows.forEach(row => store.set(row.key, row.value));
+    console.log(`PostgreSQL state loaded: ${store.size} keys`);
+  } catch(e) {
+    console.error('initDB failed, continuing without persistent state:', e.message);
+  }
 }
 
 function getProp(key) { return store.get(key) || null; }
 
 function setProp(key, value) {
   store.set(key, value);
-  pgPool.query(
-    'INSERT INTO bot_state (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
-    [key, String(value)]
-  ).catch(e => console.error('setProp DB:', e.message));
+  if (pgPool) {
+    pgPool.query(
+      'INSERT INTO bot_state (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+      [key, String(value)]
+    ).catch(e => console.error('setProp DB:', e.message));
+  }
 }
 
 function delProp(key) {
   store.delete(key);
-  pgPool.query('DELETE FROM bot_state WHERE key = $1', [key])
-    .catch(e => console.error('delProp DB:', e.message));
+  if (pgPool) {
+    pgPool.query('DELETE FROM bot_state WHERE key = $1', [key])
+      .catch(e => console.error('delProp DB:', e.message));
+  }
 }
 
 // Атомарный счётчик заказов (синхронный — без гонок в event loop Node.js)
