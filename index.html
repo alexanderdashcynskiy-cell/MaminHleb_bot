@@ -420,39 +420,39 @@
        <div style="position:absolute;inset:0;border-radius:2rem;background:linear-gradient(135deg,rgba(255,255,255,0.38) 0%,transparent 55%);pointer-events:none;"></div>
       </div>
       <div style="position:relative;z-index:1;display:flex;width:100%;gap:2px;">
-       <button id="cart-delivery-tab" onclick="setCartDelivery('delivery')" style="flex:1;padding:11px;border-radius:2rem;border:none;font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;background:transparent;color:rgba(61,31,10,0.38);transition:color 0.3s ease;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:5px;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;pointer-events:none;"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+       <button id="cart-delivery-tab" onclick="setCartDelivery('delivery')" style="flex:1;padding:9px;border-radius:2rem;border:none;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;background:transparent;color:rgba(61,31,10,0.38);transition:color 0.3s ease;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:4px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;pointer-events:none;"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
         Доставка
        </button>
-       <button id="cart-pickup-tab" onclick="setCartDelivery('pickup')" style="flex:1;padding:11px;border-radius:2rem;border:none;font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;background:transparent;color:#fff;transition:color 0.3s ease;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:5px;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;pointer-events:none;"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+       <button id="cart-pickup-tab" onclick="setCartDelivery('pickup')" style="flex:1;padding:9px;border-radius:2rem;border:none;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;background:transparent;color:#fff;transition:color 0.3s ease;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:4px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;pointer-events:none;"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
         Самовывоз
        </button>
       </div>
      </div>
      <!-- Pickup address card with chevron -->
-     <div id="cart-pickup-info" style="background:#fff;border-radius:16px;padding:11px 14px;display:none;align-items:center;justify-content:space-between;gap:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);">
-      <div style="display:flex;align-items:center;gap:10px;">
-       <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#C9A227,#D4A574);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+     <div id="cart-pickup-info" style="background:#fff;border-radius:14px;padding:9px 12px;display:none;align-items:center;justify-content:space-between;gap:8px;box-shadow:0 1px 5px rgba(0,0,0,0.05);">
+      <div style="display:flex;align-items:center;gap:8px;">
+       <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#C9A227,#D4A574);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
        </div>
-       <span style="font-size:14px;color:#3d1f0a;font-weight:500;">г. Витебск, ул. Ленина 74</span>
+       <span style="font-size:13px;color:#3d1f0a;font-weight:500;">г. Витебск, ул. Ленина 74</span>
       </div>
-      <svg width="16" height="16" fill="none" stroke="#C9A227" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+      <svg width="14" height="14" fill="none" stroke="#C9A227" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
      </div>
     </div>
 
     <!-- Scroll area -->
-    <div style="flex:1 1 0%;overflow-y:auto;padding:0 14px 12px;min-height:0;">
+    <div style="flex:1 1 0%;overflow-y:auto;padding:0 12px 10px;min-height:0;">
      <!-- "Ваш заказ" section label -->
-     <div id="cart-order-label" style="display:none;padding-bottom:8px;">
-      <span style="font-size:14px;font-weight:700;color:#3d1f0a;font-family:'Montserrat',sans-serif;letter-spacing:0.02em;">Ваш заказ</span>
+     <div id="cart-order-label" style="display:none;padding-bottom:6px;">
+      <span style="font-size:13px;font-weight:700;color:#3d1f0a;font-family:'Montserrat',sans-serif;letter-spacing:0.03em;text-transform:uppercase;">Ваш заказ</span>
      </div>
-     <div id="cart-items-full" style="display:flex;flex-direction:column;gap:7px;"></div>
+     <div id="cart-items-full" style="display:flex;flex-direction:column;gap:6px;"></div>
 
      <!-- "Добавьте к заказу" section -->
-     <div id="cart-suggestions-section" style="display:none;margin-top:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+     <div id="cart-suggestions-section" style="display:none;margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
        <div style="display:flex;align-items:center;gap:7px;">
         <svg width="16" height="16" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
         <span style="font-size:14px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;">Добавьте к заказу</span>
@@ -462,19 +462,19 @@
         <svg width="12" height="12" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
        </button>
       </div>
-      <div id="cart-suggestions" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;"></div>
+      <div id="cart-suggestions" style="display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;"></div>
      </div>
 
      <!-- Info block -->
-     <div id="cart-info-block" style="display:none;margin-top:10px;background:#FFF8F0;border-radius:16px;padding:14px;position:relative;overflow:hidden;flex-direction:row;align-items:center;gap:12px;">
-      <div style="width:38px;height:38px;border-radius:50%;border:1.5px solid #C9A227;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;">
-       <svg width="18" height="18" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+     <div id="cart-info-block" style="display:none;margin-top:8px;background:#FFF8F0;border-radius:14px;padding:11px 12px;position:relative;overflow:hidden;flex-direction:row;align-items:center;gap:10px;">
+      <div style="width:34px;height:34px;border-radius:50%;border:1.5px solid #C9A227;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;">
+       <svg width="16" height="16" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       </div>
       <div style="flex:1;min-width:0;">
-       <div style="font-size:13px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;line-height:1.2;">Готовим свежо каждый день</div>
-       <div style="font-size:11px;color:#a07b50;margin-top:3px;line-height:1.35;">Ваш заказ будет готов в указанное время</div>
+       <div style="font-size:12px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;line-height:1.2;">Готовим свежо каждый день</div>
+       <div style="font-size:11px;color:#a07b50;margin-top:2px;line-height:1.3;">Ваш заказ будет готов в указанное время</div>
       </div>
-      <div style="position:absolute;right:8px;bottom:0;font-size:42px;line-height:1;opacity:0.15;pointer-events:none;transform:rotate(-15deg);">🌿</div>
+      <div style="position:absolute;right:6px;bottom:0;font-size:36px;line-height:1;opacity:0.13;pointer-events:none;transform:rotate(-15deg);">🌿</div>
      </div>
 
      <div id="cart-empty-full" style="display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 0;">
@@ -486,10 +486,10 @@
 
     <!-- Fixed footer: compact bottom bar -->
     <div id="cart-footer" style="display:none;flex-shrink:0;background:#FFF8F0;padding:8px 14px;padding-bottom:max(33px,calc(env(safe-area-inset-bottom,14px) + 15px));position:relative;z-index:20;">
-     <div style="background:#fff;border-radius:22px;padding:11px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 24px rgba(0,0,0,0.11);">
+     <div style="background:#fff;border-radius:20px;padding:9px 10px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 22px rgba(0,0,0,0.1);">
       <!-- Bag icon -->
-      <div style="width:44px;height:44px;border-radius:12px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-       <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <div style="width:40px;height:40px;border-radius:11px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+       <svg width="18" height="18" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
       </div>
       <!-- Items info -->
       <div style="min-width:0;">
@@ -1848,26 +1848,28 @@
             + '<span style="background:#f2ece4;color:#8b6040;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap;">' + escHtml(sizeOrWeight) + '</span>'
             + '</div>'
           : '';
-        var trashIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a07b50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
-        var trashIconSm = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
+        var trashSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
         var weightChip = sizeOrWeight
-          ? '<span style="display:inline-flex;background:#F5EEE6;color:#8b6040;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap;line-height:1.5;">' + escHtml(sizeOrWeight) + '</span>'
-          : '';
-        return '<div style="background:#fff;border-radius:16px;display:flex;align-items:center;gap:10px;padding:10px;box-shadow:0 1px 5px rgba(0,0,0,0.05);">'
-          + '<div style="width:78px;height:78px;flex-shrink:0;border-radius:13px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
-          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">'
-          + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;">'
-          + '<div style="font-family:\'Playfair Display\',serif;font-weight:600;color:#3d1f0a;font-size:13px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex:1;">' + escHtml(item.product_name) + '</div>'
-          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:14px;color:#3d1f0a;white-space:nowrap;flex-shrink:0;padding-top:1px;">' + (item.price * item.quantity).toFixed(2) + ' Br</div>'
+          ? '<span style="display:inline-flex;background:#F5EEE6;color:#8b6040;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;white-space:nowrap;line-height:1.5;">' + escHtml(sizeOrWeight) + '</span>'
+          : '<span></span>';
+        return '<div style="background:#fff;border-radius:14px;display:flex;align-items:stretch;gap:9px;padding:9px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">'
+          + '<div style="width:68px;height:68px;flex-shrink:0;border-radius:11px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;align-self:center;">' + imgHTML + '</div>'
+          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:3px;">'
+          // Row 1: name + ghost trash (top-right)
+          + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">'
+          + '<div style="font-family:\'Playfair Display\',serif;font-weight:600;color:#3d1f0a;font-size:13px;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex:1;">' + escHtml(item.product_name) + '</div>'
+          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:22px;height:22px;border:none;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;opacity:0.35;padding:0;flex-shrink:0;margin-top:-1px;">' + trashSvg + '</button>'
           + '</div>'
-          + (weightChip ? '<div>' + weightChip + '</div>' : '')
-          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">'
-          + '<div style="display:flex;align-items:center;gap:6px;">'
-          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:26px;height:26px;border-radius:50%;background:#F5EEE6;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:15px;line-height:1;font-weight:700;">−</button>'
-          + '<span style="font-weight:700;font-size:13px;color:#3d1f0a;min-width:14px;text-align:center;">' + item.quantity + '</span>'
-          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;line-height:1;font-weight:700;">+</button>'
+          // Row 2: weight chip + price
+          + '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">'
+          + weightChip
+          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#3d1f0a;white-space:nowrap;">' + (item.price * item.quantity).toFixed(2) + ' <span style="font-size:10px;font-weight:600;color:#6B4423;">Br</span></div>'
           + '</div>'
-          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:26px;height:26px;border:none;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;opacity:0.4;padding:0;">' + trashIconSm + '</button>'
+          // Row 3: quantity stepper
+          + '<div style="display:flex;align-items:center;gap:7px;">'
+          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:28px;height:28px;border-radius:50%;background:#F5EEE6;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:16px;line-height:1;font-weight:700;">−</button>'
+          + '<span style="font-weight:700;font-size:13px;color:#3d1f0a;min-width:16px;text-align:center;">' + item.quantity + '</span>'
+          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:700;">+</button>'
           + '</div>'
           + '</div></div>';
       }).join('');
@@ -1897,15 +1899,15 @@
         var imgHTML = productImages[p.id]
           ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
           : '<span style="font-size:2.2rem;">' + p.image + '</span>';
-        var cardW = 148;
+        var cardW = 160;
         return '<div style="flex-shrink:0;width:' + cardW + 'px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.07);">'
-          + '<div style="width:' + cardW + 'px;height:106px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
-          + '<div style="padding:9px 9px 10px;">'
+          + '<div style="width:' + cardW + 'px;height:96px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
+          + '<div style="padding:8px 9px 9px;">'
           + '<div style="font-family:\'Playfair Display\',serif;font-weight:600;font-size:13px;color:#3d1f0a;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:32px;">' + escHtml(p.name) + '</div>'
           + (weightInfo ? '<div style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:2px;">' + escHtml(weightInfo) + '</div>' : '')
-          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px;gap:4px;">'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;gap:4px;">'
           + '<span style="font-size:14px;font-weight:700;color:#3d1f0a;font-family:\'Montserrat\',sans-serif;white-space:nowrap;">' + price.toFixed(2) + ' <span style="font-size:10px;font-weight:600;color:#a07b50;">BYN</span></span>'
-          + '<button onclick="addToCart(\'' + p.id + '\')" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.4);">+</button>'
+          + '<button onclick="addToCart(\'' + p.id + '\')" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.4);">+</button>'
           + '</div></div></div>';
       }).join('');
     }
