@@ -1846,18 +1846,29 @@
 
     var BS_CARD_W = 180, BS_GAP = 10;
     var _bsRaf = null;
+    var _bsScrollStopTimer = null;
+    var _bsCloneCount = 0;
+    var _bsTotalReal = 0;
 
     function renderBestsellers() {
-      const defaultIds = ['pastry-cheese', 'pastry-sausage', 'pastry-khachapuri', 'piroshki-meat', 'coffee-cappuccino'];
-      const ids = _featuredBestsellers.length > 0 ? _featuredBestsellers : defaultIds;
-      const container = document.getElementById('bestsellers-items');
-      // Reset padding before render so gap measurement isn't skewed by previous values
+      var defaultIds = ['pastry-cheese', 'pastry-sausage', 'pastry-khachapuri', 'piroshki-meat', 'coffee-cappuccino'];
+      var ids = _featuredBestsellers.length > 0 ? _featuredBestsellers : defaultIds;
+      var bsEl = document.getElementById('bestsellers-carousel');
+      var container = document.getElementById('bestsellers-items');
+
       container.style.paddingLeft = '0';
       container.style.paddingRight = '0';
-      container.innerHTML = products.filter(p => ids.includes(p.id)).map(p => productCardHTML(p, true)).join('');
+
+      var filtered = products.filter(function(p) { return ids.includes(p.id); });
+      _bsTotalReal = filtered.length;
+      if (_bsTotalReal === 0) return;
+      _bsCloneCount = _bsTotalReal;
+
+      // Layout: [clones of real][real cards][clones of real] — enables infinite loop
+      var realHTML = filtered.map(function(p) { return productCardHTML(p, true); });
+      container.innerHTML = realHTML.concat(realHTML).concat(realHTML).join('');
 
       var cards = Array.from(container.querySelectorAll(':scope > div'));
-      // Start cards dimmed but visible — no blank space flash
       cards.forEach(function(card) {
         card.style.scrollSnapAlign = 'center';
         card.style.flexShrink = '0';
@@ -1867,33 +1878,28 @@
         card.style.opacity = '0.7';
       });
 
-      var bsEl = document.getElementById('bestsellers-carousel');
-      var midIdx = Math.floor(cards.length / 2);
+      var startIdx = _bsCloneCount; // first real card (after left clone set)
 
       requestAnimationFrame(function() {
         if (!cards.length) return;
-        // Measure real dimensions (padding is 0 so offsetLeft is clean)
         var realW = cards[0].offsetWidth;
         if (realW > 0) BS_CARD_W = realW;
         if (cards.length > 1) {
-          var realGap = cards[1].offsetLeft - cards[0].offsetLeft - BS_CARD_W;
-          if (realGap >= 0) BS_GAP = realGap;
+          var gap = cards[1].offsetLeft - cards[0].offsetLeft - BS_CARD_W;
+          if (gap >= 0) BS_GAP = gap;
         }
-        // Apply centering padding
         var screenW = (bsEl ? bsEl.offsetWidth : 0) || window.innerWidth || 375;
         var sideOff = Math.round((screenW - BS_CARD_W) / 2);
         container.style.paddingLeft = sideOff + 'px';
         container.style.paddingRight = sideOff + 'px';
 
         requestAnimationFrame(function() {
-          // Set scroll to center card (after padding is applied)
-          if (bsEl) bsEl.scrollLeft = midIdx * (BS_CARD_W + BS_GAP);
+          if (bsEl) bsEl.scrollLeft = startIdx * (BS_CARD_W + BS_GAP);
 
           requestAnimationFrame(function() {
-            // Reveal active card, then arm transitions for subsequent scrolls
             cards.forEach(function(card, i) {
-              card.style.transform = i === midIdx ? 'scale(1)' : 'scale(0.86)';
-              card.style.opacity = i === midIdx ? '1' : '0.7';
+              card.style.transform = i === startIdx ? 'scale(1)' : 'scale(0.86)';
+              card.style.opacity = i === startIdx ? '1' : '0.7';
             });
             setTimeout(function() {
               cards.forEach(function(card) {
@@ -1921,11 +1927,41 @@
           card.style.transform = i === activeIdx ? 'scale(1)' : 'scale(0.86)';
           card.style.opacity = i === activeIdx ? '1' : '0.7';
         });
+        // After scroll settles, silently jump from clone region to real region
+        clearTimeout(_bsScrollStopTimer);
+        _bsScrollStopTimer = setTimeout(function() {
+          _bsLoopCheck(el, cards, activeIdx);
+        }, 80);
       });
     }
 
-    function scrollBestsellersLeft() { document.getElementById('bestsellers-carousel').scrollBy({ left: -160, behavior: 'smooth' }); }
-    function scrollBestsellersRight() { document.getElementById('bestsellers-carousel').scrollBy({ left: 160, behavior: 'smooth' }); }
+    function _bsLoopCheck(el, cards, activeIdx) {
+      var jump = 0;
+      if (activeIdx < _bsCloneCount) {
+        jump = _bsTotalReal; // in left clone set → jump right to real cards
+      } else if (activeIdx >= _bsCloneCount + _bsTotalReal) {
+        jump = -_bsTotalReal; // in right clone set → jump left to real cards
+      }
+      if (!jump) return;
+      var toIdx = activeIdx + jump;
+      // Instant reposition — no visible flash
+      cards.forEach(function(card) { card.style.transition = 'none'; });
+      el.scrollLeft += jump * (BS_CARD_W + BS_GAP);
+      cards.forEach(function(card, i) {
+        card.style.transform = i === toIdx ? 'scale(1)' : 'scale(0.86)';
+        card.style.opacity = i === toIdx ? '1' : '0.7';
+      });
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          cards.forEach(function(card) {
+            card.style.transition = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.22s ease';
+          });
+        });
+      });
+    }
+
+    function scrollBestsellersLeft() { document.getElementById('bestsellers-carousel').scrollBy({ left: -(BS_CARD_W + BS_GAP), behavior: 'smooth' }); }
+    function scrollBestsellersRight() { document.getElementById('bestsellers-carousel').scrollBy({ left: BS_CARD_W + BS_GAP, behavior: 'smooth' }); }
 
     // ── Search ─────────────────────────────────────────────────────────────────
     function searchProducts() {
