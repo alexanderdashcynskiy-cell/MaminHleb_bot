@@ -140,48 +140,41 @@
  <body class="h-full bg-cream font-montserrat text-coffee">
   <div id="app" class="w-full h-full flex flex-col bg-gradient-to-br from-[#FDFBF7] via-[#FFF9F2] to-[#FDF7EF]">
    <!-- Top Header Navigation -->
-   <header style="background:rgba(255,248,240,0.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);position:sticky;top:0;z-index:20;flex-shrink:0;padding:12px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.4);">
+   <header style="background:rgba(255,253,249,0.92);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);position:sticky;top:0;z-index:20;flex-shrink:0;padding:12px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.5);">
 
     <!-- Profile row -->
-    <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:10px;">
 
      <!-- Left: Avatar + Greeting -->
-     <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-      <div style="width:50px;height:50px;border-radius:50%;border:2px solid #D4732A;padding:2px;box-sizing:border-box;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-      <div style="width:100%;height:100%;border-radius:50%;background:rgba(93,64,55,0.15);box-shadow:0 3px 12px rgba(0,0,0,0.13);overflow:hidden;display:flex;align-items:center;justify-content:center;">
-       <img id="user-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;" onerror="this.style.display='none';document.getElementById('user-avatar-fallback').style.display='flex';">
-       <div id="user-avatar-fallback" style="width:100%;height:100%;background:linear-gradient(135deg,#D4A574,#C9A227);display:flex;align-items:center;justify-content:center;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style="pointer-events:none;">
-         <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.333 0-10 1.667-10 5v2h20v-2c0-3.333-6.667-5-10-5z"/>
-        </svg>
+     <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+      <div style="width:50px;height:50px;border-radius:50%;border:2.5px solid #D4732A;padding:2px;box-sizing:border-box;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+       <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <img id="user-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;" onerror="this.style.display='none';document.getElementById('user-avatar-fallback').style.display='flex';">
+        <div id="user-avatar-fallback" style="width:100%;height:100%;background:linear-gradient(135deg,#D4A574,#C9A227);display:flex;align-items:center;justify-content:center;">
+         <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style="pointer-events:none;"><path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.333 0-10 1.667-10 5v2h20v-2c0-3.333-6.667-5-10-5z"/></svg>
+        </div>
        </div>
       </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:2px;">
-       <span style="font-size:14px;font-weight:700;color:#3d1f0a;opacity:0.55;line-height:1;">Привет!</span>
-       <span id="user-greeting-name" style="font-weight:900;font-size:15px;color:#ad5c19;line-height:1.3;white-space:nowrap;display:inline-block;">Алексей</span>
+      <div style="min-width:0;">
+       <div style="font-size:16px;font-weight:800;color:#2d1505;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Привет, <span id="user-greeting-name">Алексей</span></div>
+       <div style="font-size:12px;color:#a07850;line-height:1.3;margin-top:2px;">Рады видеть вас снова!</div>
       </div>
      </div>
 
-     <!-- Center: Location -->
-     <button onclick="showScreen('locations')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:0 10px;">
-      <div style="display:flex;align-items:center;gap:3px;">
-       <svg width="13" height="15" viewBox="0 0 24 24" fill="#bd6012" style="flex-shrink:0;pointer-events:none;">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-       </svg>
-       <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:#bd6012;line-height:1;">ЛОКАЦИЯ</span>
+     <!-- Center: Location pill -->
+     <button onclick="showScreen('locations')" style="display:flex;flex-direction:column;align-items:flex-start;background:#F2EAE0;border:none;border-radius:14px;padding:8px 11px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:4px;">
+       <svg width="11" height="13" viewBox="0 0 24 24" fill="#C9A227" style="flex-shrink:0;pointer-events:none;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+       <span style="font-size:13px;font-weight:800;color:#2d1505;line-height:1;">Витебск</span>
+       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#a07850" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><path d="M6 9l6 6 6-6"/></svg>
       </div>
-      <span style="font-size:12px;font-weight:600;color:#3d1f0a;opacity:0.55;line-height:1.3;white-space:nowrap;">г. Витебск, ул. Ленина 74</span>
+      <span style="font-size:11px;color:#a07850;line-height:1.3;margin-top:2px;white-space:nowrap;">ул. Ленина 74</span>
      </button>
 
      <!-- Right: Cart -->
      <div style="position:relative;flex-shrink:0;">
-      <button onclick="showScreen('cart')" style="width:48px;height:48px;background:#F0E6D3;border-radius:18px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(160,120,60,0.18),0 1px 3px rgba(0,0,0,0.07);">
-       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
-        <circle cx="9" cy="21" r="1"/>
-        <circle cx="20" cy="21" r="1"/>
-        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-       </svg>
+      <button onclick="showScreen('cart')" style="width:48px;height:48px;background:linear-gradient(135deg,#C9A227,#D4A044);border-radius:16px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(201,162,39,0.35);">
+       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
       </button>
       <div id="cart-badge-dot" style="display:none;position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;background:#ef4444;border-radius:50%;flex-direction:row;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;pointer-events:none;padding:0 3px;box-shadow:0 2px 6px rgba(239,68,68,0.4);">
        <span id="cart-badge-count">0</span>
@@ -190,13 +183,13 @@
 
     </div>
 
-    <!-- Search — gap + shadow + не на всю ширину -->
-    <div style="margin-top:12px;padding:0 4px;">
+    <!-- Search -->
+    <div style="margin-top:12px;padding:0 2px;">
      <div style="position:relative;">
       <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;pointer-events:none;" fill="none" stroke="rgba(180,140,100,0.55)" stroke-width="2" viewBox="0 0 24 24">
        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
       </svg>
-      <input type="text" id="search-input" placeholder="Поиск хлеба или пирогов..." style="width:100%;box-sizing:border-box;background:#fff;color:#3d1f0a;border-radius:50px;padding:11px 16px 11px 40px;border:none;font-size:14px;outline:none;font-family:inherit;box-shadow:0 4px 18px rgba(140,100,60,0.13);" oninput="searchProducts()">
+      <input type="text" id="search-input" placeholder="Поиск хлеба или пирогов..." style="width:100%;box-sizing:border-box;background:#fff;color:#3d1f0a;border-radius:50px;padding:12px 16px 12px 40px;border:none;font-size:14px;outline:none;font-family:inherit;box-shadow:0 4px 18px rgba(140,100,60,0.11);" oninput="searchProducts()">
      </div>
     </div>
 
