@@ -2292,13 +2292,13 @@
 
     function csSuggBtnHTML(pid, qty) {
       if (qty > 0) {
-        return '<div style="display:flex;align-items:center;gap:3px;">'
-          + '<button onclick="event.stopPropagation();updateQuantity(\'' + pid + '\',-1)" style="width:22px;height:22px;border-radius:50%;background:#D4AA70;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;line-height:1;">−</button>'
-          + '<span style="min-width:14px;text-align:center;font-weight:800;color:#2d1505;font-size:11px;font-family:\'Montserrat\',sans-serif;">' + qty + '</span>'
-          + '<button onclick="event.stopPropagation();updateQuantity(\'' + pid + '\',1)" style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;line-height:1;box-shadow:0 2px 6px rgba(201,162,39,0.35);">+</button>'
+        return '<div style="display:flex;align-items:center;gap:4px;">'
+          + '<button onclick="event.stopPropagation();updateQuantity(\'' + pid + '\',-1)" style="width:26px;height:26px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;line-height:1;">−</button>'
+          + '<span style="min-width:16px;text-align:center;font-weight:800;color:#2d1505;font-size:12px;font-family:\'Montserrat\',sans-serif;">' + qty + '</span>'
+          + '<button onclick="event.stopPropagation();updateQuantity(\'' + pid + '\',1)" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;line-height:1;box-shadow:0 2px 8px rgba(201,162,39,0.38);">+</button>'
           + '</div>';
       }
-      return '<button onclick="event.stopPropagation();addToCart(\'' + pid + '\')" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;line-height:1;flex-shrink:0;box-shadow:0 3px 10px rgba(201,162,39,0.40);">+</button>';
+      return '<button onclick="event.stopPropagation();addToCart(\'' + pid + '\')" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;line-height:1;flex-shrink:0;box-shadow:0 3px 12px rgba(201,162,39,0.42);">+</button>';
     }
 
     function updateCsSuggCard(pid) {
@@ -2319,16 +2319,16 @@
       var imgHTML = productImages[p.id]
         ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<span style="font-size:2.5rem;line-height:1;">' + p.image + '</span>';
-      return '<div style="flex-shrink:0;width:175px;scroll-snap-align:center;">'
-        + '<div style="background:#fff;border-radius:18px;box-shadow:0 2px 12px rgba(45,21,5,0.07);display:flex;flex-direction:column;padding:7px;">'
-        + '<div style="width:100%;height:116px;border-radius:11px;background:#F5EAD8;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + imgHTML + '</div>'
-        + '<div style="margin-top:7px;">'
-        + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:13px;color:#2d1505;line-height:1.3;height:32px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(p.name) + '</div>'
-        + '<div style="font-size:10px;color:rgba(107,68,35,0.42);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:\'Montserrat\',sans-serif;">' + (weightInfo ? escHtml(weightInfo) : '&nbsp;') + '</div>'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px;">'
-        + '<div><span style="font-size:15px;font-weight:700;color:#2d1505;font-family:\'Montserrat\',sans-serif;line-height:1;">' + price.toFixed(2) + '</span><span style="font-size:10px;font-weight:500;color:#C9A227;margin-left:2px;">BYN</span></div>'
+      // Card: image edge-to-edge, overflow:hidden clips to card radius, content in tight grid
+      return '<div style="flex-shrink:0;width:175px;scroll-snap-align:center;background:#fff;border-radius:18px;box-shadow:0 4px 16px rgba(45,21,5,0.09);overflow:hidden;">'
+        + '<div style="width:100%;height:118px;background:#F5EAD8;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
+        + '<div style="padding:12px 14px 15px;">'
+        + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:13px;color:#2d1505;line-height:1.3;max-height:34px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(p.name) + '</div>'
+        + '<div style="margin-top:6px;font-size:9px;color:rgba(107,68,35,0.48);font-family:\'Montserrat\',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0.01em;">' + (weightInfo ? escHtml(weightInfo) : '&nbsp;') + '</div>'
+        + '<div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;">'
+        + '<div style="line-height:1;"><span style="font-size:15px;font-weight:800;color:#2d1505;font-family:\'Montserrat\',sans-serif;">' + price.toFixed(2) + '</span><span style="font-size:9px;font-weight:600;color:#C9A227;margin-left:3px;">BYN</span></div>'
         + '<div class="cs-btn-zone" data-pid="' + p.id + '" style="flex-shrink:0;">' + csSuggBtnHTML(p.id, qty) + '</div>'
-        + '</div></div></div></div>';
+        + '</div></div></div>';
     }
 
     function renderCartSuggestions() {
