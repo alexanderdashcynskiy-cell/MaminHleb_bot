@@ -808,7 +808,9 @@
      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.68) 0%,rgba(0,0,0,0) 52%);pointer-events:none;"></div>
      <div style="position:absolute;bottom:14px;left:16px;right:16px;">
       <h2 id="detail-card-name" style="margin:0;color:#fff;font-family:'Playfair Display',serif;font-size:clamp(18px,5.5vw,26px);font-weight:700;line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,0.4);"></h2>
-      <p id="detail-card-weight" style="margin:4px 0 0;color:rgba(255,255,255,0.65);font-size:12px;"></p>
+      <div id="detail-card-weight-wrap" style="margin-top:8px;display:none;">
+       <span id="detail-card-weight" style="display:inline-block;background:#C9A227;color:#fff;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;padding:4px 12px;border-radius:99px;letter-spacing:0.02em;"></span>
+      </div>
      </div>
     </div>
 
@@ -818,23 +820,23 @@
      <!-- КБЖУ -->
      <div style="display:flex;align-items:center;background:rgba(245,230,211,0.75);border:1.5px solid rgba(212,165,116,0.25);border-radius:50px;padding:10px 14px;margin-bottom:16px;">
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-       <span id="detail-calories" style="font-size:16px;font-weight:800;color:#C9A227;line-height:1;">0</span>
-       <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:3px;">ккал</span>
+       <span id="detail-calories" style="font-size:22px;font-weight:800;color:#C9A227;line-height:1;font-family:'Montserrat',sans-serif;">0</span>
+       <span style="font-size:11px;color:rgba(107,68,35,0.55);margin-top:4px;">ккал</span>
       </div>
-      <div style="width:1px;height:28px;background:rgba(212,165,116,0.3);flex-shrink:0;"></div>
+      <div style="width:1px;height:32px;background:rgba(212,165,116,0.3);flex-shrink:0;"></div>
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-       <span id="detail-protein" style="font-size:16px;font-weight:800;color:#C9A227;line-height:1;">0</span>
-       <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:3px;">белки</span>
+       <span id="detail-protein" style="font-size:22px;font-weight:800;color:#C9A227;line-height:1;font-family:'Montserrat',sans-serif;">0</span>
+       <span style="font-size:11px;color:rgba(107,68,35,0.55);margin-top:4px;">белки</span>
       </div>
-      <div style="width:1px;height:28px;background:rgba(212,165,116,0.3);flex-shrink:0;"></div>
+      <div style="width:1px;height:32px;background:rgba(212,165,116,0.3);flex-shrink:0;"></div>
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-       <span id="detail-fat" style="font-size:16px;font-weight:800;color:#C9A227;line-height:1;">0</span>
-       <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:3px;">жиры</span>
+       <span id="detail-fat" style="font-size:22px;font-weight:800;color:#C9A227;line-height:1;font-family:'Montserrat',sans-serif;">0</span>
+       <span style="font-size:11px;color:rgba(107,68,35,0.55);margin-top:4px;">жиры</span>
       </div>
-      <div style="width:1px;height:28px;background:rgba(212,165,116,0.3);flex-shrink:0;"></div>
+      <div style="width:1px;height:32px;background:rgba(212,165,116,0.3);flex-shrink:0;"></div>
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-       <span id="detail-carbs" style="font-size:16px;font-weight:800;color:#C9A227;line-height:1;">0</span>
-       <span style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:3px;">углев.</span>
+       <span id="detail-carbs" style="font-size:22px;font-weight:800;color:#C9A227;line-height:1;font-family:'Montserrat',sans-serif;">0</span>
+       <span style="font-size:11px;color:rgba(107,68,35,0.55);margin-top:4px;">углев.</span>
       </div>
      </div>
 
@@ -845,9 +847,20 @@
      </div>
 
      <!-- О продукте -->
-     <p style="font-size:17px;font-weight:700;color:#6B4423;margin:0 0 6px;">О продукте</p>
-     <p id="detail-description" style="font-size:14px;color:rgba(107,68,35,0.65);line-height:1.6;margin:0 0 8px;"></p>
-     <p id="detail-ingredients-text" style="font-size:12px;color:rgba(107,68,35,0.4);line-height:1.5;margin:0;"></p>
+     <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+      <div style="width:42px;height:42px;border-radius:13px;background:#F4EDE4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 8h1a4 4 0 0 1 0 8h-1"/>
+        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/>
+        <line x1="6" y1="2" x2="6" y2="4"/>
+        <line x1="10" y1="2" x2="10" y2="4"/>
+        <line x1="14" y1="2" x2="14" y2="4"/>
+       </svg>
+      </div>
+      <span style="font-size:18px;font-weight:800;color:#2d1505;font-family:'Playfair Display',serif;">О продукте</span>
+     </div>
+     <p id="detail-description" style="font-size:14px;color:rgba(107,68,35,0.7);line-height:1.65;margin:0 0 8px;"></p>
+     <p id="detail-ingredients-text" style="font-size:12px;color:rgba(107,68,35,0.45);line-height:1.5;margin:0;"></p>
 
     </div>
 
@@ -1852,7 +1865,15 @@
         document.getElementById('detail-protein').textContent = product.nutrition.protein;
         document.getElementById('detail-fat').textContent = product.nutrition.fat;
         document.getElementById('detail-carbs').textContent = product.nutrition.carbs;
-        document.getElementById('detail-card-weight').textContent = product.weight || '';
+        var _wSpan = document.getElementById('detail-card-weight');
+        var _wWrap = document.getElementById('detail-card-weight-wrap');
+        if (product.weight) {
+          _wSpan.textContent = product.weight;
+          if (_wWrap) _wWrap.style.display = 'inline-block';
+        } else {
+          _wSpan.textContent = '';
+          if (_wWrap) _wWrap.style.display = 'none';
+        }
         const imgEl = document.getElementById('detail-image');
         if (productImages[productId]) {
           imgEl.innerHTML = '<img src="' + productImages[productId] + '" class="w-full h-full object-cover" alt="' + product.name + '" onerror="this.parentNode.innerHTML=\'<span style=\\\'font-size:6rem;\\\'>' + product.image + '</span>\'">';
