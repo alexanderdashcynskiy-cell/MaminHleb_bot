@@ -274,7 +274,7 @@
       <button onclick="showScreen('bestsellers')" class="text-xs font-semibold text-caramel">Все →</button>
      </div>
      <div class="relative">
-      <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar pb-2" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;">
+      <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar pb-2" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;" onscroll="onBestsellerScroll(this)">
        <div class="flex gap-3" id="bestsellers-items"></div>
       </div>
       <button onclick="scrollBestsellersLeft()" class="absolute left-0 top-1/3 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg hidden sm:flex">
@@ -1794,16 +1794,54 @@
       });
     }
 
+    var BS_CARD_W = 176, BS_GAP = 12;
+
     function renderBestsellers() {
       const defaultIds = ['pastry-cheese', 'pastry-sausage', 'pastry-khachapuri', 'piroshki-meat', 'coffee-cappuccino'];
       const ids = _featuredBestsellers.length > 0 ? _featuredBestsellers : defaultIds;
       const container = document.getElementById('bestsellers-items');
       container.innerHTML = products.filter(p => ids.includes(p.id)).map(p => productCardHTML(p, true)).join('');
       var screenW = window.innerWidth || 375;
-      var CARD_W = 176; // w-44
-      var sideOff = Math.round((screenW - CARD_W) / 2);
+      var sideOff = Math.round((screenW - BS_CARD_W) / 2);
       container.style.paddingLeft = sideOff + 'px';
       container.style.paddingRight = sideOff + 'px';
+      // Cover Flow: scale all cards down, set transition
+      var cards = container.querySelectorAll(':scope > div');
+      cards.forEach(function(card) {
+        card.style.scrollSnapAlign = 'center';
+        card.style.flexShrink = '0';
+        card.style.transition = 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease';
+        card.style.transform = 'scale(0.86)';
+        card.style.opacity = '0.7';
+      });
+      // Activate middle card
+      var midIdx = Math.floor(cards.length / 2);
+      if (cards[midIdx]) {
+        cards[midIdx].style.transform = 'scale(1)';
+        cards[midIdx].style.opacity = '1';
+      }
+      // Scroll to center middle card
+      var bsEl = document.getElementById('bestsellers-carousel');
+      if (bsEl) {
+        requestAnimationFrame(function() {
+          bsEl.scrollLeft = midIdx * (BS_CARD_W + BS_GAP);
+        });
+      }
+    }
+
+    function onBestsellerScroll(el) {
+      var activeIdx = Math.round(el.scrollLeft / (BS_CARD_W + BS_GAP));
+      var cards = document.querySelectorAll('#bestsellers-items > div');
+      activeIdx = Math.max(0, Math.min(cards.length - 1, activeIdx));
+      cards.forEach(function(card, i) {
+        if (i === activeIdx) {
+          card.style.transform = 'scale(1)';
+          card.style.opacity = '1';
+        } else {
+          card.style.transform = 'scale(0.86)';
+          card.style.opacity = '0.7';
+        }
+      });
     }
 
     function scrollBestsellersLeft() { document.getElementById('bestsellers-carousel').scrollBy({ left: -160, behavior: 'smooth' }); }
