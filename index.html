@@ -437,23 +437,34 @@
      <div id="cart-items-full" style="display:flex;flex-direction:column;gap:8px;"></div>
 
      <!-- "Добавьте к заказу" section -->
-     <div id="cart-suggestions-section" style="display:none;margin-top:16px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-       <span style="font-size:15px;font-weight:800;color:#3d1f0a;font-family:'Montserrat',sans-serif;">Добавьте к заказу</span>
-       <button onclick="showScreen('main')" style="background:none;border:none;cursor:pointer;font-size:13px;font-weight:600;color:#C9A227;padding:4px 0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Смотреть все ›</button>
+     <div id="cart-suggestions-section" style="display:none;margin-top:18px;">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+       <div style="display:flex;align-items:center;gap:8px;">
+        <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <span style="font-size:16px;font-weight:800;color:#3d1f0a;font-family:'Playfair Display',serif;">Добавьте к заказу</span>
+       </div>
+       <button onclick="showScreen('main')" style="background:none;border:none;cursor:pointer;font-size:13px;font-weight:600;color:#C9A227;padding:4px 0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:3px;">
+        Смотреть все
+        <svg width="14" height="14" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+       </button>
       </div>
-      <div id="cart-suggestions" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+      <!-- Horizontal scroll strip -->
+      <div id="cart-suggestions" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;"></div>
      </div>
 
      <!-- Info block -->
-     <div id="cart-info-block" style="display:none;margin-top:14px;background:#fff;border-radius:18px;padding:14px 16px;flex-direction:row;align-items:center;gap:12px;box-shadow:0 1px 6px rgba(0,0,0,0.05);">
-      <div style="width:36px;height:36px;border-radius:10px;background:#FFF8E7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-       <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+     <div id="cart-info-block" style="display:none;margin-top:14px;background:#FFF8F0;border-radius:18px;padding:18px 16px;position:relative;overflow:hidden;flex-direction:row;align-items:center;gap:14px;">
+      <!-- Clock icon -->
+      <div style="width:46px;height:46px;border-radius:50%;border:2px solid #C9A227;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;">
+       <svg width="22" height="22" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       </div>
-      <div>
-       <div style="font-size:13px;font-weight:700;color:#3d1f0a;">Готовим свежо каждый день</div>
-       <div style="font-size:12px;color:#a07b50;margin-top:2px;">Выпечка производится в день заказа</div>
+      <div style="flex:1;min-width:0;">
+       <div style="font-size:15px;font-weight:800;color:#3d1f0a;font-family:'Playfair Display',serif;line-height:1.25;">Готовим свежо каждый день</div>
+       <div style="font-size:13px;color:#a07b50;margin-top:4px;">Ваш заказ будет готов в указанное время</div>
       </div>
+      <!-- Decorative branch -->
+      <div style="position:absolute;right:10px;bottom:0;font-size:52px;line-height:1;opacity:0.18;pointer-events:none;transform:rotate(-15deg);">🌿</div>
      </div>
 
      <div id="cart-empty-full" style="display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 0;">
@@ -1857,21 +1868,25 @@
       if (!section || !container) return;
       const cartIds = new Set(cart.map(i => i.product_id));
       const pool = products.filter(p => !cartIds.has(p.id));
-      const picks = pool.filter(p => p.bestseller).slice(0, 4);
-      if (picks.length < 4) { const extra = pool.filter(p => !p.bestseller).slice(0, 4 - picks.length); picks.push(...extra); }
+      const picks = pool.filter(p => p.bestseller).slice(0, 6);
+      if (picks.length < 6) { const extra = pool.filter(p => !p.bestseller).slice(0, 6 - picks.length); picks.push(...extra); }
       if (picks.length === 0) { section.style.display = 'none'; return; }
       section.style.display = 'block';
       container.innerHTML = picks.map(function(p) {
+        var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes.map(function(s){return s.size;}).join(' / ') : (p.weight || '');
+        var price = happyPrice(p);
         var imgHTML = productImages[p.id]
           ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
-          : '<span style="font-size:1.8rem;">' + p.image + '</span>';
-        return '<div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);">'
-          + '<div style="height:70px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
-          + '<div style="padding:6px 6px 8px;">'
-          + '<div style="font-size:10px;font-weight:700;color:#3d1f0a;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:26px;">' + escHtml(p.name) + '</div>'
-          + '<div style="font-size:10px;color:#C9A227;font-weight:700;margin-top:3px;">' + happyPrice(p).toFixed(2) + ' Br</div>'
-          + '<button onclick="addToCart(\'' + p.id + '\')" style="width:100%;margin-top:5px;background:linear-gradient(90deg,#C9A227,#D4A574);border:none;border-radius:8px;padding:5px 0;font-size:10px;font-weight:700;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">+ Добавить</button>'
-          + '</div></div>';
+          : '<span style="font-size:2.5rem;">' + p.image + '</span>';
+        return '<div style="flex-shrink:0;width:132px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
+          + '<div style="width:132px;height:120px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
+          + '<div style="padding:10px 10px 12px;">'
+          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:14px;color:#3d1f0a;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:36px;">' + escHtml(p.name) + '</div>'
+          + (weightInfo ? '<div style="font-size:11px;color:rgba(107,68,35,0.5);margin-top:3px;">' + escHtml(weightInfo) + '</div>' : '')
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:4px;">'
+          + '<span style="font-size:15px;font-weight:800;color:#3d1f0a;font-family:\'Montserrat\',sans-serif;white-space:nowrap;">' + price.toFixed(2) + ' <span style="font-size:11px;font-weight:700;">BYN</span></span>'
+          + '<button onclick="addToCart(\'' + p.id + '\')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;flex-shrink:0;box-shadow:0 3px 10px rgba(201,162,39,0.45);">+</button>'
+          + '</div></div></div>';
       }).join('');
     }
 
