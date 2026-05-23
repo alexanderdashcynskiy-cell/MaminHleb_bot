@@ -2234,17 +2234,17 @@
         var imgHTML = productImages[p.id]
           ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
           : '<span style="font-size:2.8rem;line-height:1;">' + p.image + '</span>';
+        var displayName = p.name.includes(' ') ? p.name.split(' ')[0] : p.name;
         return '<div style="flex-shrink:0;width:150px;scroll-snap-align:start;cursor:pointer;" onclick="showProductDetail(\'' + p.id + '\')">'
-          + '<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(45,21,5,0.07);display:flex;flex-direction:column;padding:10px;">'
-          + '<div style="width:100%;height:96px;border-radius:10px;background:#F5EAD8;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + imgHTML + '</div>'
-          + '<div style="margin-top:10px;">'
-          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:14px;color:#2d1505;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;">' + escHtml(p.name) + '</div>'
-          + '<div style="font-size:12px;color:#a08060;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (weightInfo ? escHtml(weightInfo) : '&nbsp;') + '</div>'
-          + '</div>'
-          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
+          + '<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(45,21,5,0.07);display:flex;flex-direction:column;padding:5px;">'
+          + '<div style="width:100%;height:96px;border-radius:8px;background:#F5EAD8;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + imgHTML + '</div>'
+          + '<div style="padding:8px 6px 4px;">'
+          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:14px;color:#2d1505;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(displayName) + '</div>'
+          + '<div style="font-size:12px;color:#a08060;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (weightInfo ? escHtml(weightInfo) : '&nbsp;') + '</div>'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-bottom:2px;">'
           + '<div><span style="font-size:18px;font-weight:800;color:#2d1505;font-family:\'Montserrat\',sans-serif;line-height:1;">' + price.toFixed(2) + '</span><span style="font-size:10px;font-weight:500;color:#C9A227;margin-left:3px;">BYN</span></div>'
           + '<button onclick="event.stopPropagation();addToCart(\'' + p.id + '\')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;line-height:1;flex-shrink:0;box-shadow:0 3px 10px rgba(201,162,39,0.40);">+</button>'
-          + '</div></div></div>';
+          + '</div></div></div></div>';
       }).join('');
     }
 
