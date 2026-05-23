@@ -1458,7 +1458,6 @@
       const cartItem = cart.find(item => item.product_id === p.id);
       const quantity = cartItem ? cartItem.quantity : 0;
       const available = inStock(p.name);
-      // Бейдж остатка: показываем только когда товар есть в листе Склад
       const stockKey = (p.name || '').trim().toLowerCase();
       const stockQty = (stockKey in stockData) ? stockData[stockKey] : undefined;
       const stockBadge = (stockQty !== undefined && stockQty > 0)
@@ -1467,32 +1466,67 @@
       const imgHTML = productImages[p.id]
         ? `<img src="${productImages[p.id]}" class="w-full h-full object-cover" alt="${p.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige\\'>${p.image}</div>'">`
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
-      // Оверлей «Товар закончился» поверх фото
       const oosOverlay = !available ? `
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.52);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;">
           <p style="color:#fff;font-weight:800;font-size:${compact?'9px':'11px'};text-align:center;line-height:1.3;font-family:'Montserrat',sans-serif;">Товар закончился,<br>завтра сделаем<br>новую партию 🔥</p>
         </div>` : '';
+
+      if (compact) {
+        return `
+          <div class="flex-shrink-0 w-44" data-pid="${p.id}" style="${!available ? 'opacity:0.55;' : ''}">
+            <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col" style="isolation:isolate;">
+              <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square group/img">
+                <div class="w-full h-full">${imgHTML}</div>
+                ${oosOverlay}
+              </button>
+              <div class="flex-1 px-3 pt-2 pb-3 flex flex-col justify-between gap-1">
+                <div onclick="showProductDetail('${p.id}')" style="cursor:pointer;">
+                  <h3 class="font-bold text-coffee leading-tight text-xs" style="font-family:'Playfair Display',serif;">${p.name}</h3>
+                  <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${weightInfo}</p>
+                  ${stockBadge}
+                </div>
+                <div class="flex items-center justify-between gap-2 mt-1">
+                  ${available ? (() => { const disc = happyPrice(p); return disc < p.price
+                    ? `<div style="white-space:nowrap;"><span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} ${BYN}</span><br><span class="font-bold text-sm" style="color:#E05252;font-family:'Montserrat',sans-serif;white-space:nowrap;">${disc.toFixed(2)} ${BYN}</span></div>`
+                    : `<span class="font-bold text-coffee text-sm" style="font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} ${BYN}</span>`; })()
+                    : `<span style="font-size:9px;color:#aaa;font-family:'Montserrat',sans-serif;">Нет в наличии</span>`}
+                  <div class="card-btn-zone" data-pid="${p.id}" data-compact="1" style="flex-shrink:0;position:relative;z-index:2;display:flex;justify-content:flex-end;align-items:center;">
+                    ${available ? cardBtnHTML(p.id, quantity, true) : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      const disc = happyPrice(p);
+      const priceHTML = !available
+        ? `<span style="font-size:11px;color:#aaa;font-family:'Montserrat',sans-serif;">Нет в наличии</span>`
+        : disc < p.price
+          ? `<div style="white-space:nowrap;line-height:1.2;">
+               <span style="font-size:11px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} BYN</span><br>
+               <span style="font-size:18px;font-weight:800;color:#E05252;font-family:'Montserrat',sans-serif;">${disc.toFixed(2)} <span style="font-size:13px;font-weight:700;">BYN</span></span>
+             </div>`
+          : `<span style="font-size:18px;font-weight:800;color:#3d1f0a;font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} <span style="font-size:13px;font-weight:700;color:#3d1f0a;">BYN</span></span>`;
+
       return `
-        <div class="${compact ? 'flex-shrink-0 w-44' : ''}" data-pid="${p.id}" style="${!available ? 'opacity:0.55;' : ''}">
-          <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col" style="isolation:isolate;">
-            <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square group/img">
-              <div class="w-full h-full">${imgHTML}</div>
-              ${!compact && p.isNew && available ? '<div class="absolute top-2.5 left-2.5 bg-red-500 text-white font-bold px-2 py-0.5 rounded-full" style="font-size:9px;">НОВИНКА</div>' : ''}
+        <div data-pid="${p.id}" style="${!available ? 'opacity:0.55;' : ''}">
+          <div style="background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);isolation:isolate;">
+            <button onclick="showProductDetail('${p.id}')" style="position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;display:block;border:none;padding:0;cursor:pointer;background:#F5E6D3;">
+              <div style="width:100%;height:100%;">${imgHTML}</div>
+              ${p.isNew && available ? '<div style="position:absolute;top:10px;left:10px;background:#E05252;color:#fff;font-weight:800;font-size:9px;padding:3px 9px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.04em;">НОВИНКА</div>' : ''}
               ${oosOverlay}
             </button>
-            <div class="flex-1 px-3 pt-2.5 pb-3 flex flex-col justify-between gap-1.5">
+            <div style="padding:13px 14px 14px;">
               <div onclick="showProductDetail('${p.id}')" style="cursor:pointer;">
-                <h3 class="font-bold text-coffee leading-tight ${compact ? 'text-xs' : 'text-sm'}" style="font-family:'Playfair Display',serif;">${p.name}</h3>
-                <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${weightInfo}</p>
+                <h3 style="font-family:'Playfair Display',serif;font-weight:700;font-size:17px;color:#3d1f0a;line-height:1.25;margin:0;">${p.name}</h3>
+                <p style="font-size:14px;color:rgba(107,68,35,0.5);margin:5px 0 0;">${weightInfo}</p>
                 ${stockBadge}
               </div>
-              <div class="flex items-center justify-between gap-2 mt-1">
-                ${available ? (() => { const disc = happyPrice(p); return disc < p.price
-                  ? `<div style="white-space:nowrap;"><span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} ${BYN}</span><br><span class="font-bold ${compact ? 'text-sm' : 'text-base'}" style="color:#E05252;font-family:'Montserrat',sans-serif;white-space:nowrap;">${disc.toFixed(2)} ${BYN}</span></div>`
-                  : `<span class="font-bold text-coffee ${compact ? 'text-sm' : 'text-base'}" style="font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} ${BYN}</span>`; })()
-                  : `<span style="font-size:${compact?'9px':'11px'};color:#aaa;font-family:'Montserrat',sans-serif;">Нет в наличии</span>`}
-                <div class="card-btn-zone" data-pid="${p.id}" data-compact="${compact ? '1' : '0'}" style="flex-shrink:0;position:relative;z-index:2;min-width:80px;display:flex;justify-content:flex-end;align-items:center;">
-                  ${available ? cardBtnHTML(p.id, quantity, compact) : ''}
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;">
+                ${priceHTML}
+                <div class="card-btn-zone" data-pid="${p.id}" data-compact="0" style="flex-shrink:0;position:relative;z-index:2;display:flex;justify-content:flex-end;align-items:center;">
+                  ${available ? cardBtnHTML(p.id, quantity, false) : ''}
                 </div>
               </div>
             </div>
@@ -1501,13 +1535,16 @@
     }
 
     function cardBtnHTML(pid, quantity, compact = false) {
+      const sz = compact ? 26 : 32, fsz = compact ? 14 : 18;
       if (quantity > 0) return `
-        <div style="display:flex;align-items:center;gap:4px;background:#f5ead8;border-radius:50px;padding:4px 6px;border:1px solid rgba(212,165,116,0.4);box-shadow:0 2px 6px rgba(180,130,60,0.1);">
-          <button onclick="updateQuantity('${pid}',-1)" style="width:24px;height:24px;border-radius:50%;background:#e8d4b8;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">−</button>
-          <span style="min-width:16px;text-align:center;font-weight:800;color:#6B4423;font-size:12px;">${quantity}</span>
-          <button onclick="updateQuantity('${pid}',1)" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;box-shadow:0 2px 6px rgba(201,162,39,0.35);">+</button>
+        <div style="display:flex;align-items:center;gap:${compact?4:5}px;background:#f5ead8;border-radius:50px;padding:${compact?'4px 5px':'5px 7px'};border:1px solid rgba(212,165,116,0.4);box-shadow:0 2px 6px rgba(180,130,60,0.1);">
+          <button onclick="updateQuantity('${pid}',-1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:#e8d4b8;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;">−</button>
+          <span style="min-width:${compact?16:20}px;text-align:center;font-weight:800;color:#6B4423;font-size:${compact?12:14}px;">${quantity}</span>
+          <button onclick="updateQuantity('${pid}',1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;box-shadow:0 2px 6px rgba(201,162,39,0.35);">+</button>
         </div>`;
-      return `<button onclick="addToCart('${pid}')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;flex-shrink:0;box-shadow:0 4px 12px rgba(201,162,39,0.4);">+</button>`;
+      const btnSz = compact ? 36 : 48;
+      const btnFs = compact ? 20 : 26;
+      return `<button onclick="addToCart('${pid}')" style="width:${btnSz}px;height:${btnSz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:${btnFs}px;flex-shrink:0;box-shadow:0 4px 14px rgba(201,162,39,0.45);">+</button>`;
     }
 
     function updateProductCardButtons(productId) {
