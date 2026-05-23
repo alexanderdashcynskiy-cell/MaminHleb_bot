@@ -173,8 +173,8 @@
 
      <!-- Right: Cart -->
      <div style="position:relative;flex-shrink:0;">
-      <button onclick="showScreen('cart')" style="width:59px;height:59px;background:#C07030;border-radius:18px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(160,80,20,0.30);">
-       <svg width="28" height="26" viewBox="0 0 100 90" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+      <button onclick="showScreen('cart')" style="width:50px;height:50px;background:#C07030;border-radius:15px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(160,80,20,0.30);">
+       <svg width="23" height="21" viewBox="0 0 100 90" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
         <!-- Left handle -->
         <line x1="29" y1="27" x2="13" y2="5"/>
         <!-- Right handle -->
@@ -213,7 +213,7 @@
     <!-- Carousel -->
     <div class="px-4 pt-4 pb-2">
      <div class="relative">
-      <div class="relative overflow-hidden rounded-3xl shadow-lg" style="height:215px;" id="carousel-wrapper">
+      <div class="relative overflow-hidden rounded-3xl shadow-lg" style="height:215px;" id="carousel-wrapper" ontouchstart="carouselTouchStart(event)" ontouchend="carouselTouchEnd(event)">
        <div id="carousel-container" class="flex transition-transform duration-500 ease-out" style="height:215px;">
        <!-- Slide 1: Счастливый час -->
        <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;flex-shrink:0;">
@@ -230,14 +230,6 @@
         <button onclick="showScreen('preorder')" style="position:absolute;bottom:16px;left:43%;width:130px;height:42px;background:transparent;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border-radius:50px;z-index:5;"></button>
        </div>
       </div>
-      <!-- Prev button — outside overflow-hidden so it's never clipped -->
-      <button onclick="prevSlide()" class="absolute z-20 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform" style="left:8px;top:50%;transform:translateY(-50%);touch-action:manipulation;">
-       <svg class="w-5 h-5" style="color:#7a4e2d;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
-      </button>
-      <!-- Next button — outside overflow-hidden -->
-      <button onclick="nextSlide()" class="absolute z-20 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform" style="right:8px;top:50%;transform:translateY(-50%);touch-action:manipulation;">
-       <svg class="w-5 h-5" style="color:#7a4e2d;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
-      </button>
      </div>
      <!-- Dots -->
      <div class="flex justify-center items-center gap-2 mt-3">
@@ -1587,6 +1579,14 @@
 
     // ── Carousel ───────────────────────────────────────────────────────────────
     // FIX #1: использует TOTAL_SLIDES = 3 вместо 2
+    var _carouselTouchX = 0;
+    function carouselTouchStart(e) { _carouselTouchX = e.touches[0].clientX; }
+    function carouselTouchEnd(e) {
+      var dx = e.changedTouches[0].clientX - _carouselTouchX;
+      if (Math.abs(dx) < 40) return;
+      if (dx < 0) nextSlide(); else prevSlide();
+    }
+
     function prevSlide() {
       currentSlide = (currentSlide - 1 + TOTAL_SLIDES) % TOTAL_SLIDES;
       updateCarousel();
