@@ -1801,12 +1801,9 @@
       const ids = _featuredBestsellers.length > 0 ? _featuredBestsellers : defaultIds;
       const container = document.getElementById('bestsellers-items');
       container.innerHTML = products.filter(p => ids.includes(p.id)).map(p => productCardHTML(p, true)).join('');
-      var screenW = window.innerWidth || 375;
-      var sideOff = Math.round((screenW - BS_CARD_W) / 2);
-      container.style.paddingLeft = sideOff + 'px';
-      container.style.paddingRight = sideOff + 'px';
-      // Cover Flow: scale all cards down, set transition
-      var cards = container.querySelectorAll(':scope > div');
+
+      // Apply transitions + initial small scale to all cards immediately
+      var cards = Array.from(container.querySelectorAll(':scope > div'));
       cards.forEach(function(card) {
         card.style.scrollSnapAlign = 'center';
         card.style.flexShrink = '0';
@@ -1814,19 +1811,38 @@
         card.style.transform = 'scale(0.86)';
         card.style.opacity = '0.7';
       });
-      // Activate middle card
-      var midIdx = Math.floor(cards.length / 2);
-      if (cards[midIdx]) {
-        cards[midIdx].style.transform = 'scale(1)';
-        cards[midIdx].style.opacity = '1';
-      }
-      // Scroll to center middle card
+
       var bsEl = document.getElementById('bestsellers-carousel');
-      if (bsEl) {
-        requestAnimationFrame(function() {
-          bsEl.scrollLeft = midIdx * (BS_CARD_W + BS_GAP);
+      requestAnimationFrame(function() {
+        if (!cards.length) return;
+
+        // Measure real card width from DOM
+        var realW = cards[0].offsetWidth;
+        if (realW > 0) BS_CARD_W = realW;
+        // Measure real gap (offset between starts minus card width)
+        if (cards.length > 1) {
+          var realGap = cards[1].offsetLeft - cards[0].offsetLeft - BS_CARD_W;
+          if (realGap > 0) BS_GAP = realGap;
+        }
+
+        // Set centering padding
+        var screenW = (bsEl ? bsEl.offsetWidth : 0) || window.innerWidth || 375;
+        var sideOff = Math.round((screenW - BS_CARD_W) / 2);
+        container.style.paddingLeft = sideOff + 'px';
+        container.style.paddingRight = sideOff + 'px';
+
+        // Activate middle card
+        var midIdx = Math.floor(cards.length / 2);
+        cards.forEach(function(card, i) {
+          card.style.transform = i === midIdx ? 'scale(1)' : 'scale(0.86)';
+          card.style.opacity = i === midIdx ? '1' : '0.7';
         });
-      }
+
+        // Second RAF — scroll after padding has been applied to layout
+        requestAnimationFrame(function() {
+          if (bsEl) bsEl.scrollLeft = midIdx * (BS_CARD_W + BS_GAP);
+        });
+      });
     }
 
     function onBestsellerScroll(el) {
