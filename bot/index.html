@@ -54,7 +54,7 @@
     .ring-pop { animation: ringPop 0.45s ease-out; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     /* Fix: карточки бестселлеров выравниваются по низу, чтобы не прыгали при добавлении */
-    #bestsellers-items { align-items: flex-end; }
+    #bestsellers-items { align-items: center; }
     #bestsellers-items > div { scroll-snap-align: center; }
     /* Fix: фиксированная высота нижней зоны кнопок в compact-карточке */
     .compact-card-controls { min-height: 36px; }
@@ -236,21 +236,19 @@
 
     <!-- Morning Preorder Button -->
     <div class="px-4 pt-2 pb-0">
-     <button onclick="showScreen('preorder')" style="width:100%;display:flex;align-items:center;gap:14px;background:#F5C840;border-radius:18px;padding:16px 18px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 16px rgba(220,170,30,0.38);active:scale-95;">
-      <div style="flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#7a4e0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="4"/>
-        <line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/>
-        <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/>
-        <line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
-        <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/>
-       </svg>
-      </div>
-      <div style="flex:1;text-align:left;">
+     <button onclick="showScreen('preorder')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#F5C840;border-radius:18px;padding:16px 18px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 16px rgba(220,170,30,0.38);">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7a4e0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+       <circle cx="12" cy="12" r="4"/>
+       <line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/>
+       <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/>
+       <line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
+       <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/>
+      </svg>
+      <div style="text-align:center;">
        <div style="font-size:15px;font-weight:800;color:#3d1f0a;letter-spacing:0.04em;font-family:'Montserrat',sans-serif;line-height:1.2;">УТРЕННИЙ ПРЕДЗАКАЗ</div>
        <div style="font-size:12px;color:#7a4e1a;font-family:'Montserrat',sans-serif;margin-top:3px;">Доступно с 09:00 до 11:00</div>
       </div>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7a4e1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7a4e1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
      </button>
     </div>
 
@@ -745,7 +743,7 @@
    </div>
 
    <!-- Product Detail Backdrop -->
-   <div id="product-detail-backdrop" onclick="goBackFromDetail()" style="display:none;position:fixed;inset:0;background:rgba(20,8,0,0.52);z-index:55;opacity:0;transition:opacity 0.32s ease;"></div>
+   <div id="product-detail-backdrop" onclick="goBackFromDetail()" ontouchend="event.preventDefault();goBackFromDetail();" style="display:none;position:fixed;inset:0;background:rgba(20,8,0,0.52);z-index:55;opacity:0;transition:opacity 0.32s ease;-webkit-tap-highlight-color:transparent;"></div>
 
    <!-- Product Detail Sheet (bottom modal) -->
    <div id="screen-product" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;border-radius:28px 28px 0 0;background:#FFFDF9;max-height:92vh;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,0.22);transform:translateY(100%);will-change:transform;">
@@ -1801,17 +1799,20 @@
       const defaultIds = ['pastry-cheese', 'pastry-sausage', 'pastry-khachapuri', 'piroshki-meat', 'coffee-cappuccino'];
       const ids = _featuredBestsellers.length > 0 ? _featuredBestsellers : defaultIds;
       const container = document.getElementById('bestsellers-items');
+      // Reset padding before render so gap measurement isn't skewed by previous values
+      container.style.paddingLeft = '0';
+      container.style.paddingRight = '0';
       container.innerHTML = products.filter(p => ids.includes(p.id)).map(p => productCardHTML(p, true)).join('');
 
       var cards = Array.from(container.querySelectorAll(':scope > div'));
-      // Hide cards, no transition — prevents flash on initial render
+      // Start cards dimmed but visible — no blank space flash
       cards.forEach(function(card) {
         card.style.scrollSnapAlign = 'center';
         card.style.flexShrink = '0';
         card.style.willChange = 'transform';
         card.style.transition = 'none';
-        card.style.transform = 'scale(0.86) translateY(0px)';
-        card.style.opacity = '0';
+        card.style.transform = 'scale(0.86)';
+        card.style.opacity = '0.7';
       });
 
       var bsEl = document.getElementById('bestsellers-carousel');
@@ -1819,32 +1820,35 @@
 
       requestAnimationFrame(function() {
         if (!cards.length) return;
-        // Measure real dimensions
+        // Measure real dimensions (padding is 0 so offsetLeft is clean)
         var realW = cards[0].offsetWidth;
         if (realW > 0) BS_CARD_W = realW;
         if (cards.length > 1) {
           var realGap = cards[1].offsetLeft - cards[0].offsetLeft - BS_CARD_W;
-          if (realGap > 0) BS_GAP = realGap;
+          if (realGap >= 0) BS_GAP = realGap;
         }
-        // Center padding
+        // Apply centering padding
         var screenW = (bsEl ? bsEl.offsetWidth : 0) || window.innerWidth || 375;
         var sideOff = Math.round((screenW - BS_CARD_W) / 2);
         container.style.paddingLeft = sideOff + 'px';
         container.style.paddingRight = sideOff + 'px';
-        // Set scroll instantly (no transition yet)
-        if (bsEl) bsEl.scrollLeft = midIdx * (BS_CARD_W + BS_GAP);
 
         requestAnimationFrame(function() {
-          // Show cards in final state instantly, then arm transitions for scroll
-          cards.forEach(function(card, i) {
-            card.style.transform = i === midIdx ? 'scale(1) translateY(-5px)' : 'scale(0.86) translateY(0px)';
-            card.style.opacity = i === midIdx ? '1' : '0.7';
-          });
-          setTimeout(function() {
-            cards.forEach(function(card) {
-              card.style.transition = 'transform 0.32s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease';
+          // Set scroll to center card (after padding is applied)
+          if (bsEl) bsEl.scrollLeft = midIdx * (BS_CARD_W + BS_GAP);
+
+          requestAnimationFrame(function() {
+            // Reveal active card, then arm transitions for subsequent scrolls
+            cards.forEach(function(card, i) {
+              card.style.transform = i === midIdx ? 'scale(1)' : 'scale(0.86)';
+              card.style.opacity = i === midIdx ? '1' : '0.7';
             });
-          }, 60);
+            setTimeout(function() {
+              cards.forEach(function(card) {
+                card.style.transition = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.22s ease';
+              });
+            }, 60);
+          });
         });
       });
     }
@@ -1857,7 +1861,7 @@
         var cards = document.querySelectorAll('#bestsellers-items > div');
         activeIdx = Math.max(0, Math.min(cards.length - 1, activeIdx));
         cards.forEach(function(card, i) {
-          card.style.transform = i === activeIdx ? 'scale(1) translateY(-5px)' : 'scale(0.86) translateY(0px)';
+          card.style.transform = i === activeIdx ? 'scale(1)' : 'scale(0.86)';
           card.style.opacity = i === activeIdx ? '1' : '0.7';
         });
       });
