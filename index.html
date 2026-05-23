@@ -1711,9 +1711,9 @@
 
       if (compact) {
         return `
-          <div class="flex-shrink-0" style="width:173px;" data-pid="${p.id}" style="${!available ? 'opacity:0.55;' : ''}">
+          <div class="flex-shrink-0" style="width:200px;${!available ? 'opacity:0.55;' : ''}" data-pid="${p.id}">
             <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col" style="isolation:isolate;">
-              <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl aspect-square group/img">
+              <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl group/img" style="height:160px;">
                 <div class="w-full h-full">${imgHTML}</div>
                 ${oosOverlay}
               </button>
