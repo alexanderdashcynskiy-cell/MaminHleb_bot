@@ -387,14 +387,13 @@
    <!-- Cart Screen -->
    <div id="screen-cart" style="display:none;flex-direction:column;overflow:hidden;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <!-- Header -->
-    <div style="flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;padding:12px 16px 14px;background:#FFF8F0;position:relative;">
-     <button onclick="showScreen('main')" style="width:44px;height:44px;border-radius:14px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:6px;">
-      <svg width="20" height="20" fill="none" stroke="#3d1f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
+    <div style="flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;padding:10px 16px 10px;background:#FFF8F0;position:relative;">
+     <button onclick="showScreen('main')" style="width:40px;height:40px;border-radius:12px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px;">
+      <svg width="18" height="18" fill="none" stroke="#3d1f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
      </button>
      <div style="flex:1;text-align:center;margin:0 8px;">
-      <!-- Wheat decoration -->
-      <div style="display:flex;justify-content:center;margin-bottom:4px;">
-       <svg width="36" height="28" viewBox="0 0 48 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div style="display:flex;justify-content:center;margin-bottom:3px;">
+       <svg width="28" height="22" viewBox="0 0 48 34" fill="none" xmlns="http://www.w3.org/2000/svg">
         <line x1="24" y1="33" x2="24" y2="4" stroke="#C9A227" stroke-width="1.6" stroke-linecap="round"/>
         <ellipse cx="24" cy="5" rx="3.5" ry="6" fill="#C9A227" opacity="0.85"/>
         <line x1="15" y1="33" x2="15" y2="9" stroke="#C9A227" stroke-width="1.4" stroke-linecap="round"/>
@@ -407,15 +406,15 @@
         <ellipse cx="40" cy="15" rx="2.5" ry="5" fill="#C9A227" opacity="0.55"/>
        </svg>
       </div>
-      <div style="font-size:26px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;line-height:1.2;">Мамин хлеб</div>
-      <div style="font-size:16px;color:#C9A227;font-family:'Playfair Display',serif;font-style:italic;line-height:1.4;margin-top:2px;">Корзина</div>
+      <div style="font-size:22px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;line-height:1.2;">Мамин хлеб</div>
+      <div style="font-size:13px;color:#C9A227;font-family:'Playfair Display',serif;font-style:italic;line-height:1.4;margin-top:1px;">Корзина</div>
      </div>
-     <button id="cart-clear-btn" onclick="clearCart()" style="display:none;width:44px;height:44px;border-radius:14px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;align-items:center;justify-content:center;flex-shrink:0;margin-top:6px;">
-      <svg width="20" height="20" fill="none" stroke="#E05252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+     <button id="cart-clear-btn" onclick="clearCart()" style="display:none;width:40px;height:40px;border-radius:12px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px;">
+      <svg width="17" height="17" fill="none" stroke="#c0392b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
      </button>
     </div>
     <!-- Delivery toggle + pickup address — outside scroll -->
-    <div style="flex-shrink:0;padding:0 16px 12px;">
+    <div style="flex-shrink:0;padding:0 16px 8px;">
      <div id="cart-delivery-toggle" style="position:relative;background:rgba(255,255,255,0.18);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:2.5rem;padding:5px;display:none;margin-bottom:10px;border:1px solid rgba(255,255,255,0.35);box-shadow:0 20px 40px rgba(0,0,0,0.08),inset 0 1px 2px rgba(255,255,255,0.55);overflow:hidden;">
       <div id="delivery-slider" style="position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 7px);border-radius:2rem;background:linear-gradient(90deg,#C9A227,#D4A574);box-shadow:0 8px 20px rgba(201,162,39,0.35),inset 0 2px 8px rgba(255,255,255,0.3);transition:transform 0.42s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;z-index:0;transform:translateX(calc(100% + 4px));">
        <div style="position:absolute;inset:0;border-radius:2rem;background:linear-gradient(135deg,rgba(255,255,255,0.38) 0%,transparent 55%);pointer-events:none;"></div>
@@ -444,42 +443,38 @@
     </div>
 
     <!-- Scroll area -->
-    <div style="flex:1 1 0%;overflow-y:auto;padding:0 16px 16px;min-height:0;">
+    <div style="flex:1 1 0%;overflow-y:auto;padding:0 14px 12px;min-height:0;">
      <!-- "Ваш заказ" section label -->
-     <div id="cart-order-label" style="display:none;padding-bottom:10px;">
-      <span style="font-size:16px;font-weight:800;color:#3d1f0a;font-family:'Montserrat',sans-serif;">Ваш заказ</span>
+     <div id="cart-order-label" style="display:none;padding-bottom:8px;">
+      <span style="font-size:14px;font-weight:700;color:#3d1f0a;font-family:'Montserrat',sans-serif;letter-spacing:0.02em;">Ваш заказ</span>
      </div>
-     <div id="cart-items-full" style="display:flex;flex-direction:column;gap:8px;"></div>
+     <div id="cart-items-full" style="display:flex;flex-direction:column;gap:7px;"></div>
 
      <!-- "Добавьте к заказу" section -->
-     <div id="cart-suggestions-section" style="display:none;margin-top:18px;">
-      <!-- Header -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-       <div style="display:flex;align-items:center;gap:8px;">
-        <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-        <span style="font-size:16px;font-weight:800;color:#3d1f0a;font-family:'Playfair Display',serif;">Добавьте к заказу</span>
+     <div id="cart-suggestions-section" style="display:none;margin-top:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+       <div style="display:flex;align-items:center;gap:7px;">
+        <svg width="16" height="16" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <span style="font-size:14px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;">Добавьте к заказу</span>
        </div>
-       <button onclick="showScreen('main')" style="background:none;border:none;cursor:pointer;font-size:13px;font-weight:600;color:#C9A227;padding:4px 0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:3px;">
+       <button onclick="showScreen('main')" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:#C9A227;padding:3px 0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:2px;">
         Смотреть все
-        <svg width="14" height="14" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+        <svg width="12" height="12" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
        </button>
       </div>
-      <!-- Horizontal scroll strip -->
-      <div id="cart-suggestions" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;"></div>
+      <div id="cart-suggestions" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;"></div>
      </div>
 
      <!-- Info block -->
-     <div id="cart-info-block" style="display:none;margin-top:14px;background:#FFF8F0;border-radius:18px;padding:18px 16px;position:relative;overflow:hidden;flex-direction:row;align-items:center;gap:14px;">
-      <!-- Clock icon -->
-      <div style="width:46px;height:46px;border-radius:50%;border:2px solid #C9A227;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;">
-       <svg width="22" height="22" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+     <div id="cart-info-block" style="display:none;margin-top:10px;background:#FFF8F0;border-radius:16px;padding:14px;position:relative;overflow:hidden;flex-direction:row;align-items:center;gap:12px;">
+      <div style="width:38px;height:38px;border-radius:50%;border:1.5px solid #C9A227;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;">
+       <svg width="18" height="18" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       </div>
       <div style="flex:1;min-width:0;">
-       <div style="font-size:15px;font-weight:800;color:#3d1f0a;font-family:'Playfair Display',serif;line-height:1.25;">Готовим свежо каждый день</div>
-       <div style="font-size:13px;color:#a07b50;margin-top:4px;">Ваш заказ будет готов в указанное время</div>
+       <div style="font-size:13px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;line-height:1.2;">Готовим свежо каждый день</div>
+       <div style="font-size:11px;color:#a07b50;margin-top:3px;line-height:1.35;">Ваш заказ будет готов в указанное время</div>
       </div>
-      <!-- Decorative branch -->
-      <div style="position:absolute;right:10px;bottom:0;font-size:52px;line-height:1;opacity:0.18;pointer-events:none;transform:rotate(-15deg);">🌿</div>
+      <div style="position:absolute;right:8px;bottom:0;font-size:42px;line-height:1;opacity:0.15;pointer-events:none;transform:rotate(-15deg);">🌿</div>
      </div>
 
      <div id="cart-empty-full" style="display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 0;">
@@ -491,25 +486,25 @@
 
     <!-- Fixed footer: compact bottom bar -->
     <div id="cart-footer" style="display:none;flex-shrink:0;background:#fff;border-top:1px solid rgba(0,0,0,0.06);box-shadow:0 -4px 20px rgba(0,0,0,0.08);padding:12px 16px;padding-bottom:max(34px,calc(env(safe-area-inset-bottom,16px) + 18px));position:relative;z-index:20;">
-     <div style="display:flex;align-items:center;gap:12px;">
-      <!-- Bag icon in beige square -->
-      <div style="width:48px;height:48px;border-radius:14px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-       <svg width="24" height="24" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+     <div style="display:flex;align-items:center;gap:10px;">
+      <!-- Bag icon -->
+      <div style="width:44px;height:44px;border-radius:12px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+       <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
       </div>
       <!-- Items info -->
       <div style="min-width:0;">
-       <div style="font-size:14px;font-weight:700;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-items-count">0</span> <span id="cart-footer-item-word">товар</span></div>
-       <div style="font-size:12px;color:#aaa;margin-top:2px;white-space:nowrap;"><span id="cart-footer-delivery-type">Самовывоз 📍</span></div>
+       <div style="font-size:13px;font-weight:700;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-items-count">0</span> <span id="cart-footer-item-word">товар</span></div>
+       <div style="font-size:11px;color:#aaa;margin-top:2px;white-space:nowrap;"><span id="cart-footer-delivery-type">Самовывоз 📍</span></div>
       </div>
       <!-- Vertical divider -->
-      <div style="width:1px;height:36px;background:rgba(0,0,0,0.1);flex-shrink:0;"></div>
+      <div style="width:1px;height:32px;background:rgba(0,0,0,0.08);flex-shrink:0;"></div>
       <!-- Price -->
       <div style="min-width:0;">
-       <div style="font-size:18px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-total-full">0.00</span> <span style="font-size:13px;font-weight:700;">BYN</span></div>
-       <div style="font-size:12px;color:#aaa;margin-top:2px;">Итого</div>
+       <div style="font-size:17px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-total-full">0.00</span> <span style="font-size:12px;font-weight:600;color:#6B4423;">BYN</span></div>
+       <div style="font-size:11px;color:#aaa;margin-top:2px;">Итого</div>
       </div>
       <!-- Checkout button -->
-      <button id="cart-checkout-btn" ontouchend="event.preventDefault();startCheckout();" onclick="startCheckout()" style="flex:1;margin-left:4px;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:16px 12px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:14px;font-weight:700;color:#fff;box-shadow:0 4px 14px rgba(201,162,39,0.4);white-space:nowrap;position:relative;z-index:2;"><span style="pointer-events:none;">Оформить заказ →</span></button>
+      <button id="cart-checkout-btn" ontouchend="event.preventDefault();startCheckout();" onclick="startCheckout()" style="flex:1;margin-left:2px;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:14px 10px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:13px;font-weight:700;color:#fff;letter-spacing:0.01em;box-shadow:0 3px 12px rgba(201,162,39,0.38);white-space:nowrap;position:relative;z-index:2;"><span style="pointer-events:none;">Оформить заказ →</span></button>
      </div>
      <!-- Hidden compat elements used by JS -->
      <span id="cart-subtotal-display" style="display:none;"></span>
@@ -1852,21 +1847,25 @@
             + '</div>'
           : '';
         var trashIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a07b50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
-        return '<div style="background:#fff;border-radius:18px;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 10px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">'
-          + '<div style="width:96px;height:96px;flex-shrink:0;border-radius:16px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
-          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;">'
+        var trashIconSm = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
+        var weightChip = sizeOrWeight
+          ? '<span style="display:inline-flex;background:#F5EEE6;color:#8b6040;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap;line-height:1.5;">' + escHtml(sizeOrWeight) + '</span>'
+          : '';
+        return '<div style="background:#fff;border-radius:16px;display:flex;align-items:center;gap:10px;padding:10px;box-shadow:0 1px 5px rgba(0,0,0,0.05);">'
+          + '<div style="width:78px;height:78px;flex-shrink:0;border-radius:13px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
+          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">'
           + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;">'
-          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;color:#3d1f0a;font-size:13px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">' + escHtml(item.product_name) + '</div>'
-          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:28px;height:28px;border-radius:50%;background:#f2ece4;border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + trashIcon + '</button>'
+          + '<div style="font-family:\'Playfair Display\',serif;font-weight:600;color:#3d1f0a;font-size:13px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex:1;">' + escHtml(item.product_name) + '</div>'
+          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:14px;color:#3d1f0a;white-space:nowrap;flex-shrink:0;padding-top:1px;">' + (item.price * item.quantity).toFixed(2) + ' Br</div>'
           + '</div>'
-          + weightBadge
-          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'
-          + '<div style="display:flex;align-items:center;gap:8px;">'
-          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:30px;height:30px;border-radius:50%;background:rgba(212,165,116,0.25);border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:18px;line-height:1;">−</button>'
-          + '<span style="font-weight:700;font-size:14px;color:#3d1f0a;min-width:14px;text-align:center;">' + item.quantity + '</span>'
-          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;line-height:1;">+</button>'
+          + (weightChip ? '<div>' + weightChip + '</div>' : '')
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">'
+          + '<div style="display:flex;align-items:center;gap:6px;">'
+          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:26px;height:26px;border-radius:50%;background:#F5EEE6;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:15px;line-height:1;font-weight:700;">−</button>'
+          + '<span style="font-weight:700;font-size:13px;color:#3d1f0a;min-width:14px;text-align:center;">' + item.quantity + '</span>'
+          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;line-height:1;font-weight:700;">+</button>'
           + '</div>'
-          + '<div style="background:#f2ece4;border-radius:10px;padding:4px 10px;font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#a07b10;white-space:nowrap;">' + (item.price * item.quantity).toFixed(2) + ' ' + BYN + '</div>'
+          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:26px;height:26px;border:none;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;opacity:0.4;padding:0;">' + trashIconSm + '</button>'
           + '</div>'
           + '</div></div>';
       }).join('');
@@ -1895,15 +1894,16 @@
         var price = happyPrice(p);
         var imgHTML = productImages[p.id]
           ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
-          : '<span style="font-size:2.5rem;">' + p.image + '</span>';
-        return '<div style="flex-shrink:0;width:132px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
-          + '<div style="width:132px;height:120px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
-          + '<div style="padding:10px 10px 12px;">'
-          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:14px;color:#3d1f0a;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:36px;">' + escHtml(p.name) + '</div>'
-          + (weightInfo ? '<div style="font-size:11px;color:rgba(107,68,35,0.5);margin-top:3px;">' + escHtml(weightInfo) + '</div>' : '')
-          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:4px;">'
-          + '<span style="font-size:15px;font-weight:800;color:#3d1f0a;font-family:\'Montserrat\',sans-serif;white-space:nowrap;">' + price.toFixed(2) + ' <span style="font-size:11px;font-weight:700;">BYN</span></span>'
-          + '<button onclick="addToCart(\'' + p.id + '\')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;flex-shrink:0;box-shadow:0 3px 10px rgba(201,162,39,0.45);">+</button>'
+          : '<span style="font-size:2.2rem;">' + p.image + '</span>';
+        var cardW = 148;
+        return '<div style="flex-shrink:0;width:' + cardW + 'px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.07);">'
+          + '<div style="width:' + cardW + 'px;height:106px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
+          + '<div style="padding:9px 9px 10px;">'
+          + '<div style="font-family:\'Playfair Display\',serif;font-weight:600;font-size:13px;color:#3d1f0a;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:32px;">' + escHtml(p.name) + '</div>'
+          + (weightInfo ? '<div style="font-size:10px;color:rgba(107,68,35,0.5);margin-top:2px;">' + escHtml(weightInfo) + '</div>' : '')
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px;gap:4px;">'
+          + '<span style="font-size:14px;font-weight:700;color:#3d1f0a;font-family:\'Montserrat\',sans-serif;white-space:nowrap;">' + price.toFixed(2) + ' <span style="font-size:10px;font-weight:600;color:#a07b50;">BYN</span></span>'
+          + '<button onclick="addToCart(\'' + p.id + '\')" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.4);">+</button>'
           + '</div></div></div>';
       }).join('');
     }
