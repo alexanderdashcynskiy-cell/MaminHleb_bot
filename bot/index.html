@@ -208,48 +208,52 @@
      <div class="relative">
       <div class="relative overflow-hidden rounded-3xl shadow-lg" style="height:220px;" id="carousel-wrapper">
        <div id="carousel-container" class="flex transition-transform duration-500 ease-out" style="height:220px;">
-       <!-- Slide 1: Brand -->
-       <div class="w-full flex-shrink-0 rounded-3xl flex flex-row items-center justify-center relative overflow-hidden px-5 gap-4" style="height:220px;background-color:#ede4db;">
-        <img src="/images/logo.jpeg" alt="Мамин Хлеб" class="h-28 w-28 rounded-full object-cover flex-shrink-0 shadow-md" />
-        <div class="flex flex-col justify-center gap-1">
-         <h1 class="font-playfair font-bold leading-tight" style="font-size: 26px; color: #3d1f0a; line-height: 1.15;">Мамин <span style="color: #a0612a;">хлеб</span></h1>
-         <div style="width: 40px; height: 1.5px; background: #c9a57a; margin: 2px 0;"></div>
-         <p class="font-montserrat font-medium tracking-widest uppercase" style="font-size: 9px; color: #8b5e3c; letter-spacing: 2px;">Домашняя выпечка<br>с любовью</p>
-        </div>
-       </div>
-       <!-- Slide 2: Happy Hour -->
-       <div class="w-full flex-shrink-0 rounded-3xl flex flex-col items-center justify-center relative overflow-hidden px-4 py-3 gap-1.5" style="height:220px;background-color:#ede4db;">
-        <!-- decorative blobs -->
-        <div style="position:absolute;top:-10px;right:-10px;width:60px;height:60px;background:rgba(107,68,35,0.08);border-radius:50%;"></div>
-        <div style="position:absolute;bottom:-15px;left:10px;width:40px;height:40px;background:rgba(107,68,35,0.06);border-radius:50%;"></div>
-        <span style="position:absolute;top:10px;right:14px;font-size:22px;opacity:0.55;">⏰</span>
-        <p class="font-playfair font-bold text-center" style="font-size:20px;color:#3d1f0a;line-height:1.1;">Счастливый час</p>
-        <p class="font-playfair" style="font-size:10px;color:#8b6040;">в «Мамином Хлебе»</p>
-        <div class="flex flex-col items-center justify-center rounded-2xl px-6 py-1.5 relative overflow-hidden" style="background:#7a4e2d;width:80%;margin-top:2px;">
-         <div style="position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:40px;height:40px;background:rgba(255,255,255,0.07);border-radius:50%;"></div>
-         <div style="position:absolute;right:-8px;top:50%;transform:translateY(-50%);width:35px;height:35px;background:rgba(255,255,255,0.07);border-radius:50%;"></div>
-         <p class="font-montserrat font-semibold uppercase text-center" style="font-size:8px;color:rgba(255,255,255,0.7);letter-spacing:2px;">скидка</p>
-         <p class="font-playfair font-bold" style="font-size:26px;color:#fff;line-height:1.1;">−30%</p>
-        </div>
-        <div class="flex items-center gap-2 rounded-full px-4 py-1" style="background:rgba(255,255,255,0.7);margin-top:2px;">
-         <span style="font-size:12px;color:#8b6040;">🕐</span>
-         <p class="font-montserrat font-semibold" style="font-size:11px;color:#5a3520;">19:00 — 20:00</p>
-        </div>
-       </div>
-       <!-- Slide 3: Preorder -->
-       <div class="w-full flex-shrink-0 rounded-3xl flex flex-col items-center justify-center relative overflow-hidden px-4 py-3 gap-1" style="height:220px;background-color:#7a4e2d;">
-        <!-- decorative blobs -->
-        <div style="position:absolute;bottom:-20px;left:-15px;width:90px;height:90px;background:rgba(255,255,255,0.07);border-radius:50%;"></div>
-        <div style="position:absolute;top:-10px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,0.07);border-radius:50%;"></div>
-        <span style="font-size:24px;margin-bottom:2px;">🌅</span>
-        <p class="font-playfair font-bold text-center" style="font-size:22px;color:#fff;line-height:1.1;">Утренний предзаказ</p>
-        <p class="font-playfair" style="font-size:10px;color:rgba(255,255,255,0.75);margin-bottom:4px;">Свежий хлеб к завтраку</p>
-        <div class="flex items-center gap-2" style="width:100%;">
-         <div class="flex items-center gap-1.5 rounded-full px-3 py-1.5 flex-1 justify-center" style="background:rgba(0,0,0,0.2);">
-          <span style="font-size:11px;color:rgba(255,255,255,0.8);">🕐</span>
-          <p class="font-montserrat font-semibold" style="font-size:10px;color:#fff;">09:00 — 11:00</p>
+       <!-- Slide 1: Счастливый час -->
+       <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;display:flex;flex-shrink:0;">
+        <div style="flex:1;padding:22px 12px 22px 22px;display:flex;flex-direction:column;justify-content:center;gap:5px;position:relative;z-index:2;">
+         <div style="font-family:'Playfair Display',serif;font-size:21px;font-weight:700;color:#3d1f0a;line-height:1.15;">Счастливый час</div>
+         <div style="font-family:'Playfair Display',serif;font-size:12px;color:#8b6040;margin-bottom:2px;">в «Мамином Хлебе»</div>
+         <div style="display:inline-flex;background:rgba(160,97,42,0.15);border-radius:6px;padding:3px 8px;width:fit-content;">
+          <span style="font-size:10px;font-weight:700;color:#8b5e1a;letter-spacing:0.08em;font-family:'Montserrat',sans-serif;">СКИДКА</span>
          </div>
-         <button onclick="showScreen('preorder')" class="rounded-full font-playfair font-semibold flex-1 active:scale-95 transition-transform" style="background:#c9a27a;color:#fff;font-size:12px;padding:7px 12px;border:none;cursor:pointer;touch-action:manipulation;">Заказать →</button>
+         <div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:800;color:#3d1f0a;line-height:1.05;">−30%</div>
+         <div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.65);border-radius:50px;padding:6px 12px;width:fit-content;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8b6040" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span style="font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;color:#5a3520;">19:00 — 20:00</span>
+         </div>
+        </div>
+        <div style="width:46%;position:relative;flex-shrink:0;">
+         <img src="/images/new_croissant.jpeg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.background='#d4b896';this.style.display='block';" />
+         <div style="position:absolute;inset:0;background:linear-gradient(to right,#EDE4D8 0%,rgba(237,228,216,0.55) 35%,transparent 65%);pointer-events:none;"></div>
+        </div>
+       </div>
+       <!-- Slide 2: Утренний предзаказ -->
+       <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;display:flex;flex-shrink:0;">
+        <div style="flex:1;padding:22px 12px 22px 22px;display:flex;flex-direction:column;justify-content:center;gap:8px;position:relative;z-index:2;">
+         <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#3d1f0a;line-height:1.15;">Утренний предзаказ</div>
+         <div style="font-family:'Playfair Display',serif;font-size:12px;color:#8b6040;">Свежий хлеб к завтраку</div>
+         <div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.65);border-radius:50px;padding:6px 12px;width:fit-content;margin-top:2px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8b6040" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span style="font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;color:#5a3520;">09:00 — 11:00</span>
+         </div>
+         <button onclick="showScreen('preorder')" style="background:#c9a57a;color:#fff;font-family:'Playfair Display',serif;font-size:14px;font-weight:600;border:none;border-radius:50px;padding:9px 20px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;width:fit-content;margin-top:2px;">Заказать →</button>
+        </div>
+        <div style="width:46%;position:relative;flex-shrink:0;">
+         <img src="/images/bread-whole.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.background='#d4b896';this.style.display='block';" />
+         <div style="position:absolute;inset:0;background:linear-gradient(to right,#EDE4D8 0%,rgba(237,228,216,0.55) 35%,transparent 65%);pointer-events:none;"></div>
+        </div>
+       </div>
+       <!-- Slide 3: Мамин хлеб -->
+       <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;display:flex;flex-shrink:0;">
+        <div style="flex:1;padding:22px 12px 22px 22px;display:flex;flex-direction:column;justify-content:center;gap:6px;position:relative;z-index:2;">
+         <img src="/images/logo.jpeg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,0.15);margin-bottom:2px;" />
+         <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:#3d1f0a;line-height:1.1;">Мамин <span style="color:#a0612a;">хлеб</span></div>
+         <div style="width:40px;height:1.5px;background:#c9a57a;"></div>
+         <div style="font-family:'Montserrat',sans-serif;font-size:11px;color:#8b5e3c;letter-spacing:0.02em;">Домашняя выпечка с любовью</div>
+        </div>
+        <div style="width:46%;position:relative;flex-shrink:0;">
+         <img src="/images/bread-bagette.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.background='#d4b896';this.style.display='block';" />
+         <div style="position:absolute;inset:0;background:linear-gradient(to right,#EDE4D8 0%,rgba(237,228,216,0.55) 35%,transparent 65%);pointer-events:none;"></div>
         </div>
        </div>
       </div>
