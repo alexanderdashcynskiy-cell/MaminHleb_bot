@@ -459,8 +459,8 @@
     </div>
 
     <!-- Glass "Добавьте к заказу" strip — absolute, overlays scroll area -->
-    <div id="cart-suggestions-section" style="display:none;position:absolute;left:0;right:0;bottom:max(108px,calc(env(safe-area-inset-bottom,14px) + 92px));padding:16px 12px 12px;background:rgba(255,248,240,0.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.6);z-index:10;">
-     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div id="cart-suggestions-section" style="display:none;position:absolute;left:0;right:0;bottom:max(108px,calc(env(safe-area-inset-bottom,14px) + 92px));padding:16px 12px 12px;background:rgba(255,248,240,0.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.6);z-index:10;pointer-events:none;">
+     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;pointer-events:auto;">
       <div style="display:flex;align-items:center;gap:7px;">
        <svg width="16" height="16" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
        <span style="font-size:16px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;">Добавьте к заказу</span>
@@ -470,11 +470,11 @@
        <svg width="12" height="12" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
       </button>
      </div>
-     <div id="cart-suggestions" style="display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;"></div>
+     <div id="cart-suggestions" style="display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;pointer-events:auto;"></div>
     </div>
 
     <!-- Fixed footer: compact bottom bar -->
-    <div id="cart-footer" style="display:none;position:absolute;bottom:0;left:0;right:0;background:transparent;padding:8px 14px;padding-bottom:max(38px,calc(env(safe-area-inset-bottom,14px) + 20px));z-index:20;pointer-events:none;">
+    <div id="cart-footer" style="display:none;position:absolute;bottom:0;left:0;right:0;background:rgba(255,248,240,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:8px 14px;padding-bottom:max(38px,calc(env(safe-area-inset-bottom,14px) + 20px));z-index:20;pointer-events:none;">
      <div style="background:#fff;border-radius:20px;padding:9px 10px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 22px rgba(0,0,0,0.1);pointer-events:auto;">
       <!-- Bag icon -->
       <div style="width:40px;height:40px;border-radius:11px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
