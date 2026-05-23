@@ -441,14 +441,14 @@
         </button>
        </div>
        <!-- Left-aligned carousel, partial preview of next card -->
-       <div id="cart-suggestions" class="hide-scrollbar" style="display:flex;overflow-x:auto;gap:12px;padding:4px 20px 6px;-webkit-overflow-scrolling:touch;scroll-snap-type:x start;"></div>
+       <div id="cart-suggestions" class="hide-scrollbar" style="display:flex;overflow-x:auto;gap:10px;padding:4px 20px 10px;-webkit-overflow-scrolling:touch;scroll-snap-type:x start;"></div>
       </div>
      </div>
     </div>
 
-    <!-- Bottom checkout bar — compact -->
-    <div id="cart-footer" style="display:none;position:absolute;bottom:15px;left:0;right:0;background:rgba(255,248,240,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:8px 14px;padding-bottom:max(32px,calc(env(safe-area-inset-bottom,14px) + 16px));z-index:20;pointer-events:none;">
-     <div style="background:#fff;border-radius:22px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.10);pointer-events:auto;">
+    <!-- Bottom checkout bar — floating pill -->
+    <div id="cart-footer" style="display:none;position:absolute;bottom:15px;left:0;right:0;padding:0 14px;padding-bottom:max(18px,calc(env(safe-area-inset-bottom,14px) + 8px));z-index:20;pointer-events:none;">
+     <div style="background:#fff;border-radius:22px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 36px rgba(45,21,5,0.16),0 2px 8px rgba(45,21,5,0.08);pointer-events:auto;">
       <div style="width:42px;height:42px;border-radius:12px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
        <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
       </div>
@@ -2181,22 +2181,18 @@
       if (picks.length === 0) { section.style.display = 'none'; return; }
       section.style.display = 'block';
       container.innerHTML = picks.map(function(p) {
-        var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes.map(function(s){return s.size;}).join(' / ') : (p.weight || '');
         var price = happyPrice(p);
         var imgHTML = productImages[p.id]
           ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
-          : '<span style="font-size:2.6rem;line-height:1;">' + p.image + '</span>';
-        return '<div style="flex-shrink:0;width:148px;scroll-snap-align:start;cursor:pointer;" onclick="showProductDetail(\'' + p.id + '\')">'
-          + '<div style="background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,0.08);display:flex;flex-direction:column;">'
-          + '<div style="width:148px;height:148px;flex-shrink:0;background:#F5EAD8;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
-          + '<div style="padding:10px 12px 12px;flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:100px;">'
-          + '<div>'
-          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:14px;color:#2d1505;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:36px;">' + escHtml(p.name) + '</div>'
-          + '<div style="font-size:11px;color:rgba(107,68,35,0.45);margin-top:3px;line-height:1.3;min-height:16px;">' + (weightInfo ? escHtml(weightInfo) : '') + '</div>'
-          + '</div>'
-          + '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:8px;">'
-          + '<div><span style="font-size:18px;font-weight:800;color:#2d1505;font-family:\'Montserrat\',sans-serif;">' + price.toFixed(2) + '</span><span style="font-size:11px;font-weight:600;color:#a07b50;margin-left:3px;">BYN</span></div>'
-          + '<button onclick="event.stopPropagation();addToCart(\'' + p.id + '\')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:22px;flex-shrink:0;box-shadow:0 3px 12px rgba(201,162,39,0.42);">+</button>'
+          : '<span style="font-size:2.2rem;line-height:1;">' + p.image + '</span>';
+        return '<div style="flex-shrink:0;width:118px;scroll-snap-align:start;cursor:pointer;" onclick="showProductDetail(\'' + p.id + '\')">'
+          + '<div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(45,21,5,0.07);display:flex;flex-direction:column;">'
+          + '<div style="width:118px;height:100px;flex-shrink:0;background:#F5EAD8;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
+          + '<div style="padding:8px 9px 10px;display:flex;flex-direction:column;gap:6px;">'
+          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:12px;color:#2d1505;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:30px;">' + escHtml(p.name) + '</div>'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">'
+          + '<div><span style="font-size:14px;font-weight:800;color:#2d1505;font-family:\'Montserrat\',sans-serif;">' + price.toFixed(2) + '</span><span style="font-size:10px;font-weight:600;color:#a07b50;margin-left:2px;">BYN</span></div>'
+          + '<button onclick="event.stopPropagation();addToCart(\'' + p.id + '\')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.38);">+</button>'
           + '</div></div></div></div>';
       }).join('');
     }
