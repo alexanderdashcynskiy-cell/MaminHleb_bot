@@ -140,7 +140,7 @@
  <body class="h-full bg-cream font-montserrat text-coffee">
   <div id="app" class="w-full h-full flex flex-col bg-gradient-to-br from-[#FDFBF7] via-[#FFF9F2] to-[#FDF7EF]">
    <!-- Top Header Navigation -->
-   <header style="background:rgba(255,253,249,0.92);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);position:sticky;top:0;z-index:20;flex-shrink:0;padding:16px 16px 18px;border-bottom:1px solid rgba(255,255,255,0.5);">
+   <header style="background:rgba(255,253,249,0.92);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);position:sticky;top:0;z-index:20;flex-shrink:0;padding:20px 16px 22px;border-bottom:1px solid rgba(255,255,255,0.5);">
 
     <!-- Profile row -->
     <div style="display:flex;align-items:center;gap:10px;">
@@ -173,7 +173,7 @@
 
      <!-- Right: Cart -->
      <div style="position:relative;flex-shrink:0;">
-      <button onclick="showScreen('cart')" style="width:54px;height:54px;background:linear-gradient(135deg,#C9A227,#D4A044);border-radius:16px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(201,162,39,0.35);">
+      <button onclick="showScreen('cart')" style="width:59px;height:59px;background:linear-gradient(135deg,#C9A227,#D4A044);border-radius:17px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(201,162,39,0.35);">
        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
       </button>
       <div id="cart-badge-dot" style="display:none;position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;background:#ef4444;border-radius:50%;flex-direction:row;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;pointer-events:none;padding:0 3px;box-shadow:0 2px 6px rgba(239,68,68,0.4);">
@@ -200,8 +200,8 @@
     <!-- Carousel -->
     <div class="px-4 pt-4 pb-2">
      <div class="relative">
-      <div class="relative overflow-hidden rounded-3xl shadow-lg" style="height:220px;" id="carousel-wrapper">
-       <div id="carousel-container" class="flex transition-transform duration-500 ease-out" style="height:220px;">
+      <div class="relative overflow-hidden rounded-3xl shadow-lg" style="height:215px;" id="carousel-wrapper">
+       <div id="carousel-container" class="flex transition-transform duration-500 ease-out" style="height:215px;">
        <!-- Slide 1: Счастливый час -->
        <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;flex-shrink:0;">
         <img src="/images/carousel-happyhour.png" style="width:100%;height:calc(100% + 50px);object-fit:cover;object-position:center top;margin-top:-50px;display:block;" onerror="this.style.display='none';" />
@@ -356,8 +356,8 @@
    <div id="screen-cart" style="display:none;flex-direction:column;overflow:hidden;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <!-- Header — compact -->
     <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:6px 14px 6px;background:#FFF8F0;position:relative;">
-     <button onclick="showScreen('main')" style="width:36px;height:36px;border-radius:10px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <svg width="16" height="16" fill="none" stroke="#3d1f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
+     <button onclick="showScreen('main')" style="width:41px;height:41px;border-radius:12px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="20" height="20" fill="none" stroke="#3d1f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
      </button>
      <div style="flex:1;text-align:center;margin:0 6px;">
       <div style="display:flex;justify-content:center;margin-bottom:1px;">
@@ -377,7 +377,7 @@
       <div style="font-size:19px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;line-height:1.2;">Мамин хлеб</div>
       <div style="font-size:11px;color:#C9A227;font-family:'Playfair Display',serif;font-style:italic;line-height:1.3;">Корзина</div>
      </div>
-     <button id="cart-clear-btn" onclick="clearCart()" style="display:none;width:36px;height:36px;border-radius:10px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;align-items:center;justify-content:center;flex-shrink:0;">
+     <button id="cart-clear-btn" onclick="clearCart()" style="display:none;width:41px;height:41px;border-radius:12px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;align-items:center;justify-content:center;flex-shrink:0;">
       <svg width="15" height="15" fill="none" stroke="#c0392b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
      </button>
     </div>
@@ -478,8 +478,8 @@
      <div style="position:relative;padding:max(env(safe-area-inset-top,20px),44px) 20px 8px;overflow:visible;min-height:100px;">
       <!-- Header bar: back button left, title centered -->
       <div style="display:flex;align-items:center;justify-content:center;position:relative;z-index:1;">
-       <button onclick="showScreen('cart')" style="position:absolute;left:-6px;width:36px;height:36px;border-radius:10px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;">
-        <svg width="18" height="18" fill="none" stroke="#3d1f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
+       <button onclick="showScreen('cart')" style="position:absolute;left:-6px;width:41px;height:41px;border-radius:12px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;">
+        <svg width="22" height="22" fill="none" stroke="#3d1f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
        </button>
        <div style="text-align:center;">
         <div style="font-size:28px;font-weight:700;color:#2d1505;font-family:'Playfair Display',serif;line-height:1.2;">Мамин хлеб</div>
@@ -520,7 +520,7 @@
      <form onsubmit="submitCheckout(event)" style="padding:0 18px 36px;">
 
       <!-- Контактные данные -->
-      <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#2d1505;margin:4px 0 16px;">Контактные данные</div>
+      <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:#2d1505;margin:4px 0 16px;">Контактные данные</div>
 
       <!-- Имя -->
       <div style="background:#fff;border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 12px rgba(180,140,80,0.1);margin-bottom:12px;">
@@ -600,7 +600,7 @@
       </div>
 
       <!-- Получение заказа -->
-      <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#2d1505;margin:4px 0 16px;">Получение заказа</div>
+      <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:#2d1505;margin:4px 0 16px;">Получение заказа</div>
 
       <!-- Время (самовывоз) -->
       <div id="pickup-time-section" style="display:none;margin-bottom:0;">
@@ -654,7 +654,7 @@
         <div style="font-size:13px;color:#9a8060;margin-top:4px;">Оплата при получении</div>
        </div>
        <div style="display:flex;align-items:baseline;gap:5px;">
-        <span style="font-size:40px;font-weight:400;color:#B8922A;font-family:'Montserrat',sans-serif;line-height:1;"><span id="checkout-total">0.00</span></span>
+        <span style="font-size:35px;font-weight:400;color:#B8922A;font-family:'Montserrat',sans-serif;line-height:1;"><span id="checkout-total">0.00</span></span>
         <span style="font-size:16px;font-weight:400;color:#B8922A;font-family:'Montserrat',sans-serif;letter-spacing:0.02em;">BYN</span>
        </div>
       </div>
@@ -697,7 +697,7 @@
    <!-- Referral Screen -->
    <div id="screen-referral" style="display:none;overflow:auto;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3">
-     <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+     <button onclick="showScreen('main')" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Реферальная программа</h2>
     </header>
     <div class="px-4 py-6 pb-24">
@@ -733,7 +733,7 @@
    <!-- Locations Screen -->
    <div id="screen-locations" style="display:none;overflow:auto;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3">
-     <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+     <button onclick="showScreen('main')" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Выбрать локацию</h2>
     </header>
     <div class="px-4 py-6 pb-24">
@@ -845,7 +845,7 @@
   <div id="floating-cart-btn" style="position:fixed;right:20px;bottom:44px;z-index:40;transform:scale(0);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);transform-origin:center;pointer-events:none;">
    <!-- Outer glow halo -->
    <div style="position:absolute;inset:-10px;border-radius:50%;background:rgba(201,162,39,0.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);pointer-events:none;"></div>
-   <button onclick="showScreen('cart')" style="position:relative;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;pointer-events:auto;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(201,162,39,0.5),0 2px 8px rgba(0,0,0,0.12),inset 0 1px 3px rgba(255,255,255,0.65),inset 0 -3px 8px rgba(0,0,0,0.12);overflow:hidden;">
+   <button onclick="showScreen('cart')" style="position:relative;width:69px;height:69px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;pointer-events:auto;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(201,162,39,0.5),0 2px 8px rgba(0,0,0,0.12),inset 0 1px 3px rgba(255,255,255,0.65),inset 0 -3px 8px rgba(0,0,0,0.12);overflow:hidden;">
     <!-- Light refraction overlay -->
     <div style="position:absolute;inset:0;background:linear-gradient(155deg,rgba(255,255,255,0.42) 0%,transparent 55%);pointer-events:none;border-radius:50%;"></div>
     <!-- Cart icon -->
@@ -972,8 +972,8 @@
   <!-- Preorder Screen -->
   <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
    <header style="background:#FFF8F0;padding:max(env(safe-area-inset-top,12px),12px) 16px 12px;z-index:10;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.06);">
-    <button onclick="showScreen('main')" style="width:40px;height:40px;background:#F5EEE6;border-radius:12px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
-     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+    <button onclick="showScreen('main')" style="width:45px;height:45px;background:#F5EEE6;border-radius:14px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
     </button>
     <h2 style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#3d1f0a;margin:0;">🌅 Утренний предзаказ</h2>
    </header>
@@ -1066,7 +1066,7 @@
   <!-- Bestsellers Screen -->
   <div id="screen-bestsellers" style="display:none;flex-direction:column;overflow:auto;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
    <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3 flex-shrink-0">
-    <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+    <button onclick="showScreen('main')" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
     <div style="display:flex;align-items:center;gap:6px;">
      <svg width="22" height="22" viewBox="0 0 24 24" fill="#fb923c" style="flex-shrink:0;filter:drop-shadow(0 0 4px rgba(249,115,22,0.6));" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2C9.5 6 7 8.5 7 12a5 5 0 0010 0c0-2.5-1.5-4.5-2-6-1 2-2 3-2.5 4-.5-1.5-.5-4.5-.5-8z" stroke="#f97316" stroke-width="0.5"/>
