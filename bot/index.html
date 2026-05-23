@@ -2199,23 +2199,23 @@
             : '';
         var ratingVal = product ? (4.5 + ((pid.split('').reduce(function(h,c){return (h*31+c.charCodeAt(0))&0xFFFF;},0) % 6) * 0.1)).toFixed(1) : '';
         var ratingHtml = ratingVal ? '<div style="display:inline-flex;align-items:center;gap:2px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="#C9A227"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg><span style="font-size:10px;font-weight:600;color:#8b6040;">' + ratingVal + '</span></div>' : '';
-        return '<div style="background:#fff;border-radius:18px;display:flex;align-items:stretch;gap:12px;padding:12px 14px;box-shadow:0 2px 10px rgba(0,0,0,0.07);">'
-          + '<div style="width:96px;height:96px;flex-shrink:0;border-radius:14px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;align-self:center;">' + imgHTML + '</div>'
-          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:3px;">'
+        return '<div style="background:#fff;border-radius:16px;display:flex;align-items:stretch;gap:10px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
+          + '<div style="width:72px;height:72px;flex-shrink:0;border-radius:12px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;align-self:center;">' + imgHTML + '</div>'
+          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:2px;">'
           + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">'
-          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;color:#2d1505;font-size:15px;line-height:1.25;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(item.product_name) + '</div>'
-          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:800;font-size:15px;color:#2d1505;white-space:nowrap;flex-shrink:0;">' + (item.price * item.quantity).toFixed(2) + '<span style="font-size:10px;font-weight:600;color:#6B4423;margin-left:2px;">Br</span></div>'
+          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;color:#2d1505;font-size:14px;line-height:1.25;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(item.product_name) + '</div>'
+          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:800;font-size:14px;color:#2d1505;white-space:nowrap;flex-shrink:0;">' + (item.price * item.quantity).toFixed(2) + '<span style="font-size:9px;font-weight:600;color:#6B4423;margin-left:2px;">Br</span></div>'
           + '</div>'
-          + '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">'
+          + '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">'
           + (weightChip || '') + (tagHtml ? tagHtml : '') + (ratingHtml ? ratingHtml : '')
           + '</div>'
           + '<div style="display:flex;align-items:center;justify-content:space-between;">'
-          + '<div style="display:flex;align-items:center;gap:6px;">'
-          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:32px;height:32px;border-radius:50%;background:#F5EEE6;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:18px;line-height:1;font-weight:700;">−</button>'
-          + '<span style="font-weight:700;font-size:15px;color:#2d1505;min-width:18px;text-align:center;">' + item.quantity + '</span>'
-          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;line-height:1;font-weight:700;">+</button>'
+          + '<div style="display:flex;align-items:center;gap:5px;">'
+          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:26px;height:26px;border-radius:50%;background:#F5EEE6;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:16px;line-height:1;font-weight:700;">−</button>'
+          + '<span style="font-weight:700;font-size:14px;color:#2d1505;min-width:16px;text-align:center;">' + item.quantity + '</span>'
+          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:700;">+</button>'
           + '</div>'
-          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:26px;height:26px;border:none;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;opacity:0.3;padding:0;">' + trashSvg + '</button>'
+          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:24px;height:24px;border:none;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;opacity:0.3;padding:0;">' + trashSvg + '</button>'
           + '</div>'
           + '</div></div>';
       }).join('');
