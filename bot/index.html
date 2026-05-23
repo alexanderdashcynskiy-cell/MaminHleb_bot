@@ -439,7 +439,7 @@
         </button>
        </div>
        <!-- Left-aligned carousel, partial preview of next card -->
-       <div id="cart-suggestions" class="hide-scrollbar" style="display:flex;overflow-x:auto;gap:10px;padding:4px 20px 12px;-webkit-overflow-scrolling:touch;scroll-snap-type:x start;align-items:flex-start;"></div>
+       <div id="cart-suggestions" class="hide-scrollbar" style="overflow-x:auto;width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:6px;padding-bottom:12px;" onscroll="onCartSuggestionsScroll(this)"><div id="cs-items" class="flex" style="gap:10px;align-items:center;"></div></div>
       </div>
      </div>
 
@@ -2286,35 +2286,165 @@
       return 'товаров';
     }
 
+    var CS_CARD_W = 112, CS_GAP = 10;
+    var _csRaf = null, _csScrollStopTimer = null;
+    var _csCloneCount = 0, _csTotalReal = 0, _csPickIds = '';
+
+    function csSuggBtnHTML(pid, qty) {
+      if (qty > 0) {
+        return '<div style="display:flex;align-items:center;gap:3px;">'
+          + '<button onclick="event.stopPropagation();updateQuantity(\'' + pid + '\',-1)" style="width:22px;height:22px;border-radius:50%;background:#D4AA70;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;line-height:1;">−</button>'
+          + '<span style="min-width:14px;text-align:center;font-weight:800;color:#2d1505;font-size:11px;font-family:\'Montserrat\',sans-serif;">' + qty + '</span>'
+          + '<button onclick="event.stopPropagation();updateQuantity(\'' + pid + '\',1)" style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;line-height:1;box-shadow:0 2px 6px rgba(201,162,39,0.35);">+</button>'
+          + '</div>';
+      }
+      return '<button onclick="event.stopPropagation();addToCart(\'' + pid + '\')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;line-height:1;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.40);">+</button>';
+    }
+
+    function updateCsSuggCard(pid) {
+      var qty = 0;
+      var item = cart.find(function(i) { return i.product_id === pid; });
+      if (item) qty = item.quantity;
+      document.querySelectorAll('.cs-btn-zone[data-pid="' + pid + '"]').forEach(function(zone) {
+        zone.innerHTML = csSuggBtnHTML(pid, qty);
+      });
+    }
+
+    function csSuggCardHTML(p) {
+      var price = happyPrice(p);
+      var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
+      var qty = 0;
+      var item = cart.find(function(i) { return i.product_id === p.id; });
+      if (item) qty = item.quantity;
+      var imgHTML = productImages[p.id]
+        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        : '<span style="font-size:2.5rem;line-height:1;">' + p.image + '</span>';
+      return '<div style="flex-shrink:0;width:112px;scroll-snap-align:center;cursor:pointer;" onclick="showProductDetail(\'' + p.id + '\')">'
+        + '<div style="background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(45,21,5,0.07);display:flex;flex-direction:column;padding:5px;">'
+        + '<div style="width:100%;height:80px;border-radius:8px;background:#F5EAD8;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + imgHTML + '</div>'
+        + '<div style="margin-top:5px;">'
+        + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:11px;color:#2d1505;line-height:1.3;height:26px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(p.name) + '</div>'
+        + '<div style="font-size:9px;color:rgba(107,68,35,0.42);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:\'Montserrat\',sans-serif;">' + (weightInfo ? escHtml(weightInfo) : '&nbsp;') + '</div>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;">'
+        + '<div><span style="font-size:13px;font-weight:700;color:#2d1505;font-family:\'Montserrat\',sans-serif;line-height:1;">' + price.toFixed(2) + '</span><span style="font-size:9px;font-weight:500;color:#C9A227;margin-left:2px;">BYN</span></div>'
+        + '<div class="cs-btn-zone" data-pid="' + p.id + '" style="flex-shrink:0;">' + csSuggBtnHTML(p.id, qty) + '</div>'
+        + '</div></div></div></div>';
+    }
+
     function renderCartSuggestions() {
-      const section = document.getElementById('cart-suggestions-section');
-      const container = document.getElementById('cart-suggestions');
-      if (!section || !container) return;
-      const cartIds = new Set(cart.map(i => i.product_id));
-      const pool = products.filter(p => !cartIds.has(p.id));
-      const picks = pool.filter(p => p.bestseller).slice(0, 8);
-      if (picks.length < 8) { const extra = pool.filter(p => !p.bestseller).slice(0, 8 - picks.length); picks.push(...extra); }
-      const freshness = document.getElementById('cart-freshness-block');
+      var section = document.getElementById('cart-suggestions-section');
+      var csEl = document.getElementById('cart-suggestions');
+      var container = document.getElementById('cs-items');
+      if (!section || !container || !csEl) return;
+
+      // Show bestsellers regardless of cart state; cart products show qty controls
+      var picks = products.filter(function(p) { return p.bestseller; }).slice(0, 8);
+      if (picks.length < 8) {
+        var extra = products.filter(function(p) { return !p.bestseller; }).slice(0, 8 - picks.length);
+        picks = picks.concat(extra);
+      }
+      var freshness = document.getElementById('cart-freshness-block');
       if (picks.length === 0) { section.style.display = 'none'; if (freshness) freshness.style.display = 'none'; return; }
       section.style.display = 'block';
       if (freshness) freshness.style.display = 'block';
-      container.innerHTML = picks.map(function(p) {
-        var price = happyPrice(p);
-        var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
-        var imgHTML = productImages[p.id]
-          ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
-          : '<span style="font-size:2.8rem;line-height:1;">' + p.image + '</span>';
-        return '<div style="flex-shrink:0;width:112px;scroll-snap-align:start;cursor:pointer;" onclick="showProductDetail(\'' + p.id + '\')">'
-          + '<div style="background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(45,21,5,0.07);display:flex;flex-direction:column;padding:5px;">'
-          + '<div style="width:100%;height:80px;border-radius:8px;background:#F5EAD8;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + imgHTML + '</div>'
-          + '<div style="margin-top:5px;">'
-          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:11px;color:#2d1505;line-height:1.3;height:26px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(p.name) + '</div>'
-          + '<div style="font-size:9px;color:rgba(107,68,35,0.42);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:\'Montserrat\',sans-serif;">' + (weightInfo ? escHtml(weightInfo) : '&nbsp;') + '</div>'
-          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;">'
-          + '<div><span style="font-size:13px;font-weight:700;color:#2d1505;font-family:\'Montserrat\',sans-serif;line-height:1;">' + price.toFixed(2) + '</span><span style="font-size:9px;font-weight:500;color:#C9A227;margin-left:2px;">BYN</span></div>'
-          + '<button onclick="event.stopPropagation();addToCart(\'' + p.id + '\')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;line-height:1;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.40);">+</button>'
-          + '</div></div></div></div>';
-      }).join('');
+
+      // Skip full rebuild if same product set — just refresh button zones in-place
+      var pickIds = picks.map(function(p) { return p.id; }).join(',');
+      if (_csPickIds === pickIds && container.querySelectorAll(':scope > div').length > 0) {
+        picks.forEach(function(p) { updateCsSuggCard(p.id); });
+        return;
+      }
+      _csPickIds = pickIds;
+      _csTotalReal = picks.length;
+      _csCloneCount = _csTotalReal;
+
+      container.style.paddingLeft = '0';
+      container.style.paddingRight = '0';
+
+      // Layout: [clones][real][clones] for infinite loop
+      var realHTML = picks.map(function(p) { return csSuggCardHTML(p); });
+      container.innerHTML = realHTML.concat(realHTML).concat(realHTML).join('');
+
+      var cards = Array.from(container.querySelectorAll(':scope > div'));
+      cards.forEach(function(card) {
+        card.style.flexShrink = '0';
+        card.style.willChange = 'transform';
+        card.style.transition = 'none';
+        card.style.transform = 'scale(0.86)';
+        card.style.opacity = '0.7';
+      });
+      var startIdx = _csCloneCount;
+
+      requestAnimationFrame(function() {
+        if (!cards.length) return;
+        var realW = cards[0].offsetWidth;
+        if (realW > 0) CS_CARD_W = realW;
+        if (cards.length > 1) {
+          var gap = cards[1].offsetLeft - cards[0].offsetLeft - CS_CARD_W;
+          if (gap >= 0) CS_GAP = gap;
+        }
+        var screenW = (csEl ? csEl.offsetWidth : 0) || window.innerWidth || 375;
+        var sideOff = Math.round((screenW - CS_CARD_W) / 2);
+        container.style.paddingLeft = sideOff + 'px';
+        container.style.paddingRight = sideOff + 'px';
+
+        requestAnimationFrame(function() {
+          if (csEl) csEl.scrollLeft = startIdx * (CS_CARD_W + CS_GAP);
+          requestAnimationFrame(function() {
+            cards.forEach(function(card, i) {
+              card.style.transform = i === startIdx ? 'scale(1)' : 'scale(0.86)';
+              card.style.opacity = i === startIdx ? '1' : '0.7';
+            });
+            setTimeout(function() {
+              cards.forEach(function(card) {
+                card.style.transition = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.22s ease';
+              });
+            }, 60);
+          });
+        });
+      });
+    }
+
+    function onCartSuggestionsScroll(el) {
+      if (_csRaf) return;
+      _csRaf = requestAnimationFrame(function() {
+        _csRaf = null;
+        var cards = document.querySelectorAll('#cs-items > div');
+        if (!cards.length) return;
+        var center = el.scrollLeft + el.offsetWidth / 2;
+        var activeIdx = 0, minDist = Infinity;
+        cards.forEach(function(card, i) {
+          var dist = Math.abs((card.offsetLeft + card.offsetWidth / 2) - center);
+          if (dist < minDist) { minDist = dist; activeIdx = i; }
+        });
+        cards.forEach(function(card, i) {
+          card.style.transform = i === activeIdx ? 'scale(1)' : 'scale(0.86)';
+          card.style.opacity = i === activeIdx ? '1' : '0.7';
+        });
+        clearTimeout(_csScrollStopTimer);
+        _csScrollStopTimer = setTimeout(function() { _csLoopCheck(el, cards, activeIdx); }, 80);
+      });
+    }
+
+    function _csLoopCheck(el, cards, activeIdx) {
+      var jump = 0;
+      if (activeIdx < _csCloneCount) jump = _csTotalReal;
+      else if (activeIdx >= _csCloneCount + _csTotalReal) jump = -_csTotalReal;
+      if (!jump) return;
+      var toIdx = activeIdx + jump;
+      cards.forEach(function(card) { card.style.transition = 'none'; });
+      el.scrollLeft += jump * (CS_CARD_W + CS_GAP);
+      cards.forEach(function(card, i) {
+        card.style.transform = i === toIdx ? 'scale(1)' : 'scale(0.86)';
+        card.style.opacity = i === toIdx ? '1' : '0.7';
+      });
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          cards.forEach(function(card) {
+            card.style.transition = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.22s ease';
+          });
+        });
+      });
     }
 
     // ── Happy Hour ─────────────────────────────────────────────────────────────
