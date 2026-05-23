@@ -444,6 +444,52 @@
        <div id="cart-suggestions" class="hide-scrollbar" style="display:flex;overflow-x:auto;gap:10px;padding:4px 20px 10px;-webkit-overflow-scrolling:touch;scroll-snap-type:x start;"></div>
       </div>
      </div>
+
+     <!-- Freshness promise block -->
+     <div id="cart-freshness-block" style="display:none;background:#FDF8F2;border-radius:0 0 28px 28px;margin-top:-2px;padding:18px 20px 24px;position:relative;overflow:hidden;box-shadow:0 6px 24px rgba(180,140,80,0.09);">
+      <!-- Wheat illustration -->
+      <svg width="110" height="96" viewBox="0 0 110 96" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;right:-4px;bottom:-4px;opacity:0.18;pointer-events:none;">
+       <!-- central stalk -->
+       <line x1="55" y1="96" x2="55" y2="18" stroke="#C9A227" stroke-width="2" stroke-linecap="round"/>
+       <ellipse cx="55" cy="13" rx="5" ry="10" fill="#C9A227"/>
+       <ellipse cx="49" cy="22" rx="4" ry="8" fill="#C9A227" transform="rotate(-18 49 22)"/>
+       <ellipse cx="61" cy="22" rx="4" ry="8" fill="#C9A227" transform="rotate(18 61 22)"/>
+       <ellipse cx="45" cy="32" rx="3.5" ry="7" fill="#C9A227" transform="rotate(-24 45 32)"/>
+       <ellipse cx="65" cy="32" rx="3.5" ry="7" fill="#C9A227" transform="rotate(24 65 32)"/>
+       <!-- left stalk -->
+       <line x1="38" y1="96" x2="38" y2="32" stroke="#C9A227" stroke-width="1.6" stroke-linecap="round"/>
+       <ellipse cx="38" cy="27" rx="4" ry="8.5" fill="#C9A227"/>
+       <ellipse cx="32" cy="36" rx="3.5" ry="7" fill="#C9A227" transform="rotate(-20 32 36)"/>
+       <ellipse cx="44" cy="36" rx="3.5" ry="7" fill="#C9A227" transform="rotate(20 44 36)"/>
+       <!-- right stalk -->
+       <line x1="72" y1="96" x2="72" y2="32" stroke="#C9A227" stroke-width="1.6" stroke-linecap="round"/>
+       <ellipse cx="72" cy="27" rx="4" ry="8.5" fill="#C9A227"/>
+       <ellipse cx="66" cy="36" rx="3.5" ry="7" fill="#C9A227" transform="rotate(-20 66 36)"/>
+       <ellipse cx="78" cy="36" rx="3.5" ry="7" fill="#C9A227" transform="rotate(20 78 36)"/>
+       <!-- far left stalk -->
+       <line x1="22" y1="96" x2="22" y2="46" stroke="#C9A227" stroke-width="1.3" stroke-linecap="round"/>
+       <ellipse cx="22" cy="41" rx="3" ry="7" fill="#C9A227"/>
+       <ellipse cx="17" cy="49" rx="3" ry="6" fill="#C9A227" transform="rotate(-18 17 49)"/>
+       <!-- far right stalk -->
+       <line x1="88" y1="96" x2="88" y2="46" stroke="#C9A227" stroke-width="1.3" stroke-linecap="round"/>
+       <ellipse cx="88" cy="41" rx="3" ry="7" fill="#C9A227"/>
+       <ellipse cx="93" cy="49" rx="3" ry="6" fill="#C9A227" transform="rotate(18 93 49)"/>
+      </svg>
+      <!-- Content -->
+      <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:1;">
+       <!-- Clock icon -->
+       <div style="width:52px;height:52px;border-radius:50%;border:2px solid #C9A227;background:rgba(201,162,39,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="26" height="26" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+         <circle cx="12" cy="12" r="10"/>
+         <polyline points="12 6 12 12 16 14"/>
+        </svg>
+       </div>
+       <div>
+        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#2d1505;line-height:1.3;">Готовим свежо каждый день</div>
+        <div style="font-size:12px;color:#9a8060;margin-top:5px;line-height:1.45;">Ваш заказ будет готов<br>в указанное время</div>
+       </div>
+      </div>
+     </div>
     </div>
 
     <!-- Bottom checkout bar — floating pill -->
@@ -2178,8 +2224,10 @@
       const pool = products.filter(p => !cartIds.has(p.id));
       const picks = pool.filter(p => p.bestseller).slice(0, 8);
       if (picks.length < 8) { const extra = pool.filter(p => !p.bestseller).slice(0, 8 - picks.length); picks.push(...extra); }
-      if (picks.length === 0) { section.style.display = 'none'; return; }
+      const freshness = document.getElementById('cart-freshness-block');
+      if (picks.length === 0) { section.style.display = 'none'; if (freshness) freshness.style.display = 'none'; return; }
       section.style.display = 'block';
+      if (freshness) freshness.style.display = 'block';
       container.innerHTML = picks.map(function(p) {
         var price = happyPrice(p);
         var imgHTML = productImages[p.id]
