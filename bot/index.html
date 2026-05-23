@@ -2144,7 +2144,7 @@
           + '<button onclick="addToCart(\'' + p.id + '\')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.35);">+</button>'
           + '</div></div></div></div>';
       }).join('');
-      var midIdx = Math.floor((picks.length - 1) / 2);
+      var midIdx = Math.floor(picks.length / 2);
       _setCoverFlowActive(container, midIdx, picks.length);
       requestAnimationFrame(function() {
         container.scrollLeft = midIdx * (CFLOW_CARD_W + CFLOW_GAP);
