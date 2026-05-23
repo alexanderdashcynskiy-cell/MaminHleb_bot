@@ -275,7 +275,7 @@
      </div>
      <div class="relative">
       <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar pb-2" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;" onscroll="onBestsellerScroll(this)">
-       <div class="flex gap-3" id="bestsellers-items"></div>
+       <div class="flex" style="gap:10px;" id="bestsellers-items"></div>
       </div>
       <button onclick="scrollBestsellersLeft()" class="absolute left-0 top-1/3 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg hidden sm:flex">
        <svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
@@ -1711,9 +1711,9 @@
 
       if (compact) {
         return `
-          <div class="flex-shrink-0" style="width:200px;${!available ? 'opacity:0.55;' : ''}" data-pid="${p.id}">
+          <div class="flex-shrink-0" style="width:180px;${!available ? 'opacity:0.55;' : ''}" data-pid="${p.id}">
             <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col" style="isolation:isolate;">
-              <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl group/img" style="height:160px;">
+              <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl group/img" style="height:144px;">
                 <div class="w-full h-full">${imgHTML}</div>
                 ${oosOverlay}
               </button>
