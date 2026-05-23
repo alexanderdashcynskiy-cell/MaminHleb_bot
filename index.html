@@ -919,33 +919,73 @@
 
   <!-- Preorder Screen -->
   <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
-   <header class="bg-warmWhite px-4 py-4 z-10 shadow-sm flex items-center gap-3 flex-shrink-0">
-    <button onclick="showScreen('main')" class="w-10 h-10 bg-beige rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
-    <h2 class="text-xl font-bold text-coffee">🌅 Утренний предзаказ</h2>
+   <header style="background:#FFF8F0;padding:max(env(safe-area-inset-top,12px),12px) 16px 12px;z-index:10;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.06);">
+    <button onclick="showScreen('main')" style="width:40px;height:40px;background:#F5EEE6;border-radius:12px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <h2 style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#3d1f0a;margin:0;">🌅 Утренний предзаказ</h2>
    </header>
-   <div class="flex-1 px-4 py-4 overflow-y-auto pb-32" style="-webkit-overflow-scrolling:touch;overflow-x:hidden;width:100%;">
-    <form onsubmit="submitPreorder(event)" class="space-y-4">
-     <div>
-      <label class="block text-sm font-semibold text-coffee mb-3">Выберите товары</label>
+   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overflow-x:hidden;">
+    <form id="preorder-form" onsubmit="submitPreorder(event)" style="padding:16px 16px 20px;">
+     <!-- Product grid -->
+     <div style="margin-bottom:20px;">
+      <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:10px;">Выберите товары</label>
       <div id="preorder-products" class="grid grid-cols-3 gap-2" style="overflow-x:hidden;width:100%;"></div>
      </div>
-     <!-- Блок выбора времени -->
-     <div style="display:flex;gap:8px;align-items:flex-end;">
+     <!-- Section title -->
+     <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#3d1f0a;margin-bottom:16px;">Данные для заказа</div>
+     <!-- Date + Time -->
+     <div style="display:flex;gap:10px;margin-bottom:16px;">
       <div style="flex:1;min-width:0;">
-       <label class="block font-semibold text-coffee mb-1" style="font-size:11px;">Дата*</label>
-       <input type="date" id="preorder-date" class="border-2 border-beige focus:outline-none focus:border-gold transition-colors" style="font-size:10px;padding:3px 8px;box-sizing:border-box;width:100%;min-width:0;border-radius:9999px;" required>
+       <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Дата*</label>
+       <div style="position:relative;background:#fff;border-radius:16px;padding:14px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 6px rgba(0,0,0,0.07);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="preorder-date-display" style="font-size:14px;color:#b0a898;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Выберите дату</span>
+        <input type="date" id="preorder-date" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;" oninput="updatePreorderDateDisplay(this)" required>
+       </div>
       </div>
       <div style="flex:1;min-width:0;">
-       <label class="block font-semibold text-coffee mb-1" style="font-size:11px;">Время (07–11)*</label>
-       <input type="time" id="preorder-time" min="07:00" max="11:00" class="border-2 border-beige focus:outline-none focus:border-gold transition-colors" style="font-size:10px;padding:3px 8px;box-sizing:border-box;width:100%;min-width:0;border-radius:9999px;" required>
+       <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Время (07–11)*</label>
+       <div style="position:relative;background:#fff;border-radius:16px;padding:14px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 6px rgba(0,0,0,0.07);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="preorder-time-display" style="font-size:14px;color:#b0a898;flex:1;min-width:0;">Выберите время</span>
+        <input type="time" id="preorder-time" min="07:00" max="11:00" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;" oninput="updatePreorderTimeDisplay(this)" required>
+       </div>
       </div>
      </div>
-     <div><label class="block text-sm font-semibold text-coffee mb-2">Ваше имя*</label><input type="text" id="preorder-name" placeholder="Введите имя" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" required></div>
-     <div><label class="block text-sm font-semibold text-coffee mb-2">Номер телефона*</label><input type="tel" id="preorder-phone" placeholder="+375 (XX) XXX-XX-XX" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors" oninput="formatPhone(this)" maxlength="19" required></div>
-     <div><label class="block text-sm font-semibold text-coffee mb-2">Примечание (опционально)</label><textarea id="preorder-note" placeholder="Ваши пожелания..." rows="1" class="w-full px-4 py-3 border-2 border-beige rounded-xl focus:outline-none focus:border-gold transition-colors resize-none"></textarea></div>
-     <div class="bg-gradient-to-br from-gold/10 to-caramel/10 rounded-2xl p-4 border-2 border-gold/40"><div class="flex justify-between items-center"><span class="font-bold text-coffee">Итого:</span><span class="text-2xl font-bold text-gold"><span id="preorder-total">0.00</span> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display:inline-block;width:1em;height:1em;vertical-align:-0.15em;fill:currentColor"><rect x="8" y="4" width="2" height="16"/><rect x="8" y="4" width="10" height="2"/><rect x="5" y="14" width="7" height="2"/><path d="M8 10L13 10A5 5 0 0 1 13 20L8 20L8 18L13 18A3 3 0 0 0 13 12L8 12Z"/></svg></span></div></div>
-     <button type="submit" id="submit-preorder-btn" class="w-full text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all" style="background:linear-gradient(90deg,#C9A227,#D4A574);touch-action:manipulation;">Забронировать предзаказ</button>
+     <!-- Name -->
+     <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Ваше имя*</label>
+      <div style="background:#fff;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 6px rgba(0,0,0,0.07);">
+       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+       <input type="text" id="preorder-name" placeholder="Введите ваше имя" style="border:none;outline:none;background:transparent;font-size:15px;color:#3d1f0a;flex:1;min-width:0;font-family:'Montserrat',sans-serif;" required>
+      </div>
+     </div>
+     <!-- Phone -->
+     <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Номер телефона*</label>
+      <div style="background:#fff;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 6px rgba(0,0,0,0.07);">
+       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.7A2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.06 6.06l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+       <input type="tel" id="preorder-phone" placeholder="+375 (XX) XXX-XX-XX" style="border:none;outline:none;background:transparent;font-size:15px;color:#3d1f0a;flex:1;min-width:0;font-family:'Montserrat',sans-serif;" oninput="formatPhone(this)" maxlength="19" required>
+      </div>
+     </div>
+     <!-- Note -->
+     <div style="margin-bottom:8px;">
+      <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:8px;">Примечание (опционально)</label>
+      <div style="background:#fff;border-radius:16px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 6px rgba(0,0,0,0.07);">
+       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+       <textarea id="preorder-note" placeholder="Ваши пожелания..." rows="1" style="border:none;outline:none;background:transparent;font-size:15px;color:#3d1f0a;flex:1;min-width:0;resize:none;font-family:'Montserrat',sans-serif;line-height:1.4;"></textarea>
+      </div>
+     </div>
     </form>
+   </div>
+   <!-- Fixed bottom bar -->
+   <div style="flex-shrink:0;border-top:1px solid #EDE8E3;padding:12px 16px;padding-bottom:max(env(safe-area-inset-bottom,16px),16px);background:#FFF8F0;display:flex;align-items:center;gap:10px;">
+    <div style="background:#FFF2D8;border-radius:14px;padding:10px 14px;display:flex;align-items:baseline;gap:5px;white-space:nowrap;">
+     <span style="font-size:14px;font-weight:700;color:#3d1f0a;font-family:'Montserrat',sans-serif;">Итого:</span>
+     <span style="font-size:20px;font-weight:800;color:#C9A227;font-family:'Montserrat',sans-serif;"><span id="preorder-total">0.00</span> BYN</span>
+    </div>
+    <button type="submit" form="preorder-form" id="submit-preorder-btn" style="flex:1;padding:16px 10px;background:linear-gradient(90deg,#C9A227,#D4A574);color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:16px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.01em;">Забронировать предзаказ</button>
    </div>
   </div>
 
@@ -2440,6 +2480,31 @@
       showScreen('main');
     }
 
+    function updatePreorderDateDisplay(input) {
+      var el = document.getElementById('preorder-date-display');
+      if (!el) return;
+      if (input.value) {
+        var p = input.value.split('-');
+        el.textContent = p[2] + '.' + p[1] + '.' + p[0];
+        el.style.color = '#3d1f0a';
+      } else {
+        el.textContent = 'Выберите дату';
+        el.style.color = '#b0a898';
+      }
+    }
+
+    function updatePreorderTimeDisplay(input) {
+      var el = document.getElementById('preorder-time-display');
+      if (!el) return;
+      if (input.value) {
+        el.textContent = input.value;
+        el.style.color = '#3d1f0a';
+      } else {
+        el.textContent = 'Выберите время';
+        el.style.color = '#b0a898';
+      }
+    }
+
     // ── Floating cart ──────────────────────────────────────────────────────────
     function updateFloatingCart() {
       const floatingCartBtn = document.getElementById('floating-cart-btn');
@@ -2612,6 +2677,8 @@
         document.getElementById('preorder-note').value = '';
         document.getElementById('preorder-date').value = '';
         document.getElementById('preorder-time').value = '';
+        var dd = document.getElementById('preorder-date-display'); if (dd) { dd.textContent = 'Выберите дату'; dd.style.color = '#b0a898'; }
+        var td = document.getElementById('preorder-time-display'); if (td) { td.textContent = 'Выберите время'; td.style.color = '#b0a898'; }
         btn.disabled = false; btn.textContent = 'Забронировать предзаказ';
         _preorderLock = false;
         showPreorderReceipt(orderId, name, phone, cartSnapshot, total, savedPreorderTime);
