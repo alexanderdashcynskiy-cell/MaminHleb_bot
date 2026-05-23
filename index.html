@@ -464,19 +464,26 @@
     </div>
 
     <!-- Fixed footer: compact bottom bar -->
-    <div id="cart-footer" style="display:none;flex-shrink:0;padding:8px 16px calc(10px + env(safe-area-inset-bottom,12px));background:#F5F5F5;">
-     <div style="background:#fff;border-radius:20px;padding:10px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
-      <!-- Bag icon -->
-      <div style="width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#C9A227,#D4A574);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-       <svg width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    <div id="cart-footer" style="display:none;flex-shrink:0;background:#fff;border-top:1px solid rgba(0,0,0,0.06);box-shadow:0 -4px 20px rgba(0,0,0,0.08);padding:12px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));">
+     <div style="display:flex;align-items:center;gap:12px;">
+      <!-- Bag icon in beige square -->
+      <div style="width:48px;height:48px;border-radius:14px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+       <svg width="24" height="24" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
       </div>
-      <!-- Items info + price -->
-      <div style="flex:1;min-width:0;">
-       <div style="font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span id="cart-items-count">0</span> <span id="cart-footer-item-word">товар</span> · <span id="cart-footer-delivery-type">Самовывоз</span></div>
-       <div style="font-size:18px;font-weight:800;color:#C9A227;line-height:1.25;"><span id="cart-total-full">0.00</span> Br</div>
+      <!-- Items info -->
+      <div style="min-width:0;">
+       <div style="font-size:14px;font-weight:700;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-items-count">0</span> <span id="cart-footer-item-word">товар</span></div>
+       <div style="font-size:12px;color:#aaa;margin-top:2px;white-space:nowrap;"><span id="cart-footer-delivery-type">Самовывоз 📍</span></div>
+      </div>
+      <!-- Vertical divider -->
+      <div style="width:1px;height:36px;background:rgba(0,0,0,0.1);flex-shrink:0;"></div>
+      <!-- Price -->
+      <div style="min-width:0;">
+       <div style="font-size:18px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-total-full">0.00</span> <span style="font-size:13px;font-weight:700;">BYN</span></div>
+       <div style="font-size:12px;color:#aaa;margin-top:2px;">Итого</div>
       </div>
       <!-- Checkout button -->
-      <button id="cart-checkout-btn" onclick="startCheckout()" style="background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:14px;padding:12px 14px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:14px;font-weight:800;color:#fff;letter-spacing:0.03em;box-shadow:0 4px 14px rgba(201,162,39,0.35);white-space:nowrap;transition:transform 0.15s ease;"><span style="pointer-events:none;">Оформить →</span></button>
+      <button id="cart-checkout-btn" onclick="startCheckout()" style="flex:1;margin-left:4px;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:14px 12px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:14px;font-weight:700;color:#fff;box-shadow:0 4px 14px rgba(201,162,39,0.4);white-space:nowrap;transition:transform 0.15s ease;"><span style="pointer-events:none;">Оформить заказ →</span></button>
      </div>
      <!-- Hidden compat elements used by JS -->
      <span id="cart-subtotal-display" style="display:none;"></span>
