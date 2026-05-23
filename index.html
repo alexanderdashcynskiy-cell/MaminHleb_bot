@@ -506,83 +506,106 @@
    </div>
 
    <!-- Checkout Screen -->
-   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#F2E8DA;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+    <div style="flex:1;overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch;">
 
-    <!-- Header -->
-    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px;background:#FFF8F0;">
-     <button onclick="showScreen('cart')" style="width:44px;height:44px;border-radius:14px;background:rgba(0,0,0,0.05);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <svg width="20" height="20" fill="none" stroke="#3d1f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
-     </button>
-     <div style="text-align:center;">
-      <div style="font-size:20px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;line-height:1.2;">Мамин хлеб</div>
-      <div style="font-size:12px;color:#a07b50;line-height:1.4;margin-top:2px;">мини приложение</div>
+     <!-- Header with illustration -->
+     <div style="position:relative;padding:max(env(safe-area-inset-top,20px),36px) 20px 18px;overflow:hidden;">
+      <button onclick="showScreen('cart')" style="position:absolute;top:max(env(safe-area-inset-top,8px),20px);left:16px;width:36px;height:36px;border-radius:10px;background:rgba(0,0,0,0.06);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;z-index:3;">
+       <svg width="18" height="18" fill="none" stroke="#3d1f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="text-align:center;position:relative;z-index:1;padding-right:80px;">
+       <div style="font-size:28px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;line-height:1.2;">Мамин хлеб</div>
+       <div style="font-size:14px;color:#C9A227;font-weight:600;margin-top:4px;letter-spacing:0.01em;">Оформление заказа</div>
+      </div>
+      <!-- Wheat & bread illustration -->
+      <div style="position:absolute;right:0;top:0;width:170px;height:160px;pointer-events:none;z-index:2;">
+       <svg width="170" height="160" viewBox="0 0 170 160" fill="none" xmlns="http://www.w3.org/2000/svg" opacity="0.3">
+        <path d="M122 158 Q119 118 116 52" stroke="#8B6040" stroke-width="1.5" fill="none"/>
+        <ellipse cx="116" cy="52" rx="5.5" ry="12" fill="none" stroke="#8B6040" stroke-width="1.2"/>
+        <ellipse cx="110" cy="65" rx="5" ry="9" fill="none" stroke="#8B6040" stroke-width="1.1" transform="rotate(-18 110 65)"/>
+        <ellipse cx="122" cy="65" rx="5" ry="9" fill="none" stroke="#8B6040" stroke-width="1.1" transform="rotate(18 122 65)"/>
+        <ellipse cx="109" cy="80" rx="4.5" ry="8" fill="none" stroke="#8B6040" stroke-width="1" transform="rotate(-22 109 80)"/>
+        <ellipse cx="123" cy="80" rx="4.5" ry="8" fill="none" stroke="#8B6040" stroke-width="1" transform="rotate(22 123 80)"/>
+        <ellipse cx="108" cy="94" rx="4" ry="7" fill="none" stroke="#8B6040" stroke-width="1" transform="rotate(-20 108 94)"/>
+        <ellipse cx="124" cy="94" rx="4" ry="7" fill="none" stroke="#8B6040" stroke-width="1" transform="rotate(20 124 94)"/>
+        <path d="M148 158 Q147 122 145 60" stroke="#8B6040" stroke-width="1.5" fill="none"/>
+        <ellipse cx="145" cy="60" rx="5" ry="11" fill="none" stroke="#8B6040" stroke-width="1.2"/>
+        <ellipse cx="139" cy="73" rx="4.5" ry="8" fill="none" stroke="#8B6040" stroke-width="1.1" transform="rotate(-18 139 73)"/>
+        <ellipse cx="151" cy="73" rx="4.5" ry="8" fill="none" stroke="#8B6040" stroke-width="1.1" transform="rotate(18 151 73)"/>
+        <ellipse cx="138" cy="87" rx="4" ry="7" fill="none" stroke="#8B6040" stroke-width="1" transform="rotate(-22 138 87)"/>
+        <ellipse cx="152" cy="87" rx="4" ry="7" fill="none" stroke="#8B6040" stroke-width="1" transform="rotate(22 152 87)"/>
+        <ellipse cx="88" cy="132" rx="44" ry="26" fill="none" stroke="#8B6040" stroke-width="1.4"/>
+        <path d="M44 132 Q50 104 88 102 Q126 104 132 132" fill="none" stroke="#8B6040" stroke-width="1.4"/>
+        <path d="M66 107 Q69 119 68 140" fill="none" stroke="#8B6040" stroke-width="1"/>
+        <path d="M88 103 Q91 117 90 143" fill="none" stroke="#8B6040" stroke-width="1"/>
+        <path d="M110 107 Q113 119 112 140" fill="none" stroke="#8B6040" stroke-width="1"/>
+       </svg>
+      </div>
      </div>
-     <div style="width:44px;"></div>
-    </div>
 
-    <!-- Form title -->
-    <div style="flex-shrink:0;text-align:center;padding:8px 20px 22px;">
-     <h2 style="font-size:28px;font-weight:700;color:#3d1f0a;font-family:'Playfair Display',serif;margin:0 0 8px;">Оформление заказа</h2>
-     <p style="font-size:14px;color:#a07b50;margin:0;">Заполните данные для оформления заказа</p>
-    </div>
+     <!-- Form -->
+     <form onsubmit="submitCheckout(event)" style="padding:0 16px 32px;">
 
-    <!-- Scrollable form -->
-    <div style="flex:1;overflow-y:auto;min-height:0;padding:0 20px 40px;">
-     <form onsubmit="submitCheckout(event)">
+      <!-- Контактные данные -->
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#3d1f0a;margin-bottom:14px;">Контактные данные</div>
 
       <!-- Имя -->
-      <div style="margin-bottom:20px;">
-       <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:10px;">Ваше имя*</label>
-       <div style="background:#fff;border-radius:18px;padding:8px 16px 8px 8px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 14px rgba(140,100,60,0.09);">
-        <div style="width:46px;height:46px;border-radius:13px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-         <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
+      <div style="background:#fff;border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 8px rgba(140,100,60,0.08);margin-bottom:10px;">
+       <div style="width:42px;height:42px;border-radius:50%;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="19" height="19" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+       </div>
+       <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:#C9A227;margin-bottom:3px;">Ваше имя*</div>
         <input type="text" id="checkout-name" placeholder="Введите ваше имя" required
-         style="flex:1;border:none;outline:none;background:transparent;font-size:16px;color:#3d1f0a;font-family:inherit;padding:10px 0;">
+         style="width:100%;box-sizing:border-box;border:none;outline:none;background:transparent;font-size:16px;color:#3d1f0a;font-family:inherit;padding:0;line-height:1.4;">
        </div>
       </div>
 
       <!-- Телефон -->
-      <div style="margin-bottom:20px;">
-       <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:10px;">Номер телефона*</label>
-       <div style="background:#fff;border-radius:18px;padding:8px 16px 8px 8px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 14px rgba(140,100,60,0.09);">
-        <div style="width:46px;height:46px;border-radius:13px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-         <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.5 19.79 19.79 0 012 .82 2 2 0 014 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-        </div>
+      <div style="background:#fff;border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 8px rgba(140,100,60,0.08);margin-bottom:22px;">
+       <div style="width:42px;height:42px;border-radius:50%;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="19" height="19" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.5 19.79 19.79 0 012 .82 2 2 0 014 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+       </div>
+       <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:#C9A227;margin-bottom:3px;">Номер телефона*</div>
         <input type="tel" id="checkout-phone" placeholder="+375 (хх) ХХХ-ХХ-ХХ" maxlength="19" required
          oninput="formatPhone(this)"
-         style="flex:1;border:none;outline:none;background:transparent;font-size:16px;color:#3d1f0a;font-family:inherit;padding:10px 0;">
+         style="width:100%;box-sizing:border-box;border:none;outline:none;background:transparent;font-size:16px;color:#3d1f0a;font-family:inherit;padding:0;line-height:1.4;">
        </div>
       </div>
 
-      <!-- Адрес доставки -->
-      <div id="address-section" style="display:none;margin-bottom:20px;">
-       <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:10px;">Адрес доставки*</label>
+      <!-- Адрес доставки (delivery only) -->
+      <div id="address-section" style="display:none;margin-bottom:22px;">
+       <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#3d1f0a;margin-bottom:14px;">Адрес доставки</div>
        <div style="position:relative;margin-bottom:10px;">
-        <div style="background:#fff;border-radius:18px;padding:8px 16px 8px 8px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 14px rgba(140,100,60,0.09);">
-         <div style="width:46px;height:46px;border-radius:13px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div style="background:#fff;border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 8px rgba(140,100,60,0.08);">
+         <div style="width:42px;height:42px;border-radius:50%;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="19" height="19" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
          </div>
-         <input type="text" id="checkout-address" placeholder="Улица и номер дома*" autocomplete="off"
-          oninput="filterAddressSuggestions(this.value)" onfocus="filterAddressSuggestions(this.value)"
-          style="flex:1;border:none;outline:none;background:transparent;font-size:16px;color:#3d1f0a;font-family:inherit;padding:10px 0;">
+         <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:#C9A227;margin-bottom:3px;">Улица и дом*</div>
+          <input type="text" id="checkout-address" placeholder="Улица и номер дома" autocomplete="off"
+           oninput="filterAddressSuggestions(this.value)" onfocus="filterAddressSuggestions(this.value)"
+           style="width:100%;box-sizing:border-box;border:none;outline:none;background:transparent;font-size:16px;color:#3d1f0a;font-family:inherit;padding:0;line-height:1.4;">
+         </div>
         </div>
         <div id="address-dropdown" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border-radius:0 0 14px 14px;z-index:100;max-height:180px;overflow-y:auto;box-shadow:0 8px 20px rgba(0,0,0,0.12);margin-top:2px;"></div>
        </div>
        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
         <input type="number" inputmode="numeric" id="checkout-building" placeholder="Корп." autocomplete="off"
-         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:14px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 2px 10px rgba(140,100,60,0.09);">
+         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:14px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 1px 6px rgba(140,100,60,0.08);">
         <input type="number" inputmode="numeric" id="checkout-entrance" placeholder="Подъезд" autocomplete="off"
-         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:14px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 2px 10px rgba(140,100,60,0.09);">
+         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:14px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 1px 6px rgba(140,100,60,0.08);">
         <input type="number" inputmode="numeric" id="checkout-floor" placeholder="Этаж" autocomplete="off"
-         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:14px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 2px 10px rgba(140,100,60,0.09);">
+         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:14px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 1px 6px rgba(140,100,60,0.08);">
         <input type="number" inputmode="numeric" id="checkout-apartment" placeholder="Кв." autocomplete="off"
-         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:14px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 2px 10px rgba(140,100,60,0.09);">
+         style="width:100%;box-sizing:border-box;background:#fff;border:none;border-radius:50px;padding:14px 6px;font-size:13px;color:#3d1f0a;text-align:center;outline:none;font-family:inherit;box-shadow:0 1px 6px rgba(140,100,60,0.08);">
        </div>
       </div>
 
-      <!-- Способ оплаты -->
-      <div id="payment-section" style="display:none;margin-bottom:20px;">
+      <!-- Способ оплаты (delivery only — keep existing toggle) -->
+      <div id="payment-section" style="display:none;margin-bottom:22px;">
        <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:10px;">Способ оплаты*</label>
        <div id="payment-toggle" style="position:relative;background:rgba(255,255,255,0.18);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:2.5rem;padding:5px;border:1px solid rgba(255,255,255,0.35);box-shadow:0 20px 40px rgba(0,0,0,0.08),inset 0 1px 2px rgba(255,255,255,0.55);overflow:hidden;">
         <div id="payment-slider" style="position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 7px);border-radius:2rem;background:linear-gradient(90deg,#C9A227,#D4A574);box-shadow:0 8px 20px rgba(201,162,39,0.35),inset 0 2px 8px rgba(255,255,255,0.3);transition:transform 0.42s cubic-bezier(0.34,1.56,0.64,1),opacity 0.25s ease;opacity:1;pointer-events:none;z-index:0;">
@@ -604,54 +627,107 @@
        <input type="hidden" id="checkout-payment" value="">
       </div>
 
+      <!-- Получение заказа -->
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#3d1f0a;margin-bottom:14px;">Получение заказа</div>
+
       <!-- Время (самовывоз) -->
-      <div id="pickup-time-section" style="display:none;margin-bottom:20px;">
-       <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:10px;">Время получения</label>
-       <div style="background:#fff;border-radius:18px;padding:8px 16px 8px 8px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 14px rgba(140,100,60,0.09);">
-        <div style="width:46px;height:46px;border-radius:13px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-         <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <div id="pickup-time-section" style="display:none;margin-bottom:0;">
+       <div style="background:#fff;border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 8px rgba(140,100,60,0.08);">
+        <div style="width:42px;height:42px;border-radius:50%;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+         <svg width="19" height="19" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <button type="button" id="pickup-time-row" onclick="togglePickupTimePicker()"
-         style="flex:1;border:none;outline:none;background:transparent;display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation;padding:10px 0;">
-         <span id="pickup-time-display" style="font-size:16px;color:#9ca3af;font-family:inherit;">Выберите время</span>
-         <svg style="width:18px;height:18px;color:#9ca3af;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+         style="flex:1;border:none;outline:none;background:transparent;display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation;padding:0;-webkit-tap-highlight-color:transparent;">
+         <div style="text-align:left;">
+          <div style="font-size:13px;font-weight:600;color:#C9A227;margin-bottom:3px;">Время получения</div>
+          <span id="pickup-time-display" style="font-size:16px;color:#9ca3af;font-family:inherit;line-height:1.4;">Выберите время</span>
+         </div>
+         <svg style="width:18px;height:18px;flex-shrink:0;margin-left:8px;" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M19 9l-7 7-7-7"/></svg>
         </button>
        </div>
-       <div id="pickup-time-chips" style="display:none;margin-top:10px;padding:16px;background:#fff;border-radius:18px;box-shadow:0 2px 14px rgba(140,100,60,0.09);">
+       <div id="pickup-time-chips" style="display:none;margin-top:8px;padding:14px 16px;background:#fff;border-radius:18px;box-shadow:0 1px 8px rgba(140,100,60,0.08);">
         <div style="display:flex;flex-wrap:wrap;gap:8px;" id="pickup-chips-container"></div>
        </div>
        <input type="hidden" id="checkout-pickup-time" value="">
+       <!-- Working hours hint -->
+       <div style="font-size:12px;color:#a07b50;margin:8px 0 16px;display:flex;align-items:center;gap:5px;padding:0 4px;">
+        <svg width="13" height="13" fill="none" stroke="#a07b50" stroke-width="1.6" viewBox="0 0 24 24" style="flex-shrink:0;pointer-events:none;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Заказы принимаются с 08:00 до 20:00
+       </div>
       </div>
 
       <!-- Примечание -->
-      <div style="margin-bottom:22px;">
-       <label style="display:block;font-size:14px;font-weight:700;color:#3d1f0a;margin-bottom:10px;">Примечание (опционально)</label>
-       <div style="background:#fff;border-radius:18px;padding:8px 16px 8px 8px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 2px 14px rgba(140,100,60,0.09);">
-        <div style="width:46px;height:46px;border-radius:13px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px;">
-         <svg width="19" height="19" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <div style="margin-bottom:8px;">
+       <div style="background:#fff;border-radius:18px;padding:14px 16px;display:flex;align-items:flex-start;gap:14px;box-shadow:0 1px 8px rgba(140,100,60,0.08);">
+        <div style="width:42px;height:42px;border-radius:50%;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">
+         <svg width="19" height="19" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         </div>
-        <textarea id="checkout-note" placeholder="Ваши пожелания..." rows="2"
-         style="flex:1;border:none;outline:none;background:transparent;font-size:16px;color:#3d1f0a;font-family:inherit;resize:none;padding:10px 0;"></textarea>
+        <div style="flex:1;min-width:0;">
+         <div style="font-size:13px;font-weight:600;color:#C9A227;margin-bottom:3px;">Примечание (опционально)</div>
+         <textarea id="checkout-note" placeholder="Ваши пожелания..." rows="2"
+          style="width:100%;box-sizing:border-box;border:none;outline:none;background:transparent;font-size:16px;color:#3d1f0a;font-family:inherit;resize:none;padding:0;line-height:1.4;"></textarea>
+        </div>
+       </div>
+      </div>
+      <!-- Note caption -->
+      <div style="font-size:12px;color:#a07b50;margin:6px 0 22px;display:flex;align-items:center;gap:5px;padding:0 4px;">
+       <svg width="13" height="13" fill="none" stroke="#a07b50" stroke-width="1.7" viewBox="0 0 24 24" style="flex-shrink:0;pointer-events:none;"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+       Мы сделаем всё, чтобы вам понравилось
+      </div>
+
+      <!-- Итого к оплате -->
+      <div style="background:#E5D0B8;border-radius:20px;padding:18px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;">
+       <div style="position:absolute;right:14px;bottom:-6px;pointer-events:none;opacity:0.22;">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+         <path d="M36 70 Q34 52 32 22" stroke="#6B4423" stroke-width="1.6" fill="none"/>
+         <ellipse cx="32" cy="22" rx="5.5" ry="12" fill="none" stroke="#6B4423" stroke-width="1.2"/>
+         <ellipse cx="27" cy="36" rx="5" ry="9" fill="none" stroke="#6B4423" stroke-width="1.1" transform="rotate(-18 27 36)"/>
+         <ellipse cx="37" cy="36" rx="5" ry="9" fill="none" stroke="#6B4423" stroke-width="1.1" transform="rotate(18 37 36)"/>
+         <ellipse cx="26" cy="51" rx="4.5" ry="8" fill="none" stroke="#6B4423" stroke-width="1" transform="rotate(-22 26 51)"/>
+         <ellipse cx="38" cy="51" rx="4.5" ry="8" fill="none" stroke="#6B4423" stroke-width="1" transform="rotate(22 38 51)"/>
+        </svg>
+       </div>
+       <div>
+        <div style="font-size:17px;font-weight:700;color:#3d1f0a;line-height:1.2;">Итого к оплате</div>
+        <div style="font-size:13px;color:#8b6040;margin-top:3px;">Оплата при получении</div>
+       </div>
+       <div style="display:flex;align-items:baseline;gap:5px;position:relative;z-index:1;">
+        <span style="font-size:32px;font-weight:800;color:#C9A227;font-family:'Montserrat',sans-serif;line-height:1;"><span id="checkout-total">0.00</span></span>
+        <span style="font-size:15px;font-weight:700;color:#C9A227;font-family:'Montserrat',sans-serif;">BYN</span>
        </div>
       </div>
 
-      <!-- Итого -->
-      <div style="background:#fff;border-radius:18px;padding:16px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 14px rgba(140,100,60,0.09);">
-       <div style="display:flex;align-items:center;gap:14px;">
-        <div style="width:46px;height:46px;border-radius:13px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-         <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-        </div>
-        <span style="font-size:15px;font-weight:700;color:#3d1f0a;">Итого к оплате:</span>
-       </div>
-       <span style="font-size:26px;font-weight:800;color:#C9A227;font-family:'Montserrat',sans-serif;"><span id="checkout-total">0.00</span> <span style="font-size:14px;font-weight:600;color:#a07b50;">BYN</span></span>
-      </div>
-
-      <!-- Кнопка подтвердить -->
+      <!-- Подтвердить заказ -->
       <button type="submit" id="submit-checkout-btn"
-       style="width:100%;position:relative;overflow:hidden;background:linear-gradient(90deg,#C9A227,#D4A574);border:none;border-radius:50px;padding:18px;font-size:17px;font-weight:800;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 24px rgba(201,162,39,0.38);letter-spacing:0.05em;">
+       style="width:100%;position:relative;overflow:hidden;background:linear-gradient(90deg,#C9A227,#D4A574);border:none;border-radius:50px;padding:0 20px;height:60px;font-size:17px;font-weight:800;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 24px rgba(201,162,39,0.38);letter-spacing:0.04em;display:flex;align-items:center;justify-content:center;gap:14px;">
+       <div style="width:42px;height:42px;border-radius:50%;background:rgba(61,31,10,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;pointer-events:none;">
+        <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+       </div>
        <span style="position:relative;z-index:1;">Подтвердить заказ</span>
        <div style="position:absolute;inset:0;background:linear-gradient(to right,transparent,rgba(255,255,255,0.28),transparent);transform:translateX(-100%) skewX(-12deg);animation:cat-shimmer 3s ease-in-out infinite;pointer-events:none;"></div>
       </button>
+
+      <!-- Trust badges -->
+      <div style="display:flex;justify-content:center;gap:4px;padding:22px 0 10px;">
+       <div style="flex:1;text-align:center;padding:0 6px;">
+        <div style="display:flex;justify-content:center;margin-bottom:6px;">
+         <svg width="22" height="22" fill="none" stroke="#a07b50" stroke-width="1.5" viewBox="0 0 24 24" style="opacity:0.7;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div style="font-size:11px;color:#8b6040;line-height:1.4;">Свежие продукты<br>каждый день</div>
+       </div>
+       <div style="flex:1;text-align:center;padding:0 6px;">
+        <div style="display:flex;justify-content:center;margin-bottom:6px;">
+         <svg width="22" height="22" fill="none" stroke="#a07b50" stroke-width="1.5" viewBox="0 0 24 24" style="opacity:0.7;"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <div style="font-size:11px;color:#8b6040;line-height:1.4;">Качество<br>и контроль</div>
+       </div>
+       <div style="flex:1;text-align:center;padding:0 6px;">
+        <div style="display:flex;justify-content:center;margin-bottom:6px;">
+         <svg width="22" height="22" fill="none" stroke="#a07b50" stroke-width="1.5" viewBox="0 0 24 24" style="opacity:0.7;"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </div>
+        <div style="font-size:11px;color:#8b6040;line-height:1.4;">Сделано<br>с любовью</div>
+       </div>
+      </div>
 
      </form>
     </div>
