@@ -408,7 +408,7 @@
 
     <!-- Scroll area -->
     <div style="flex:1 1 0%;overflow-y:auto;min-height:0;padding-bottom:130px;">
-     <div id="cart-items-full" class="hide-scrollbar" style="display:flex;flex-direction:column;gap:8px;padding:2px 10px 0;max-height:330px;overflow-y:auto;"></div>
+     <div id="cart-items-full" class="hide-scrollbar" style="display:flex;flex-direction:column;gap:8px;padding:2px 10px 0;max-height:210px;overflow-y:auto;"></div>
      <!-- Expand/collapse toggle -->
      <div id="cart-expand-wrap" style="display:none;padding:6px 10px 0;">
       <button id="cart-expand-btn" onclick="toggleCartExpand()" style="width:100%;background:none;border:1.5px solid rgba(201,162,39,0.35);border-radius:12px;padding:8px 12px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:6px;color:#C9A227;font-size:12px;font-weight:700;font-family:'Montserrat',sans-serif;letter-spacing:0.03em;">
@@ -2211,7 +2211,7 @@
         expandWrap.style.display = cart.length > 2 ? 'block' : 'none';
         if (cart.length <= 2 && _cartExpanded) {
           _cartExpanded = false;
-          itemsContainer.style.maxHeight = '330px';
+          itemsContainer.style.maxHeight = '210px';
           itemsContainer.style.overflowY = 'auto';
         }
       }
