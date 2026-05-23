@@ -209,52 +209,17 @@
       <div class="relative overflow-hidden rounded-3xl shadow-lg" style="height:220px;" id="carousel-wrapper">
        <div id="carousel-container" class="flex transition-transform duration-500 ease-out" style="height:220px;">
        <!-- Slide 1: Счастливый час -->
-       <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;display:flex;flex-shrink:0;">
-        <div style="flex:1;padding:22px 12px 22px 22px;display:flex;flex-direction:column;justify-content:center;gap:5px;position:relative;z-index:2;">
-         <div style="font-family:'Playfair Display',serif;font-size:21px;font-weight:700;color:#3d1f0a;line-height:1.15;">Счастливый час</div>
-         <div style="font-family:'Playfair Display',serif;font-size:12px;color:#8b6040;margin-bottom:2px;">в «Мамином Хлебе»</div>
-         <div style="display:inline-flex;background:rgba(160,97,42,0.15);border-radius:6px;padding:3px 8px;width:fit-content;">
-          <span style="font-size:10px;font-weight:700;color:#8b5e1a;letter-spacing:0.08em;font-family:'Montserrat',sans-serif;">СКИДКА</span>
-         </div>
-         <div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:800;color:#3d1f0a;line-height:1.05;">−30%</div>
-         <div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.65);border-radius:50px;padding:6px 12px;width:fit-content;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8b6040" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span style="font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;color:#5a3520;">19:00 — 20:00</span>
-         </div>
-        </div>
-        <div style="width:46%;position:relative;flex-shrink:0;">
-         <img src="/images/new_croissant.jpeg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.background='#d4b896';this.style.display='block';" />
-         <div style="position:absolute;inset:0;background:linear-gradient(to right,#EDE4D8 0%,rgba(237,228,216,0.55) 35%,transparent 65%);pointer-events:none;"></div>
-        </div>
+       <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;flex-shrink:0;">
+        <img src="/images/carousel-happyhour.jpg" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';" />
        </div>
-       <!-- Slide 2: Утренний предзаказ -->
-       <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;display:flex;flex-shrink:0;">
-        <div style="flex:1;padding:22px 12px 22px 22px;display:flex;flex-direction:column;justify-content:center;gap:8px;position:relative;z-index:2;">
-         <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#3d1f0a;line-height:1.15;">Утренний предзаказ</div>
-         <div style="font-family:'Playfair Display',serif;font-size:12px;color:#8b6040;">Свежий хлеб к завтраку</div>
-         <div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.65);border-radius:50px;padding:6px 12px;width:fit-content;margin-top:2px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8b6040" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span style="font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;color:#5a3520;">09:00 — 11:00</span>
-         </div>
-         <button onclick="showScreen('preorder')" style="background:#c9a57a;color:#fff;font-family:'Playfair Display',serif;font-size:14px;font-weight:600;border:none;border-radius:50px;padding:9px 20px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;width:fit-content;margin-top:2px;">Заказать →</button>
-        </div>
-        <div style="width:46%;position:relative;flex-shrink:0;">
-         <img src="/images/bread-whole.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.background='#d4b896';this.style.display='block';" />
-         <div style="position:absolute;inset:0;background:linear-gradient(to right,#EDE4D8 0%,rgba(237,228,216,0.55) 35%,transparent 65%);pointer-events:none;"></div>
-        </div>
+       <!-- Slide 2: Мамин хлеб -->
+       <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;flex-shrink:0;">
+        <img src="/images/carousel-brand.jpg" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';" />
        </div>
-       <!-- Slide 3: Мамин хлеб -->
-       <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;display:flex;flex-shrink:0;">
-        <div style="flex:1;padding:22px 12px 22px 22px;display:flex;flex-direction:column;justify-content:center;gap:6px;position:relative;z-index:2;">
-         <img src="/images/logo.jpeg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,0.15);margin-bottom:2px;" />
-         <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:#3d1f0a;line-height:1.1;">Мамин <span style="color:#a0612a;">хлеб</span></div>
-         <div style="width:40px;height:1.5px;background:#c9a57a;"></div>
-         <div style="font-family:'Montserrat',sans-serif;font-size:11px;color:#8b5e3c;letter-spacing:0.02em;">Домашняя выпечка с любовью</div>
-        </div>
-        <div style="width:46%;position:relative;flex-shrink:0;">
-         <img src="/images/bread-bagette.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.background='#d4b896';this.style.display='block';" />
-         <div style="position:absolute;inset:0;background:linear-gradient(to right,#EDE4D8 0%,rgba(237,228,216,0.55) 35%,transparent 65%);pointer-events:none;"></div>
-        </div>
+       <!-- Slide 3: Утренний предзаказ -->
+       <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:220px;background:#EDE4D8;flex-shrink:0;">
+        <img src="/images/carousel-preorder.jpg" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';" />
+        <!-- Кнопка "Заказать" поверх картинки -->
        </div>
       </div>
       <!-- Prev button — outside overflow-hidden so it's never clipped -->
