@@ -458,6 +458,9 @@
      </div>
     </div>
 
+    <!-- Fade gradient — sits just above the glass suggestions strip -->
+    <div id="cart-scroll-fade" style="display:none;position:absolute;left:0;right:0;height:60px;bottom:max(108px,calc(env(safe-area-inset-bottom,14px) + 92px));background:linear-gradient(to bottom,rgba(255,248,240,0) 0%,rgba(255,248,240,0.95) 100%);pointer-events:none;z-index:9;"></div>
+
     <!-- Glass "Добавьте к заказу" strip — absolute, overlays scroll area -->
     <div id="cart-suggestions-section" style="display:none;position:absolute;left:0;right:0;bottom:max(108px,calc(env(safe-area-inset-bottom,14px) + 92px));padding:16px 12px 12px;background:rgba(255,248,240,0.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.6);z-index:10;pointer-events:none;">
      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;pointer-events:auto;">
@@ -1790,6 +1793,7 @@
       if (clearBtn) clearBtn.style.display = cart.length === 0 ? 'none' : 'flex';
       const orderLabel = document.getElementById('cart-order-label');
       const suggSection = document.getElementById('cart-suggestions-section');
+      const scrollFade = document.getElementById('cart-scroll-fade');
       const infoBlock = document.getElementById('cart-info-block');
       if (cart.length === 0) {
         itemsContainer.innerHTML = '';
@@ -1798,6 +1802,7 @@
         footer.style.display = 'none';
         if (orderLabel) orderLabel.style.display = 'none';
         if (suggSection) suggSection.style.display = 'none';
+        if (scrollFade) scrollFade.style.display = 'none';
         if (infoBlock) infoBlock.style.display = 'none';
         const delivTgl = document.getElementById('cart-delivery-toggle');
         const pickupInfo = document.getElementById('cart-pickup-info');
@@ -1880,8 +1885,10 @@
       const pool = products.filter(p => !cartIds.has(p.id));
       const picks = pool.filter(p => p.bestseller).slice(0, 6);
       if (picks.length < 6) { const extra = pool.filter(p => !p.bestseller).slice(0, 6 - picks.length); picks.push(...extra); }
-      if (picks.length === 0) { section.style.display = 'none'; return; }
+      const fade = document.getElementById('cart-scroll-fade');
+      if (picks.length === 0) { section.style.display = 'none'; if (fade) fade.style.display = 'none'; return; }
       section.style.display = 'block';
+      if (fade) fade.style.display = 'block';
       container.innerHTML = picks.map(function(p) {
         var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes.map(function(s){return s.size;}).join(' / ') : (p.weight || '');
         var price = happyPrice(p);
