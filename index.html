@@ -1762,7 +1762,7 @@
       if (compact) {
         return `
           <div class="flex-shrink-0" style="width:175px;${!available ? 'opacity:0.55;' : ''}" data-pid="${p.id}">
-            <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col" style="isolation:isolate;">
+            <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col overflow-hidden" style="isolation:isolate;">
               <button onclick="showProductDetail('${p.id}')" class="relative w-full flex-shrink-0 overflow-hidden rounded-3xl group/img" style="height:148px;">
                 <div class="w-full h-full">${imgHTML}</div>
                 ${oosOverlay}
