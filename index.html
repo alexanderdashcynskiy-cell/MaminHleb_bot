@@ -2286,7 +2286,7 @@
       return 'товаров';
     }
 
-    var CS_CARD_W = 150, CS_GAP = 12;
+    var CS_CARD_W = 175, CS_GAP = 12;
     var _csRaf = null, _csScrollStopTimer = null;
     var _csCloneCount = 0, _csTotalReal = 0, _csPickIds = '';
 
@@ -2319,14 +2319,14 @@
       var imgHTML = productImages[p.id]
         ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<span style="font-size:2.5rem;line-height:1;">' + p.image + '</span>';
-      return '<div style="flex-shrink:0;width:150px;scroll-snap-align:center;">'
-        + '<div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(45,21,5,0.07);display:flex;flex-direction:column;padding:6px;">'
-        + '<div style="width:100%;height:96px;border-radius:9px;background:#F5EAD8;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + imgHTML + '</div>'
-        + '<div style="margin-top:6px;">'
-        + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:12px;color:#2d1505;line-height:1.3;height:30px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(p.name) + '</div>'
+      return '<div style="flex-shrink:0;width:175px;scroll-snap-align:center;">'
+        + '<div style="background:#fff;border-radius:18px;box-shadow:0 2px 12px rgba(45,21,5,0.07);display:flex;flex-direction:column;padding:7px;">'
+        + '<div style="width:100%;height:116px;border-radius:11px;background:#F5EAD8;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + imgHTML + '</div>'
+        + '<div style="margin-top:7px;">'
+        + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:13px;color:#2d1505;line-height:1.3;height:32px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(p.name) + '</div>'
         + '<div style="font-size:10px;color:rgba(107,68,35,0.42);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:\'Montserrat\',sans-serif;">' + (weightInfo ? escHtml(weightInfo) : '&nbsp;') + '</div>'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">'
-        + '<div><span style="font-size:14px;font-weight:700;color:#2d1505;font-family:\'Montserrat\',sans-serif;line-height:1;">' + price.toFixed(2) + '</span><span style="font-size:10px;font-weight:500;color:#C9A227;margin-left:2px;">BYN</span></div>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px;">'
+        + '<div><span style="font-size:15px;font-weight:700;color:#2d1505;font-family:\'Montserrat\',sans-serif;line-height:1;">' + price.toFixed(2) + '</span><span style="font-size:10px;font-weight:500;color:#C9A227;margin-left:2px;">BYN</span></div>'
         + '<div class="cs-btn-zone" data-pid="' + p.id + '" style="flex-shrink:0;">' + csSuggBtnHTML(p.id, qty) + '</div>'
         + '</div></div></div></div>';
     }
