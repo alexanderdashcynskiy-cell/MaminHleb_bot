@@ -1909,9 +1909,14 @@
       if (_bsRaf) return;
       _bsRaf = requestAnimationFrame(function() {
         _bsRaf = null;
-        var activeIdx = Math.round(el.scrollLeft / (BS_CARD_W + BS_GAP));
         var cards = document.querySelectorAll('#bestsellers-items > div');
-        activeIdx = Math.max(0, Math.min(cards.length - 1, activeIdx));
+        if (!cards.length) return;
+        var center = el.scrollLeft + el.offsetWidth / 2;
+        var activeIdx = 0, minDist = Infinity;
+        cards.forEach(function(card, i) {
+          var dist = Math.abs((card.offsetLeft + card.offsetWidth / 2) - center);
+          if (dist < minDist) { minDist = dist; activeIdx = i; }
+        });
         cards.forEach(function(card, i) {
           card.style.transform = i === activeIdx ? 'scale(1)' : 'scale(0.86)';
           card.style.opacity = i === activeIdx ? '1' : '0.7';
