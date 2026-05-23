@@ -459,22 +459,22 @@
     </div>
 
     <!-- Bottom checkout bar — compact -->
-    <div id="cart-footer" style="display:none;position:absolute;bottom:15px;left:0;right:0;background:rgba(255,248,240,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:6px 12px;padding-bottom:max(32px,calc(env(safe-area-inset-bottom,14px) + 16px));z-index:20;pointer-events:none;">
-     <div style="background:#fff;border-radius:18px;padding:7px 8px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,0.09);pointer-events:auto;">
-      <div style="width:34px;height:34px;border-radius:9px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-       <svg width="16" height="16" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    <div id="cart-footer" style="display:none;position:absolute;bottom:15px;left:0;right:0;background:rgba(255,248,240,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:8px 14px;padding-bottom:max(32px,calc(env(safe-area-inset-bottom,14px) + 16px));z-index:20;pointer-events:none;">
+     <div style="background:#fff;border-radius:22px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.10);pointer-events:auto;">
+      <div style="width:42px;height:42px;border-radius:12px;background:#F5EEE6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+       <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
       </div>
       <div style="min-width:0;">
-       <div style="font-size:12px;font-weight:700;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-items-count">0</span> <span id="cart-footer-item-word">товар</span></div>
-       <div style="font-size:10px;color:#aaa;margin-top:1px;white-space:nowrap;"><span id="cart-footer-delivery-type">Самовывоз 📍</span></div>
+       <div style="font-size:14px;font-weight:700;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-items-count">0</span> <span id="cart-footer-item-word">товар</span></div>
+       <div style="font-size:11px;color:#aaa;margin-top:1px;white-space:nowrap;"><span id="cart-footer-delivery-type">Самовывоз 📍</span></div>
       </div>
-      <div style="width:1px;height:26px;background:rgba(0,0,0,0.08);flex-shrink:0;"></div>
+      <div style="width:1px;height:30px;background:rgba(0,0,0,0.08);flex-shrink:0;"></div>
       <div style="min-width:0;">
-       <div style="font-size:15px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-total-full">0.00</span> <span style="font-size:11px;font-weight:600;color:#6B4423;">BYN</span></div>
-       <div style="font-size:10px;color:#aaa;margin-top:1px;">Итого</div>
+       <div style="font-size:17px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-total-full">0.00</span> <span style="font-size:12px;font-weight:600;color:#6B4423;">BYN</span></div>
+       <div style="font-size:11px;color:#aaa;margin-top:1px;">Итого</div>
       </div>
-      <div style="flex:1;margin-left:2px;min-width:0;">
-       <button id="cart-checkout-btn" ontouchend="event.preventDefault();startCheckout();" onclick="startCheckout()" style="width:100%;display:block;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:13px 8px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:14px;font-weight:700;color:#fff;letter-spacing:0.01em;box-shadow:0 3px 10px rgba(201,162,39,0.35);white-space:nowrap;text-align:center;">Оформить заказ →</button>
+      <div style="flex:1;display:flex;justify-content:flex-end;min-width:0;">
+       <button id="cart-checkout-btn" ontouchend="event.preventDefault();startCheckout();" onclick="startCheckout()" style="display:inline-block;background:linear-gradient(90deg,#C9A227,#D4A574);border-radius:50px;padding:14px 22px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:15px;font-weight:700;color:#fff;letter-spacing:0.01em;box-shadow:0 3px 12px rgba(201,162,39,0.38);white-space:nowrap;">Оформить →</button>
       </div>
      </div>
      <span id="cart-subtotal-display" style="display:none;"></span>
