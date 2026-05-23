@@ -55,6 +55,7 @@
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     /* Fix: карточки бестселлеров выравниваются по низу, чтобы не прыгали при добавлении */
     #bestsellers-items { align-items: flex-end; }
+    #bestsellers-items > div { scroll-snap-align: center; }
     /* Fix: фиксированная высота нижней зоны кнопок в compact-карточке */
     .compact-card-controls { min-height: 36px; }
     /* Card lift animation removed */
@@ -273,8 +274,8 @@
       <button onclick="showScreen('bestsellers')" class="text-xs font-semibold text-caramel">Все →</button>
      </div>
      <div class="relative">
-      <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar pb-4" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);">
-       <div class="flex gap-3 w-min" id="bestsellers-items" style="padding-left:16px;padding-right:16px;"></div>
+      <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar pb-2" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;">
+       <div class="flex gap-3" id="bestsellers-items"></div>
       </div>
       <button onclick="scrollBestsellersLeft()" class="absolute left-0 top-1/3 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg hidden sm:flex">
        <svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
@@ -425,7 +426,7 @@
 
     <!-- Scroll area -->
     <div style="flex:1 1 0%;overflow-y:auto;padding:0 10px 330px;min-height:0;-webkit-mask-image:linear-gradient(to bottom,black 0%,black calc(100% - 80px),transparent 100%);mask-image:linear-gradient(to bottom,black 0%,black calc(100% - 80px),transparent 100%);">
-     <div id="cart-items-full" style="display:flex;flex-direction:column;gap:4px;padding-top:2px;"></div>
+     <div id="cart-items-full" style="display:flex;flex-direction:column;gap:8px;padding-top:2px;"></div>
      <div id="cart-empty-full" style="display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 0;">
       <span style="font-size:3.75rem;margin-bottom:1rem;">🥐</span>
       <p style="color:#D4A574;font-size:1.125rem;font-weight:600;">Корзина пуста</p>
@@ -1798,6 +1799,11 @@
       const ids = _featuredBestsellers.length > 0 ? _featuredBestsellers : defaultIds;
       const container = document.getElementById('bestsellers-items');
       container.innerHTML = products.filter(p => ids.includes(p.id)).map(p => productCardHTML(p, true)).join('');
+      var screenW = window.innerWidth || 375;
+      var CARD_W = 176; // w-44
+      var sideOff = Math.round((screenW - CARD_W) / 2);
+      container.style.paddingLeft = sideOff + 'px';
+      container.style.paddingRight = sideOff + 'px';
     }
 
     function scrollBestsellersLeft() { document.getElementById('bestsellers-carousel').scrollBy({ left: -160, behavior: 'smooth' }); }
@@ -2064,24 +2070,24 @@
         var weightChip = sizeOrWeight
           ? '<span style="display:inline-flex;background:#F5EEE6;color:#8b6040;font-size:9px;font-weight:600;padding:2px 6px;border-radius:99px;white-space:nowrap;line-height:1.4;">' + escHtml(sizeOrWeight) + '</span>'
           : '';
-        return '<div style="background:#fff;border-radius:14px;display:flex;align-items:stretch;gap:10px;padding:9px 10px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">'
-          + '<div style="width:70px;height:70px;flex-shrink:0;border-radius:10px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;align-self:center;">' + imgHTML + '</div>'
-          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:3px;">'
+        return '<div style="background:#fff;border-radius:16px;display:flex;align-items:stretch;gap:12px;padding:12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
+          + '<div style="width:88px;height:88px;flex-shrink:0;border-radius:12px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;align-self:center;">' + imgHTML + '</div>'
+          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:4px;">'
           // Row 1: name (truncated) + price right-aligned
           + '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px;">'
-          + '<div style="font-family:\'Playfair Display\',serif;font-weight:600;color:#3d1f0a;font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">' + escHtml(item.product_name) + '</div>'
-          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:14px;color:#3d1f0a;white-space:nowrap;flex-shrink:0;">' + (item.price * item.quantity).toFixed(2) + ' <span style="font-size:10px;font-weight:600;color:#6B4423;">Br</span></div>'
+          + '<div style="font-family:\'Playfair Display\',serif;font-weight:600;color:#3d1f0a;font-size:15px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">' + escHtml(item.product_name) + '</div>'
+          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:15px;color:#3d1f0a;white-space:nowrap;flex-shrink:0;">' + (item.price * item.quantity).toFixed(2) + ' <span style="font-size:11px;font-weight:600;color:#6B4423;">Br</span></div>'
           + '</div>'
           // Row 2: weight chip
           + (weightChip ? '<div>' + weightChip + '</div>' : '<div style="height:2px;"></div>')
           // Row 3: stepper + delete ghost
           + '<div style="display:flex;align-items:center;justify-content:space-between;">'
-          + '<div style="display:flex;align-items:center;gap:6px;">'
-          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:28px;height:28px;border-radius:50%;background:#F5EEE6;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:16px;line-height:1;font-weight:700;">−</button>'
-          + '<span style="font-weight:700;font-size:14px;color:#3d1f0a;min-width:16px;text-align:center;">' + item.quantity + '</span>'
-          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:700;">+</button>'
+          + '<div style="display:flex;align-items:center;gap:8px;">'
+          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:34px;height:34px;border-radius:50%;background:#F5EEE6;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:18px;line-height:1;font-weight:700;">−</button>'
+          + '<span style="font-weight:700;font-size:15px;color:#3d1f0a;min-width:18px;text-align:center;">' + item.quantity + '</span>'
+          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#D4A574);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;line-height:1;font-weight:700;">+</button>'
           + '</div>'
-          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:20px;height:20px;border:none;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;opacity:0.3;padding:0;">' + trashSvg + '</button>'
+          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:24px;height:24px;border:none;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;opacity:0.3;padding:0;">' + trashSvg + '</button>'
           + '</div>'
           + '</div></div>';
       }).join('');
