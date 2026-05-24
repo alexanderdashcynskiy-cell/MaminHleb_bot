@@ -1918,46 +1918,63 @@
       const qty = cartItem ? cartItem.quantity : 0;
       document.querySelectorAll(`.card-btn-zone[data-pid="${productId}"]`).forEach(zone => {
         const compact = zone.dataset.compact;
-        zone.innerHTML = cardBtnHTML(productId, qty, compact);
+        zone.innerHTML = compact === '3' ? bsFloatBtnHTML(productId, qty) : cardBtnHTML(productId, qty, compact);
       });
     }
 
-    var BS_CARD_W = 150, BS_GAP = 14;
+    var BS_CARD_W = 158, BS_GAP = 14;
     var _bsRaf = null;
     var _bsScrollStopTimer = null;
     var _bsCloneCount = 0;
     var _bsTotalReal = 0;
 
+    function bsFloatBtnHTML(pid, quantity) {
+      if (quantity > 0) {
+        return '<div style="display:flex;align-items:center;gap:3px;background:rgba(255,251,245,0.96);border-radius:50px;padding:3px 4px 3px 3px;box-shadow:0 4px 18px rgba(0,0,0,0.14);border:1px solid rgba(201,162,39,0.22);">'
+          + '<button onclick="updateQuantity(\'' + pid + '\',-1)" style="width:26px;height:26px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">−</button>'
+          + '<span style="min-width:16px;text-align:center;font-weight:800;color:#2d1505;font-size:12px;font-family:\'Montserrat\',sans-serif;">' + quantity + '</span>'
+          + '<button onclick="updateQuantity(\'' + pid + '\',1)" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.45);">+</button>'
+          + '</div>';
+      }
+      return '<button onclick="addToCart(\'' + pid + '\')" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:24px;box-shadow:0 4px 18px rgba(201,162,39,0.52);">+</button>';
+    }
+
     function bsCardHTML(p) {
       var cartItem = cart.find(function(i) { return i.product_id === p.id; });
       var quantity = cartItem ? cartItem.quantity : 0;
       var available = inStock(p.name);
-      var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var imgHTML = productImages[p.id]
         ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
-        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.6rem;background:#F5EAD8;">' + p.image + '</div>';
-      var hitBadge = p.bestseller ? '<div style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:9px;font-weight:800;padding:3px 10px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;pointer-events:none;">Хит</div>' : '';
-      var oosOverlay = !available ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.50);display:flex;align-items:center;justify-content:center;padding:6px;z-index:3;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.3;font-family:\'Montserrat\',sans-serif;">Товар закончился,<br>завтра сделаем<br>новую партию 🔥</p></div>' : '';
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3.2rem;background:#F5EAD8;">' + p.image + '</div>';
+      var hitBadge = p.bestseller
+        ? '<div style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:10px;font-weight:800;padding:4px 11px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.03em;pointer-events:none;box-shadow:0 2px 8px rgba(201,162,39,0.40);">Хит</div>' : '';
+      var oosOverlay = !available
+        ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.46);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.4;font-family:\'Montserrat\',sans-serif;">Товар закончился,<br>завтра сделаем<br>новую партию 🔥</p></div>' : '';
       var disc = happyPrice(p);
-      var priceHTML = !available
-        ? '<span style="font-size:10px;color:#aaa;font-family:\'Montserrat\',sans-serif;">Нет в наличии</span>'
-        : disc < p.price
-          ? '<div style="line-height:1.2;"><span style="font-size:9px;color:#aaa;text-decoration:line-through;font-family:\'Montserrat\',sans-serif;">' + p.price.toFixed(2) + ' BYN</span><br><span style="font-size:17px;font-weight:800;color:#E05252;font-family:\'Montserrat\',sans-serif;">' + disc.toFixed(2) + ' <span style="font-size:10px;">BYN</span></span></div>'
-          : '<span style="font-size:17px;font-weight:800;color:#2d1505;font-family:\'Montserrat\',sans-serif;line-height:1;">' + p.price.toFixed(2) + ' <span style="font-size:10px;font-weight:600;color:rgba(107,68,35,0.55);">BYN</span></span>';
-      return '<div style="flex-shrink:0;width:150px;height:248px;' + (!available ? 'opacity:0.6;' : '') + '">'
-        + '<div class="bs-card-inner" style="width:100%;height:100%;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.06);display:flex;flex-direction:column;transition:box-shadow 0.35s ease;">'
-        + '<button onclick="showProductDetail(\'' + p.id + '\')" style="width:100%;height:158px;flex-shrink:0;display:block;border:none;padding:0;cursor:pointer;background:#F5EAD8;position:relative;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">'
-        + '<div style="width:100%;height:100%;">' + imgHTML + '</div>' + hitBadge + oosOverlay
+      var priceStr = !available ? '' : (disc < p.price ? disc.toFixed(2) : p.price.toFixed(2));
+      var priceColor = disc < p.price ? '#E05252' : '#2d1505';
+      return '<div style="flex-shrink:0;width:158px;height:244px;position:relative;' + (!available ? 'opacity:0.62;' : '') + '">'
+        + '<div class="bs-card-inner" style="width:100%;height:100%;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 6px 20px rgba(45,21,5,0.07);display:flex;flex-direction:column;transition:box-shadow 0.35s ease;">'
+        /* image — 67% */
+        + '<button onclick="showProductDetail(\'' + p.id + '\')" style="width:100%;height:163px;flex-shrink:0;display:block;border:none;padding:0;cursor:pointer;background:#F2E8D8;position:relative;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">'
+        + '<div style="width:100%;height:100%;">' + imgHTML + '</div>'
+        + hitBadge + oosOverlay
+        /* warm vignette at bottom of photo */
+        + '<div style="position:absolute;bottom:0;left:0;right:0;height:56px;background:linear-gradient(to top,rgba(255,248,240,0.55),transparent);pointer-events:none;"></div>'
         + '</button>'
-        + '<div style="flex:1;padding:10px 12px 12px;display:flex;flex-direction:column;justify-content:space-between;">'
-        + '<div onclick="showProductDetail(\'' + p.id + '\')" style="cursor:pointer;">'
-        + '<h3 style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:14px;color:#2d1505;line-height:1.25;margin:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(p.name) + '</h3>'
-        + (weightInfo ? '<p style="font-size:10px;color:rgba(107,68,35,0.48);margin:2px 0 0;font-family:\'Montserrat\',sans-serif;">' + escHtml(weightInfo) + '</p>' : '')
+        /* footer — 33% — name + price only, no button */
+        + '<div style="flex:1;padding:10px 14px 12px;background:#fff;">'
+        + '<h3 onclick="showProductDetail(\'' + p.id + '\')" style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:13.5px;color:#2d1505;line-height:1.25;margin:0;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
+        + (available
+          ? '<p style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:' + priceColor + ';margin:5px 0 0;line-height:1;">' + priceStr + ' <span style="font-size:9px;font-weight:500;color:rgba(107,68,35,0.50);">BYN</span></p>'
+          : '<p style="font-size:10px;color:#aaa;margin:4px 0 0;font-family:\'Montserrat\',sans-serif;">Нет в наличии</p>')
         + '</div>'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">'
-        + priceHTML
-        + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="2" style="flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;">' + (available ? cardBtnHTML(p.id, quantity, '2') : '') + '</div>'
-        + '</div></div></div></div>';
+        + '</div>'
+        /* floating btn — outside overflow:hidden, absolute on outer wrapper */
+        + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="3" style="position:absolute;bottom:12px;right:12px;z-index:4;display:flex;align-items:center;justify-content:flex-end;">'
+        + (available ? bsFloatBtnHTML(p.id, quantity) : '')
+        + '</div>'
+        + '</div>';
     }
 
     function renderBestsellers() {
