@@ -270,7 +270,7 @@
       <button onclick="showScreen('bestsellers')" class="text-xs font-semibold text-caramel">Все →</button>
      </div>
      <div class="relative">
-      <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:24px;padding-bottom:20px;" onscroll="onBestsellerScroll(this)">
+      <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:18px;padding-bottom:18px;" onscroll="onBestsellerScroll(this)">
        <div class="flex" style="gap:14px;" id="bestsellers-items"></div>
       </div>
       <button onclick="scrollBestsellersLeft()" class="absolute left-0 top-1/3 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg hidden sm:flex">
@@ -2034,7 +2034,7 @@
           requestAnimationFrame(function() {
             cards.forEach(function(card, i) {
               var isActive = i === startIdx;
-              card.style.transform = isActive ? 'scale(1.15) translateY(-8px)' : 'scale(0.93) translateY(0px)';
+              card.style.transform = isActive ? 'scale(1.08)' : 'scale(0.93)';
               card.style.opacity = isActive ? '1' : '0.72';
               var inner = card.querySelector('.bs-card-inner');
               if (inner) inner.style.boxShadow = isActive ? SHADOW_ACTIVE : SHADOW_REST;
@@ -2061,7 +2061,7 @@
         });
         cards.forEach(function(card, i) {
           var isActive = i === activeIdx;
-          card.style.transform = isActive ? 'scale(1.15) translateY(-8px)' : 'scale(0.93) translateY(0px)';
+          card.style.transform = isActive ? 'scale(1.08)' : 'scale(0.93)';
           card.style.opacity = isActive ? '1' : '0.72';
           var inner = card.querySelector('.bs-card-inner');
           if (inner) inner.style.boxShadow = isActive ? '0 10px 30px rgba(0,0,0,0.13)' : '0 4px 14px rgba(0,0,0,0.06)';
@@ -2087,7 +2087,7 @@
       el.scrollLeft += jump * (BS_CARD_W + BS_GAP);
       cards.forEach(function(card, i) {
         var isActive = i === toIdx;
-        card.style.transform = isActive ? 'scale(1.15) translateY(-8px)' : 'scale(0.93) translateY(0px)';
+        card.style.transform = isActive ? 'scale(1.08)' : 'scale(0.93)';
         card.style.opacity = isActive ? '1' : '0.72';
         var inner = card.querySelector('.bs-card-inner');
         if (inner) inner.style.boxShadow = isActive ? '0 10px 30px rgba(0,0,0,0.13)' : '0 4px 14px rgba(0,0,0,0.06)';
