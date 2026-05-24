@@ -1930,13 +1930,13 @@
 
     function bsFloatBtnHTML(pid, quantity) {
       if (quantity > 0) {
-        return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
-          + '<button onclick="updateQuantity(\'' + pid + '\',-1)" style="width:24px;height:24px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">−</button>'
-          + '<span style="min-width:14px;text-align:center;font-weight:800;color:#2d1505;font-size:11px;font-family:\'Montserrat\',sans-serif;">' + quantity + '</span>'
-          + '<button onclick="updateQuantity(\'' + pid + '\',1)" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
+        return '<div style="display:flex;align-items:center;gap:3px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
+          + '<button onclick="updateQuantity(\'' + pid + '\',-1)" style="width:28px;height:28px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">−</button>'
+          + '<span style="min-width:16px;text-align:center;font-weight:800;color:#2d1505;font-size:13px;font-family:\'Montserrat\',sans-serif;">' + quantity + '</span>'
+          + '<button onclick="updateQuantity(\'' + pid + '\',1)" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
           + '</div>';
       }
-      return '<button onclick="addToCart(\'' + pid + '\')" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;box-shadow:0 4px 16px rgba(201,162,39,0.50);">+</button>';
+      return '<button onclick="addToCart(\'' + pid + '\')" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px;box-shadow:0 4px 16px rgba(201,162,39,0.50);">+</button>';
     }
 
     function bsCardHTML(p) {
@@ -1944,34 +1944,37 @@
       var quantity = cartItem ? cartItem.quantity : 0;
       var available = inStock(p.name);
       var disc = happyPrice(p);
+      var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var imgHTML = productImages[p.id]
         ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
       var hitBadge = p.bestseller
-        ? '<div style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:8px;font-weight:800;padding:3px 8px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.04em;pointer-events:none;box-shadow:0 2px 6px rgba(201,162,39,0.38);">Хит</div>' : '';
+        ? '<div style="position:absolute;top:9px;left:9px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;pointer-events:none;box-shadow:0 2px 6px rgba(201,162,39,0.40);">Хит</div>' : '';
       var oosOverlay = !available
-        ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.44);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;"><p style="color:#fff;font-weight:800;font-size:8px;text-align:center;line-height:1.4;font-family:\'Montserrat\',sans-serif;">Закончился 🔥<br>Завтра будет</p></div>' : '';
+        ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.44);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.4;font-family:\'Montserrat\',sans-serif;">Закончился 🔥<br>Завтра будет</p></div>' : '';
       var priceStr = disc < p.price ? disc.toFixed(2) : p.price.toFixed(2);
-      var priceColor = disc < p.price ? '#E05252' : 'rgba(107,68,35,0.60)';
-      /* card 142×222 — 85% image (189px) / 15% footer (33px) */
-      return '<div style="flex-shrink:0;width:142px;height:222px;position:relative;' + (!available ? 'opacity:0.60;' : '') + '">'
+      var priceColor = disc < p.price ? '#E05252' : '#2d1505';
+      /* card 142×230 — 58% image (133px) / 42% footer (97px) */
+      return '<div style="flex-shrink:0;width:142px;height:230px;position:relative;' + (!available ? 'opacity:0.60;' : '') + '">'
         + '<div class="bs-card-inner" style="width:100%;height:100%;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.07);display:flex;flex-direction:column;transition:box-shadow 0.35s ease;">'
-        /* image 85% = 189px */
-        + '<button onclick="showProductDetail(\'' + p.id + '\')" style="width:100%;height:189px;flex-shrink:0;display:block;border:none;padding:0;cursor:pointer;background:#F2E8D8;position:relative;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">'
+        /* image 58% = 133px */
+        + '<button onclick="showProductDetail(\'' + p.id + '\')" style="width:100%;height:133px;flex-shrink:0;display:block;border:none;padding:0;cursor:pointer;background:#F2E8D8;position:relative;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">'
         + '<div style="width:100%;height:100%;">' + imgHTML + '</div>'
         + hitBadge + oosOverlay
-        + '<div style="position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(to top,rgba(255,250,245,0.60),transparent);pointer-events:none;"></div>'
         + '</button>'
-        /* footer 15% = 33px — name + price, no button */
-        + '<div style="flex:1;display:flex;align-items:center;padding:0 12px;overflow:hidden;">'
-        + '<div onclick="showProductDetail(\'' + p.id + '\')" style="cursor:pointer;min-width:0;flex:1;padding-right:42px;">'
-        + '<h3 style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;">' + escHtml(p.name) + '</h3>'
-        + (available ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;font-weight:700;color:' + priceColor + ';margin:1px 0 0;line-height:1;">' + priceStr + ' <span style="font-size:8px;font-weight:500;">BYN</span></p>' : '')
+        /* footer 42% = 97px — name, weight, price */
+        + '<div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:10px 12px 12px;">'
+        + '<div onclick="showProductDetail(\'' + p.id + '\')" style="cursor:pointer;padding-right:50px;">'
+        + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#2d1505;margin:0;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + escHtml(p.name) + '</h3>'
+        + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:11px;color:#A08060;margin:3px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
+        + '</div>'
+        + (available
+          ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:17px;font-weight:800;color:' + priceColor + ';margin:0;line-height:1;">' + priceStr + ' <span style="font-size:12px;font-weight:600;">Б</span></p>'
+          : '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#aaa;margin:0;">Нет в наличии</p>')
         + '</div>'
         + '</div>'
-        + '</div>'
-        /* floating button — outside overflow:hidden */
-        + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="3" style="position:absolute;bottom:6px;right:8px;z-index:4;display:flex;align-items:center;justify-content:flex-end;">'
+        /* floating button — outside overflow:hidden, visually in footer zone */
+        + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="3" style="position:absolute;bottom:12px;right:10px;z-index:4;display:flex;align-items:center;justify-content:flex-end;">'
         + (available ? bsFloatBtnHTML(p.id, quantity) : '')
         + '</div>'
         + '</div>';
