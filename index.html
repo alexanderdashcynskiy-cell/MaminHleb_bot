@@ -1867,10 +1867,10 @@
         ? `<span style="font-size:11px;color:#aaa;font-family:'Montserrat',sans-serif;">Нет в наличии</span>`
         : disc < p.price
           ? `<div style="white-space:nowrap;line-height:1.2;">
-               <span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} BYN</span><br>
-               <span style="font-size:15px;font-weight:500;color:#E05252;font-family:'Montserrat',sans-serif;">${disc.toFixed(2)} <span style="font-size:11px;font-weight:500;">BYN</span></span>
+               <span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} Б</span><br>
+               <span style="font-size:15px;font-weight:800;color:#E05252;font-family:'Montserrat',sans-serif;">${disc.toFixed(2)} <span style="font-size:11px;font-weight:600;">Б</span></span>
              </div>`
-          : `<span style="font-size:15px;font-weight:500;color:#6B4423;font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} <span style="font-size:11px;font-weight:500;color:#6B4423;">BYN</span></span>`;
+          : `<span style="font-size:15px;font-weight:800;color:#2d1505;font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} <span style="font-size:11px;font-weight:600;">Б</span></span>`;
 
       return `
         <div data-pid="${p.id}" style="${!available ? 'opacity:0.55;' : ''}">
@@ -1879,14 +1879,15 @@
               <div style="width:100%;height:100%;">${imgHTML}</div>
               ${p.isNew && available ? '<div style="position:absolute;top:8px;left:8px;background:#E05252;color:#fff;font-weight:700;font-size:8px;padding:2px 7px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.04em;">НОВИНКА</div>' : ''}
               ${oosOverlay}
+              <div style="position:absolute;bottom:0;left:0;right:0;height:28px;background:linear-gradient(to bottom,transparent 0%,rgba(255,255,255,0.6) 55%,#ffffff 100%);pointer-events:none;z-index:1;"></div>
             </button>
-            <div style="padding:10px 12px 12px;">
+            <div style="padding:8px 12px 12px;display:flex;flex-direction:column;gap:4px;">
               <div onclick="showProductDetail('${p.id}')" style="cursor:pointer;">
-                <h3 style="font-family:'Playfair Display',serif;font-weight:400;font-size:15px;color:#6B4423;line-height:1.25;margin:0;">${p.name}</h3>
-                <p style="font-size:12px;color:rgba(107,68,35,0.5);margin:3px 0 0;">${weightInfo}</p>
+                <h3 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#2d1505;line-height:1.25;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</h3>
+                <p style="font-family:'Montserrat',sans-serif;font-size:10px;color:#A08060;margin:2px 0 0;line-height:1;">${weightInfo}</p>
                 ${stockBadge}
               </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
                 ${priceHTML}
                 <div class="card-btn-zone" data-pid="${p.id}" data-compact="0" style="flex-shrink:0;position:relative;z-index:2;display:flex;justify-content:flex-end;align-items:center;">
                   ${available ? cardBtnHTML(p.id, quantity, false) : ''}
