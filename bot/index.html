@@ -1922,7 +1922,7 @@
       });
     }
 
-    var BS_CARD_W = 166, BS_GAP = 14;
+    var BS_CARD_W = 150, BS_GAP = 14;
     var _bsRaf = null;
     var _bsScrollStopTimer = null;
     var _bsCloneCount = 0;
@@ -1954,8 +1954,8 @@
         ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.44);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.4;font-family:\'Montserrat\',sans-serif;">Закончился 🔥<br>Завтра будет</p></div>' : '';
       var priceStr = disc < p.price ? disc.toFixed(2) : p.price.toFixed(2);
       var priceColor = disc < p.price ? '#E05252' : '#2d1505';
-      /* card 166×218 — 58% image (126px) / 42% footer (92px) */
-      return '<div style="flex-shrink:0;width:166px;height:218px;position:relative;' + (!available ? 'opacity:0.60;' : '') + '">'
+      /* card 150×218 — 58% image (126px) / 42% footer (92px) */
+      return '<div style="flex-shrink:0;width:150px;height:218px;position:relative;' + (!available ? 'opacity:0.60;' : '') + '">'
         + '<div class="bs-card-inner" style="width:100%;height:100%;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.07);display:flex;flex-direction:column;transition:box-shadow 0.35s ease;">'
         /* image 58% = 126px */
         + '<button onclick="showProductDetail(\'' + p.id + '\')" style="width:100%;height:126px;flex-shrink:0;display:block;border:none;padding:0;cursor:pointer;background:#F2E8D8;position:relative;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">'
