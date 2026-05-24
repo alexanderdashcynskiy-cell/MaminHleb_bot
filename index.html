@@ -1936,7 +1936,7 @@
           + '<button onclick="updateQuantity(\'' + pid + '\',1)" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
           + '</div>';
       }
-      return '<button onclick="addToCart(\'' + pid + '\')" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;box-shadow:0 4px 16px rgba(201,162,39,0.50);">+</button>';
+      return '<button onclick="addToCart(\'' + pid + '\')" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
     }
 
     function bsCardHTML(p) {
@@ -1968,14 +1968,15 @@
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
         + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#A08060;margin:2px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
         + '</div>'
+        /* price row — price left, button right */
+        + '<div style="display:flex;align-items:center;justify-content:space-between;">'
         + (available
           ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:800;color:' + priceColor + ';margin:0;line-height:1;">' + priceStr + ' <span style="font-size:11px;font-weight:600;">Б</span></p>'
           : '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#aaa;margin:0;">Нет в наличии</p>')
-        + '</div>'
-        + '</div>'
-        /* floating button — outside overflow:hidden, visually in footer zone */
-        + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="3" style="position:absolute;bottom:10px;right:8px;z-index:4;display:flex;align-items:center;justify-content:flex-end;">'
+        + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="3" style="display:flex;align-items:center;">'
         + (available ? bsFloatBtnHTML(p.id, quantity) : '')
+        + '</div>'
+        + '</div>'
         + '</div>'
         + '</div>';
     }
