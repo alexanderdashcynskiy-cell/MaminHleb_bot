@@ -1955,7 +1955,7 @@
         ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.44);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.4;font-family:\'Montserrat\',sans-serif;">Закончился 🔥<br>Завтра будет</p></div>' : '';
       var priceStr = disc < p.price ? disc.toFixed(2) : p.price.toFixed(2);
       var priceColor = disc < p.price ? '#E05252' : '#2d1505';
-      return '<div style="flex-shrink:0;width:150px;height:210px;position:relative;' + (!available ? 'opacity:0.60;' : '') + '">'
+      return '<div style="flex-shrink:0;width:150px;height:240px;position:relative;' + (!available ? 'opacity:0.60;' : '') + '">'
         + '<div class="bs-card-inner" style="width:100%;height:100%;background:#F2E8D8;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.07);position:relative;transition:box-shadow 0.35s ease;">'
         /* full-bleed photo — fills entire card, food centered */
         + '<button onclick="showProductDetail(\'' + p.id + '\')" style="position:absolute;inset:0;border:none;padding:0;cursor:pointer;background:transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent;z-index:1;">'
