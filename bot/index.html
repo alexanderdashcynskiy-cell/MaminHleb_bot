@@ -1948,35 +1948,33 @@
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var imgHTML = productImages[p.id]
         ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center 30%;" alt="' + escHtml(p.name) + '" loading="lazy">'
-        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
-      /* small semi-transparent golden pill badge — subtle, not a sticker */
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#2a1506;">' + p.image + '</div>';
       var hitBadge = p.bestseller
-        ? '<div style="position:absolute;top:9px;left:9px;background:rgba(193,146,22,0.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.04em;pointer-events:none;z-index:4;">Хит</div>' : '';
+        ? '<div style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.03em;pointer-events:none;z-index:4;box-shadow:0 2px 8px rgba(201,162,39,0.45);">Хит</div>' : '';
       var oosOverlay = !available
-        ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.40);display:flex;align-items:center;justify-content:center;padding:8px;z-index:5;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.4;font-family:\'Montserrat\',sans-serif;">Закончился 🔥<br>Завтра будет</p></div>' : '';
+        ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.52);display:flex;align-items:center;justify-content:center;padding:8px;z-index:5;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.4;font-family:\'Montserrat\',sans-serif;">Закончился 🔥<br>Завтра будет</p></div>' : '';
       var priceStr = disc < p.price ? disc.toFixed(2) : p.price.toFixed(2);
-      var priceColor = disc < p.price ? '#E05252' : '#1a0900';
-      /* 155×228 card: food photo dominates (~80%), compact footer rides on subtle gradient */
-      return '<div style="flex-shrink:0;width:155px;height:228px;position:relative;' + (!available ? 'opacity:0.62;' : '') + '">'
-        + '<div class="bs-card-inner" style="width:100%;height:100%;background:#F0E6D3;border-radius:22px;overflow:hidden;box-shadow:0 4px 14px rgba(45,21,5,0.08);position:relative;transition:box-shadow 0.32s ease;">'
-        /* full-bleed food photo — hero of the card */
+      var priceColor = disc < p.price ? '#ff7b7b' : '#ffffff';
+      /* dark gradient overlay — food hero in top 55%, text on dark bottom */
+      return '<div style="flex-shrink:0;width:155px;height:228px;position:relative;' + (!available ? 'opacity:0.60;' : '') + '">'
+        + '<div class="bs-card-inner" style="width:100%;height:100%;background:#1a0a02;border-radius:22px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.22);position:relative;transition:box-shadow 0.32s ease;">'
         + '<button onclick="showProductDetail(\'' + p.id + '\')" style="position:absolute;inset:0;border:none;padding:0;cursor:pointer;background:transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent;z-index:1;">'
         + '<div style="width:100%;height:100%;">' + imgHTML + '</div>'
         + oosOverlay
         + '</button>'
         + hitBadge
-        /* readability strip — matches footer height exactly */
-        + '<div style="position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(to bottom,transparent 0%,rgba(255,252,248,0.30) 25%,rgba(255,252,248,0.88) 55%,#fffcf8 72%);pointer-events:none;z-index:2;"></div>'
-        /* compact footer — auto height, content stacks tightly */
-        + '<div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:4px 10px 8px;display:flex;flex-direction:column;gap:3px;">'
+        /* dark warm gradient — food stays visible in top, text readable on dark bottom */
+        + '<div style="position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(to bottom,transparent 0%,rgba(15,5,0,0.42) 35%,rgba(12,3,0,0.80) 62%,rgba(8,2,0,0.94) 82%,rgba(6,1,0,0.97) 100%);pointer-events:none;z-index:2;"></div>'
+        /* white text on dark gradient */
+        + '<div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:5px 11px 10px;display:flex;flex-direction:column;gap:2px;">'
         + '<div onclick="showProductDetail(\'' + p.id + '\')" style="cursor:pointer;touch-action:manipulation;">'
-        + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#1a0900;margin:0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
-        + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:9.5px;color:#9E7A56;margin:1px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
+        + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#ffffff;margin:0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
+        + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:rgba(255,255,255,0.58);margin:1px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
         + '</div>'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">'
         + (available
-          ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:14px;font-weight:800;color:' + priceColor + ';margin:0;line-height:1;letter-spacing:-0.2px;">' + priceStr + ' <span style="font-size:10px;font-weight:600;">Б</span></p>'
-          : '<p style="font-family:\'Montserrat\',sans-serif;font-size:9px;color:#bbb;margin:0;">Нет в наличии</p>')
+          ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:800;color:' + priceColor + ';margin:0;line-height:1;">' + priceStr + ' <span style="font-size:11px;font-weight:600;">Б</span></p>'
+          : '<p style="font-family:\'Montserrat\',sans-serif;font-size:9px;color:rgba(255,255,255,0.50);margin:0;">Нет в наличии</p>')
         + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="3" style="display:flex;align-items:center;">'
         + (available ? bsFloatBtnHTML(p.id, quantity) : '')
         + '</div>'
