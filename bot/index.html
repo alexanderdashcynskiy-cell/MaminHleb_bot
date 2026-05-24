@@ -270,7 +270,7 @@
       <button onclick="showScreen('bestsellers')" class="text-xs font-semibold text-caramel">Все →</button>
      </div>
      <div class="relative">
-      <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:10px;padding-bottom:18px;" onscroll="onBestsellerScroll(this)">
+      <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:18px;padding-bottom:28px;" onscroll="onBestsellerScroll(this)">
        <div class="flex" style="gap:14px;" id="bestsellers-items"></div>
       </div>
       <button onclick="scrollBestsellersLeft()" class="absolute left-0 top-1/3 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg hidden sm:flex">
@@ -1923,7 +1923,7 @@
       });
     }
 
-    var BS_CARD_W = 155, BS_GAP = 12;
+    var BS_CARD_W = 150, BS_GAP = 14;
     var _bsRaf = null;
     var _bsScrollStopTimer = null;
     var _bsCloneCount = 0;
@@ -1932,12 +1932,12 @@
     function bsFloatBtnHTML(pid, quantity) {
       if (quantity > 0) {
         return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
-          + '<button onclick="updateQuantity(\'' + pid + '\',-1)" style="width:28px;height:28px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">−</button>'
-          + '<span style="min-width:16px;text-align:center;font-weight:800;color:#2d1505;font-size:12px;font-family:\'Montserrat\',sans-serif;">' + quantity + '</span>'
-          + '<button onclick="updateQuantity(\'' + pid + '\',1)" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
+          + '<button onclick="updateQuantity(\'' + pid + '\',-1)" style="width:24px;height:24px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">−</button>'
+          + '<span style="min-width:14px;text-align:center;font-weight:800;color:#2d1505;font-size:11px;font-family:\'Montserrat\',sans-serif;">' + quantity + '</span>'
+          + '<button onclick="updateQuantity(\'' + pid + '\',1)" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
           + '</div>';
       }
-      return '<button onclick="addToCart(\'' + pid + '\')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;box-shadow:0 4px 12px rgba(201,162,39,0.52);">+</button>';
+      return '<button onclick="addToCart(\'' + pid + '\')" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
     }
 
     function bsCardHTML(p) {
@@ -1947,36 +1947,34 @@
       var disc = happyPrice(p);
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var imgHTML = productImages[p.id]
-        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center 30%;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
-      /* small semi-transparent golden pill badge — subtle, not a sticker */
       var hitBadge = p.bestseller
-        ? '<div style="position:absolute;top:9px;left:9px;background:rgba(193,146,22,0.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.04em;pointer-events:none;z-index:4;">Хит</div>' : '';
+        ? '<div style="position:absolute;top:9px;left:9px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;pointer-events:none;box-shadow:0 2px 6px rgba(201,162,39,0.40);">Хит</div>' : '';
       var oosOverlay = !available
-        ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.40);display:flex;align-items:center;justify-content:center;padding:8px;z-index:5;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.4;font-family:\'Montserrat\',sans-serif;">Закончился 🔥<br>Завтра будет</p></div>' : '';
+        ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.44);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.4;font-family:\'Montserrat\',sans-serif;">Закончился 🔥<br>Завтра будет</p></div>' : '';
       var priceStr = disc < p.price ? disc.toFixed(2) : p.price.toFixed(2);
-      var priceColor = disc < p.price ? '#E05252' : '#1a0900';
-      /* 155×228 card: food photo dominates (~80%), compact footer rides on subtle gradient */
-      return '<div style="flex-shrink:0;width:155px;height:228px;position:relative;' + (!available ? 'opacity:0.62;' : '') + '">'
-        + '<div class="bs-card-inner" style="width:100%;height:100%;background:#F0E6D3;border-radius:22px;overflow:hidden;box-shadow:0 4px 14px rgba(45,21,5,0.08);position:relative;transition:box-shadow 0.32s ease;">'
-        /* full-bleed food photo — hero of the card */
-        + '<button onclick="showProductDetail(\'' + p.id + '\')" style="position:absolute;inset:0;border:none;padding:0;cursor:pointer;background:transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent;z-index:1;">'
+      var priceColor = disc < p.price ? '#E05252' : '#2d1505';
+      /* card 150×205 — image 126px / footer 79px */
+      return '<div style="flex-shrink:0;width:150px;height:205px;position:relative;' + (!available ? 'opacity:0.60;' : '') + '">'
+        + '<div class="bs-card-inner" style="width:100%;height:100%;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.07);display:flex;flex-direction:column;transition:box-shadow 0.35s ease;">'
+        /* image 58% = 126px */
+        + '<button onclick="showProductDetail(\'' + p.id + '\')" style="width:100%;height:126px;flex-shrink:0;display:block;border:none;padding:0;cursor:pointer;background:#F2E8D8;position:relative;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">'
         + '<div style="width:100%;height:100%;">' + imgHTML + '</div>'
-        + oosOverlay
+        + hitBadge + oosOverlay
         + '</button>'
-        + hitBadge
-        /* readability strip — matches footer height exactly */
-        + '<div style="position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(to bottom,transparent 0%,rgba(255,252,248,0.30) 25%,rgba(255,252,248,0.88) 55%,#fffcf8 72%);pointer-events:none;z-index:2;"></div>'
-        /* compact footer — auto height, content stacks tightly */
-        + '<div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:4px 10px 8px;display:flex;flex-direction:column;gap:3px;">'
-        + '<div onclick="showProductDetail(\'' + p.id + '\')" style="cursor:pointer;touch-action:manipulation;">'
-        + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#1a0900;margin:0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
-        + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:9.5px;color:#9E7A56;margin:1px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
+        + '<div style="flex-shrink:0;height:44px;margin-top:-44px;background:linear-gradient(to bottom,transparent 0%,rgba(255,255,255,0.45) 45%,#ffffff 100%);position:relative;z-index:2;pointer-events:none;"></div>'
+        /* footer — name, weight, price */
+        + '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;padding:4px 10px 8px;">'
+        + '<div onclick="showProductDetail(\'' + p.id + '\')" style="cursor:pointer;">'
+        + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
+        + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#A08060;margin:2px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
         + '</div>'
+        /* price row — price left, button right */
         + '<div style="display:flex;align-items:center;justify-content:space-between;">'
         + (available
-          ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:14px;font-weight:800;color:' + priceColor + ';margin:0;line-height:1;letter-spacing:-0.2px;">' + priceStr + ' <span style="font-size:10px;font-weight:600;">Б</span></p>'
-          : '<p style="font-family:\'Montserrat\',sans-serif;font-size:9px;color:#bbb;margin:0;">Нет в наличии</p>')
+          ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:800;color:' + priceColor + ';margin:0;line-height:1;">' + priceStr + ' <span style="font-size:11px;font-weight:600;">Б</span></p>'
+          : '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#aaa;margin:0;">Нет в наличии</p>')
         + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="3" style="display:flex;align-items:center;">'
         + (available ? bsFloatBtnHTML(p.id, quantity) : '')
         + '</div>'
@@ -2009,14 +2007,14 @@
         card.style.scrollSnapAlign = 'center';
         card.style.willChange = 'transform';
         card.style.transition = 'none';
-        card.style.transform = 'scale(0.92)';
-        card.style.opacity = '0.88';
+        card.style.transform = 'scale(0.93) translateY(0px)';
+        card.style.opacity = '0.72';
       });
 
       var startIdx = _bsCloneCount; // first real card (after left clone set)
-      var SPRING = 'transform 0.34s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.22s ease';
-      var SHADOW_ACTIVE = '0 8px 24px rgba(45,21,5,0.13)';
-      var SHADOW_REST   = '0 2px 8px rgba(45,21,5,0.05)';
+      var SPRING = 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.26s ease';
+      var SHADOW_ACTIVE = '0 6px 16px rgba(0,0,0,0.09)';
+      var SHADOW_REST   = '0 3px 10px rgba(0,0,0,0.05)';
 
       requestAnimationFrame(function() {
         if (!cards.length) return;
@@ -2037,8 +2035,8 @@
           requestAnimationFrame(function() {
             cards.forEach(function(card, i) {
               var isActive = i === startIdx;
-              card.style.transform = isActive ? 'scale(1.0)' : 'scale(0.92)';
-              card.style.opacity = isActive ? '1' : '0.88';
+              card.style.transform = isActive ? 'scale(1.08)' : 'scale(0.93)';
+              card.style.opacity = isActive ? '1' : '0.72';
               var inner = card.querySelector('.bs-card-inner');
               if (inner) inner.style.boxShadow = isActive ? SHADOW_ACTIVE : SHADOW_REST;
             });
@@ -2064,10 +2062,10 @@
         });
         cards.forEach(function(card, i) {
           var isActive = i === activeIdx;
-          card.style.transform = isActive ? 'scale(1.0)' : 'scale(0.92)';
-          card.style.opacity = isActive ? '1' : '0.88';
+          card.style.transform = isActive ? 'scale(1.08)' : 'scale(0.93)';
+          card.style.opacity = isActive ? '1' : '0.72';
           var inner = card.querySelector('.bs-card-inner');
-          if (inner) inner.style.boxShadow = isActive ? '0 8px 24px rgba(45,21,5,0.13)' : '0 2px 8px rgba(45,21,5,0.05)';
+          if (inner) inner.style.boxShadow = isActive ? '0 6px 16px rgba(0,0,0,0.09)' : '0 3px 10px rgba(0,0,0,0.05)';
         });
         clearTimeout(_bsScrollStopTimer);
         _bsScrollStopTimer = setTimeout(function() {
@@ -2090,15 +2088,15 @@
       el.scrollLeft += jump * (BS_CARD_W + BS_GAP);
       cards.forEach(function(card, i) {
         var isActive = i === toIdx;
-        card.style.transform = isActive ? 'scale(1.0)' : 'scale(0.92)';
-        card.style.opacity = isActive ? '1' : '0.88';
+        card.style.transform = isActive ? 'scale(1.08)' : 'scale(0.93)';
+        card.style.opacity = isActive ? '1' : '0.72';
         var inner = card.querySelector('.bs-card-inner');
-        if (inner) inner.style.boxShadow = isActive ? '0 8px 24px rgba(45,21,5,0.13)' : '0 2px 8px rgba(45,21,5,0.05)';
+        if (inner) inner.style.boxShadow = isActive ? '0 6px 16px rgba(0,0,0,0.09)' : '0 3px 10px rgba(0,0,0,0.05)';
       });
       requestAnimationFrame(function() {
         requestAnimationFrame(function() {
           cards.forEach(function(card) {
-            card.style.transition = 'transform 0.34s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.22s ease';
+            card.style.transition = 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.26s ease';
           });
         });
       });
@@ -2430,7 +2428,7 @@
       return 'товаров';
     }
 
-    var CS_CARD_W = 160, CS_GAP = 14;
+    var CS_CARD_W = 150, CS_GAP = 14;
     var _csRaf = null, _csScrollStopTimer = null;
     var _csCloneCount = 0, _csTotalReal = 0, _csPickIds = '';
 
@@ -2461,16 +2459,13 @@
       var item = cart.find(function(i) { return i.product_id === p.id; });
       if (item) qty = item.quantity;
       var imgHTML = productImages[p.id]
-        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center 25%;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
-      return '<div style="flex-shrink:0;width:160px;height:245px;scroll-snap-align:center;position:relative;">'
-        + '<div style="width:100%;height:100%;background:#F2E8D8;border-radius:20px;overflow:hidden;box-shadow:0 3px 10px rgba(45,21,5,0.05);position:relative;">'
-        /* photo fills entire card */
-        + '<div style="position:absolute;inset:0;">' + imgHTML + '</div>'
-        /* gradient from bottom: transparent → white */
-        + '<div style="position:absolute;left:0;right:0;bottom:0;height:140px;background:linear-gradient(to bottom,transparent 0%,rgba(255,255,255,0.72) 42%,#ffffff 68%,#ffffff 100%);pointer-events:none;z-index:2;"></div>'
-        /* text block on top of gradient */
-        + '<div style="position:absolute;left:0;right:0;bottom:0;height:79px;z-index:3;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;">'
+      return '<div style="flex-shrink:0;width:150px;height:205px;scroll-snap-align:center;position:relative;">'
+        + '<div style="width:100%;height:100%;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 3px 10px rgba(45,21,5,0.05);display:flex;flex-direction:column;">'
+        + '<div style="position:relative;width:100%;height:126px;flex-shrink:0;background:#F2E8D8;overflow:hidden;">' + imgHTML + '</div>'
+        + '<div style="flex-shrink:0;height:44px;margin-top:-44px;background:linear-gradient(to bottom,transparent 0%,rgba(255,255,255,0.45) 45%,#ffffff 100%);position:relative;z-index:2;pointer-events:none;"></div>'
+        + '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;padding:4px 10px 8px;">'
         + '<div>'
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
         + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#A08060;margin:2px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
@@ -3115,7 +3110,7 @@
 
     function preorderCardHTML(p, isBakery) {
       var imgHTML = productImages[p.id]
-        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center 25%;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
       var now = new Date(); var h = now.getHours();
       var freshBadge = (isBakery && h >= 7 && h < 11) ? '<div style="position:absolute;top:9px;right:9px;background:#fff;color:#C0360A;font-size:9px;font-weight:800;padding:3px 8px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;box-shadow:0 1px 6px rgba(0,0,0,0.12);">Из печи 🔥</div>' : '';
@@ -3123,16 +3118,12 @@
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var cartItem = preorderCart.find(function(i) { return i.product_id === p.id; });
       var qty = cartItem ? cartItem.quantity : 0;
-      return '<div style="flex-shrink:0;width:160px;height:245px;position:relative;scroll-snap-align:start;">'
-        + '<div style="width:100%;height:100%;background:#F2E8D8;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.07);position:relative;">'
-        /* photo fills entire card */
-        + '<div style="position:absolute;inset:0;">' + imgHTML + '</div>'
-        /* badges over photo */
-        + badge + freshBadge
-        /* gradient from bottom: transparent → white */
-        + '<div style="position:absolute;left:0;right:0;bottom:0;height:140px;background:linear-gradient(to bottom,transparent 0%,rgba(255,255,255,0.72) 42%,#ffffff 68%,#ffffff 100%);pointer-events:none;z-index:2;"></div>'
-        /* text block on top of gradient */
-        + '<div style="position:absolute;left:0;right:0;bottom:0;height:79px;z-index:3;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;">'
+      /* same dimensions and style as bestseller cards */
+      return '<div style="flex-shrink:0;width:150px;height:205px;position:relative;scroll-snap-align:start;">'
+        + '<div style="width:100%;height:100%;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.07);display:flex;flex-direction:column;">'
+        + '<div style="position:relative;width:100%;height:126px;flex-shrink:0;background:#F2E8D8;overflow:hidden;">' + imgHTML + badge + freshBadge + '</div>'
+        + '<div style="flex-shrink:0;height:44px;margin-top:-44px;background:linear-gradient(to bottom,transparent 0%,rgba(255,255,255,0.45) 45%,#ffffff 100%);position:relative;z-index:2;pointer-events:none;"></div>'
+        + '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;padding:4px 10px 8px;">'
         + '<div>'
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
         + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#A08060;margin:2px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
