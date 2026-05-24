@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProductCard — Мамин Хлеб</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #F5EFE6; font-family: 'Montserrat', sans-serif; }
+
+    .product-card {
+      width: 155px;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 8px 28px rgba(45, 21, 5, 0.10);
+      overflow: visible;
+      position: relative;
+      flex-shrink: 0;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1),
+                  box-shadow 0.35s ease;
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 14px 36px rgba(45,21,5,0.14); }
+
+    .product-card__img-wrap {
+      position: relative;
+      width: 100%;
+      height: 135px;
+      border-radius: 20px 20px 0 0;
+      overflow: hidden;
+    }
+
+    .product-card__img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* gradient fade: image → white, the core transition effect */
+    .product-card__fade {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(255,255,255,0.40) 40%,
+        rgba(255,255,255,0.82) 70%,
+        #ffffff 100%
+      );
+      pointer-events: none;
+    }
+
+    /* soft glow blur on the image edges */
+    .product-card__img-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px 20px 0 0;
+      box-shadow: inset 0 -1px 0 rgba(255,255,255,0.9);
+      pointer-events: none;
+    }
+
+    .product-card__badge {
+      position: absolute;
+      top: 9px;
+      left: 9px;
+      background: linear-gradient(135deg, #C9A227, #E8B430);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 99px;
+      letter-spacing: 0.03em;
+      box-shadow: 0 2px 8px rgba(201,162,39,0.45);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .product-card__body {
+      /* continues white from the gradient fade */
+      background: #fff;
+      border-radius: 0 0 20px 20px;
+      padding: 4px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .product-card__name {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      color: #2d1505;
+      line-height: 1.25;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      padding-right: 44px;
+    }
+
+    .product-card__weight {
+      font-size: 10px;
+      color: #A08060;
+      margin: 2px 0 8px;
+      line-height: 1;
+    }
+
+    .product-card__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .product-card__price {
+      font-size: 15px;
+      font-weight: 800;
+      color: #2d1505;
+      line-height: 1;
+    }
+
+    .product-card__price span {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* add button */
+    .product-card__btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #C9A227, #E8B430);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 22px;
+      box-shadow: 0 4px 14px rgba(201,162,39,0.50);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      flex-shrink: 0;
+    }
+    .product-card__btn:active { transform: scale(0.90); box-shadow: 0 2px 8px rgba(201,162,39,0.40); }
+
+    /* quantity pill (shown when item is in cart) */
+    .product-card__qty {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: rgba(255,251,245,0.97);
+      border-radius: 50px;
+      padding: 3px;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.12);
+      border: 1px solid rgba(201,162,39,0.20);
+    }
+    .product-card__qty-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .product-card__qty-btn--minus { background: #EDE0C4; color: #6B4423; }
+    .product-card__qty-btn--plus  { background: linear-gradient(135deg,#C9A227,#E8B430); color: #fff; box-shadow: 0 2px 6px rgba(201,162,39,0.42); }
+    .product-card__qty-count {
+      min-width: 14px;
+      text-align: center;
+      font-weight: 800;
+      color: #2d1505;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+  <!-- Demo: 3 cards in a row -->
+  <div class="flex gap-4 items-start flex-wrap justify-center">
+
+    <!-- card 1: no cart item -->
+    <div id="card-piroshki" class="product-card">
+      <div class="product-card__img-wrap">
+        <img class="product-card__img"
+          src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80"
+          alt="Пирожок с мясом">
+        <div class="product-card__fade"></div>
+        <div class="product-card__badge">Хит</div>
+      </div>
+      <div class="product-card__body">
+        <h3 class="product-card__name">Пирожок с мясом</h3>
+        <p class="product-card__weight">90 г</p>
+        <div class="product-card__footer">
+          <p class="product-card__price">1.75 <span>Б</span></p>
+          <button class="product-card__btn" onclick="addToCart('piroshki', this)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- card 2: already in cart (qty=2) -->
+    <div id="card-khachapuri" class="product-card">
+      <div class="product-card__img-wrap">
+        <img class="product-card__img"
+          src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=400&q=80"
+          alt="Хачапури">
+        <div class="product-card__fade"></div>
+        <div class="product-card__badge">Хит</div>
+      </div>
+      <div class="product-card__body">
+        <h3 class="product-card__name">Хачапури</h3>
+        <p class="product-card__weight">90 г</p>
+        <div class="product-card__footer">
+          <p class="product-card__price">2.10 <span>Б</span></p>
+          <!-- qty pill demo -->
+          <div class="product-card__qty" id="qty-khachapuri">
+            <button class="product-card__qty-btn product-card__qty-btn--minus"
+              onclick="changeQty('khachapuri', -1)">−</button>
+            <span class="product-card__qty-count" id="count-khachapuri">2</span>
+            <button class="product-card__qty-btn product-card__qty-btn--plus"
+              onclick="changeQty('khachapuri', 1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- card 3: out of stock -->
+    <div id="card-cappuccino" class="product-card" style="opacity:0.60;">
+      <div class="product-card__img-wrap">
+        <img class="product-card__img"
+          src="https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&q=80"
+          alt="Капучино">
+        <div class="product-card__fade"></div>
+        <!-- out-of-stock overlay -->
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.42);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;border-radius:20px 20px 0 0;">
+          <p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.5;">Закончился 🔥<br>Завтра будет</p>
+        </div>
+      </div>
+      <div class="product-card__body">
+        <h3 class="product-card__name">Капучино</h3>
+        <p class="product-card__weight">300 мл</p>
+        <div class="product-card__footer">
+          <p class="product-card__price" style="color:#aaa;">3.00 <span>Б</span></p>
+          <span style="font-size:9px;color:#bbb;font-family:'Montserrat',sans-serif;">Нет в наличии</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ── Cart state ─────────────────────────────────── */
+    const cart = {};
+
+    function addToCart(id, btn) {
+      cart[id] = 1;
+      renderQty(id, btn.closest('.product-card__footer'));
+    }
+
+    function changeQty(id, delta) {
+      cart[id] = (cart[id] || 0) + delta;
+      const footer = document.getElementById('card-' + id).querySelector('.product-card__footer');
+      renderQty(id, footer);
+    }
+
+    function renderQty(id, footer) {
+      const qty = cart[id] || 0;
+      const existingBtn = footer.querySelector('.product-card__btn');
+      const existingQty = footer.querySelector('.product-card__qty');
+
+      if (qty <= 0) {
+        if (existingQty) existingQty.remove();
+        if (!existingBtn) {
+          const btn = document.createElement('button');
+          btn.className = 'product-card__btn';
+          btn.textContent = '+';
+          btn.onclick = () => addToCart(id, btn);
+          footer.appendChild(btn);
+        }
+        return;
+      }
+
+      if (existingBtn) existingBtn.remove();
+
+      if (existingQty) {
+        existingQty.querySelector('.product-card__qty-count').textContent = qty;
+      } else {
+        const pill = document.createElement('div');
+        pill.className = 'product-card__qty';
+        pill.id = 'qty-' + id;
+        pill.innerHTML = `
+          <button class="product-card__qty-btn product-card__qty-btn--minus"
+            onclick="changeQty('${id}',-1)">−</button>
+          <span class="product-card__qty-count" id="count-${id}">${qty}</span>
+          <button class="product-card__qty-btn product-card__qty-btn--plus"
+            onclick="changeQty('${id}',1)">+</button>`;
+        footer.appendChild(pill);
+      }
+    }
+
+    /* ── Factory: create card element programmatically ── */
+    function createProductCard({ id, name, weight, price, imageUrl, badge, inStock = true, quantity = 0 }) {
+      const priceFormatted = typeof price === 'number' ? price.toFixed(2) : price;
+
+      const card = document.createElement('div');
+      card.id = 'card-' + id;
+      card.className = 'product-card';
+      if (!inStock) card.style.opacity = '0.60';
+
+      card.innerHTML = `
+        <div class="product-card__img-wrap">
+          <img class="product-card__img" src="${imageUrl}" alt="${name}" loading="lazy">
+          <div class="product-card__fade"></div>
+          ${badge ? `<div class="product-card__badge">${badge}</div>` : ''}
+          ${!inStock ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.42);display:flex;align-items:center;justify-content:center;z-index:3;border-radius:20px 20px 0 0;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.5;">Закончился 🔥<br>Завтра будет</p></div>` : ''}
+        </div>
+        <div class="product-card__body">
+          <h3 class="product-card__name">${name}</h3>
+          ${weight ? `<p class="product-card__weight">${weight}</p>` : ''}
+          <div class="product-card__footer">
+            <p class="product-card__price">${priceFormatted} <span>Б</span></p>
+            ${inStock
+              ? `<button class="product-card__btn" onclick="addToCart('${id}', this)">+</button>`
+              : `<span style="font-size:9px;color:#bbb;">Нет в наличии</span>`}
+          </div>
+        </div>`;
+
+      if (inStock && quantity > 0) {
+        cart[id] = quantity;
+        const footer = card.querySelector('.product-card__footer');
+        setTimeout(() => renderQty(id, footer), 0);
+      }
+
+      return card;
+    }
+  </script>
+</body>
+</html>
