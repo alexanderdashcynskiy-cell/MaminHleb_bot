@@ -3103,31 +3103,38 @@
     function preorderCardHTML(p, isBakery) {
       var imgHTML = productImages[p.id]
         ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
-        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">' + p.image + '</div>';
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
       var now = new Date(); var h = now.getHours();
-      var freshBadge = (isBakery && h >= 7 && h < 11) ? '<div style="position:absolute;top:8px;right:8px;background:#fff;color:#C0360A;font-size:9px;font-weight:800;padding:3px 8px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;box-shadow:0 1px 6px rgba(0,0,0,0.12);">Из печи 🔥</div>' : '';
-      var badge = p.bestseller ? '<div style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:9px;font-weight:800;padding:3px 9px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.03em;">Хит</div>' : '';
+      var freshBadge = (isBakery && h >= 7 && h < 11) ? '<div style="position:absolute;top:9px;right:9px;background:#fff;color:#C0360A;font-size:9px;font-weight:800;padding:3px 8px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;box-shadow:0 1px 6px rgba(0,0,0,0.12);">Из печи 🔥</div>' : '';
+      var badge = p.bestseller ? '<div style="position:absolute;top:9px;left:9px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;box-shadow:0 2px 6px rgba(201,162,39,0.40);">Хит</div>' : '';
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
-      return '<div style="flex-shrink:0;width:150px;background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(45,21,5,0.08);overflow:hidden;scroll-snap-align:start;">'
-        + '<div style="position:relative;width:100%;height:140px;background:#F5EAD8;overflow:hidden;">' + imgHTML + badge + freshBadge + '</div>'
-        + '<div style="padding:10px 12px 13px;">'
-        + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:13px;color:#2d1505;line-height:1.3;min-height:32px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(p.name) + '</div>'
-        + '<div style="font-size:9px;color:rgba(107,68,35,0.50);margin-top:3px;font-family:\'Montserrat\',sans-serif;">' + escHtml(weightInfo) + '</div>'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
-        + '<div><span style="font-size:15px;font-weight:800;color:#2d1505;font-family:\'Montserrat\',sans-serif;">' + p.price.toFixed(2) + '</span><span style="font-size:9px;font-weight:600;color:#C9A227;margin-left:2px;">BYN</span></div>'
-        + '<div class="preorder-btn-zone" data-pid="' + p.id + '" data-price="' + p.price + '" style="display:flex;align-items:center;justify-content:flex-end;"></div>'
-        + '</div></div></div>';
+      /* same dimensions and style as bestseller cards */
+      return '<div style="flex-shrink:0;width:150px;height:205px;position:relative;scroll-snap-align:start;">'
+        + '<div style="width:100%;height:100%;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.07);display:flex;flex-direction:column;">'
+        + '<div style="position:relative;width:100%;height:126px;flex-shrink:0;background:#F2E8D8;overflow:hidden;">' + imgHTML + badge + freshBadge + '</div>'
+        + '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;padding:8px 10px;">'
+        + '<div>'
+        + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
+        + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#A08060;margin:2px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
+        + '</div>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;">'
+        + '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:800;color:#2d1505;margin:0;line-height:1;">' + p.price.toFixed(2) + ' <span style="font-size:11px;font-weight:600;">Б</span></p>'
+        + '<div class="preorder-btn-zone" data-pid="' + p.id + '" data-price="' + p.price + '" style="display:flex;align-items:center;"></div>'
+        + '</div>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
     }
 
     function preorderBtnZoneHTML(productId, price, qty) {
       if (qty > 0) {
-        return '<div style="display:flex;align-items:center;gap:4px;">'
-          + '<button type="button" onclick="updatePreorderQuantity(\'' + productId + '\', -1)" style="width:28px;height:28px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">−</button>'
-          + '<span style="min-width:16px;text-align:center;font-weight:800;font-size:13px;color:#2d1505;font-family:\'Montserrat\',sans-serif;">' + qty + '</span>'
-          + '<button type="button" onclick="updatePreorderQuantity(\'' + productId + '\', 1)" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 8px rgba(201,162,39,0.38);">+</button>'
+        return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
+          + '<button type="button" onclick="updatePreorderQuantity(\'' + productId + '\', -1)" style="width:24px;height:24px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">−</button>'
+          + '<span style="min-width:14px;text-align:center;font-weight:800;font-size:11px;color:#2d1505;font-family:\'Montserrat\',sans-serif;">' + qty + '</span>'
+          + '<button type="button" onclick="updatePreorderQuantity(\'' + productId + '\', 1)" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
           + '</div>';
       }
-      return '<button type="button" onclick="addPreorderItem(\'' + productId + '\', ' + price + ')" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 10px rgba(201,162,39,0.40);">+</button>';
+      return '<button type="button" onclick="addPreorderItem(\'' + productId + '\', ' + price + ')" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
     }
 
     function renderPreorderBakery() {
