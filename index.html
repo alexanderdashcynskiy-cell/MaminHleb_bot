@@ -270,8 +270,8 @@
       <button onclick="showScreen('bestsellers')" class="text-xs font-semibold text-caramel">Все →</button>
      </div>
      <div class="relative">
-      <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar pb-2" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:8px;" onscroll="onBestsellerScroll(this)">
-       <div class="flex" style="gap:10px;" id="bestsellers-items"></div>
+      <div id="bestsellers-carousel" class="overflow-x-auto hide-scrollbar" style="width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:20px;padding-bottom:18px;" onscroll="onBestsellerScroll(this)">
+       <div class="flex" style="gap:14px;" id="bestsellers-items"></div>
       </div>
       <button onclick="scrollBestsellersLeft()" class="absolute left-0 top-1/3 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg hidden sm:flex">
        <svg class="w-5 h-5 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
@@ -1898,15 +1898,18 @@
     }
 
     function cardBtnHTML(pid, quantity, compact = false) {
-      const sz = compact ? 26 : 32, fsz = compact ? 14 : 18;
+      var isBs = compact === 2 || compact === '2';
+      var isCompact = compact === true || compact === '1';
+      var sz = isCompact ? 26 : isBs ? 28 : 32;
+      var fsz = isCompact ? 14 : isBs ? 15 : 18;
       if (quantity > 0) return `
-        <div style="display:flex;align-items:center;gap:${compact?4:5}px;background:#f5ead8;border-radius:50px;padding:${compact?'4px 5px':'5px 7px'};border:1px solid rgba(201,162,39,0.45);box-shadow:0 2px 6px rgba(180,130,60,0.1);">
+        <div style="display:flex;align-items:center;gap:${isCompact?4:isBs?3:5}px;background:#f5ead8;border-radius:50px;padding:${isCompact?'4px 5px':isBs?'3px 4px':'5px 7px'};border:1px solid rgba(201,162,39,0.45);box-shadow:0 2px 6px rgba(180,130,60,0.1);">
           <button onclick="updateQuantity('${pid}',-1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:#D4AA70;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;">−</button>
-          <span style="min-width:${compact?16:20}px;text-align:center;font-weight:800;color:#6B4423;font-size:${compact?12:14}px;">${quantity}</span>
+          <span style="min-width:${isCompact?16:isBs?14:20}px;text-align:center;font-weight:800;color:#6B4423;font-size:${isCompact?12:isBs?12:14}px;">${quantity}</span>
           <button onclick="updateQuantity('${pid}',1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;box-shadow:0 2px 6px rgba(201,162,39,0.35);">+</button>
         </div>`;
-      const btnSz = compact ? 36 : 48;
-      const btnFs = compact ? 20 : 26;
+      var btnSz = isCompact ? 36 : isBs ? 44 : 48;
+      var btnFs = isCompact ? 20 : isBs ? 22 : 26;
       return `<button onclick="addToCart('${pid}')" style="width:${btnSz}px;height:${btnSz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:${btnFs}px;flex-shrink:0;box-shadow:0 4px 14px rgba(201,162,39,0.45);">+</button>`;
     }
 
@@ -1914,16 +1917,44 @@
       const cartItem = cart.find(i => i.product_id === productId);
       const qty = cartItem ? cartItem.quantity : 0;
       document.querySelectorAll(`.card-btn-zone[data-pid="${productId}"]`).forEach(zone => {
-        const compact = zone.dataset.compact === '1';
+        const compact = zone.dataset.compact;
         zone.innerHTML = cardBtnHTML(productId, qty, compact);
       });
     }
 
-    var BS_CARD_W = 180, BS_GAP = 10;
+    var BS_CARD_W = 140, BS_GAP = 14;
     var _bsRaf = null;
     var _bsScrollStopTimer = null;
     var _bsCloneCount = 0;
     var _bsTotalReal = 0;
+
+    function bsCardHTML(p) {
+      var cartItem = cart.find(function(i) { return i.product_id === p.id; });
+      var quantity = cartItem ? cartItem.quantity : 0;
+      var available = inStock(p.name);
+      var imgHTML = productImages[p.id]
+        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:#F5EAD8;">' + p.image + '</div>';
+      var hitBadge = p.bestseller ? '<div style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.03em;pointer-events:none;">Хит</div>' : '';
+      var oosOverlay = !available ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.50);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;"><p style="color:#fff;font-weight:800;font-size:9px;text-align:center;line-height:1.3;font-family:\'Montserrat\',sans-serif;">Товар закончился,<br>завтра сделаем<br>новую партию 🔥</p></div>' : '';
+      var disc = happyPrice(p);
+      var priceHTML = !available
+        ? '<span style="font-size:9px;color:#aaa;font-family:\'Montserrat\',sans-serif;">Нет в наличии</span>'
+        : disc < p.price
+          ? '<div style="line-height:1.2;"><span style="font-size:9px;color:#aaa;text-decoration:line-through;font-family:\'Montserrat\',sans-serif;">' + p.price.toFixed(2) + '</span><br><span style="font-size:13px;font-weight:800;color:#E05252;font-family:\'Montserrat\',sans-serif;">' + disc.toFixed(2) + ' <span style="font-size:9px;">BYN</span></span></div>'
+          : '<span style="font-size:13px;font-weight:800;color:#2d1505;font-family:\'Montserrat\',sans-serif;">' + p.price.toFixed(2) + ' <span style="font-size:9px;font-weight:600;color:#C9A227;">BYN</span></span>';
+      return '<div style="flex-shrink:0;width:140px;height:220px;' + (!available ? 'opacity:0.6;' : '') + '">'
+        + '<div class="bs-card-inner" style="width:100%;height:100%;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.06);display:flex;flex-direction:column;transition:box-shadow 0.35s ease;">'
+        + '<button onclick="showProductDetail(\'' + p.id + '\')" style="width:100%;height:154px;flex-shrink:0;display:block;border:none;padding:0;cursor:pointer;background:#F5EAD8;position:relative;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">'
+        + '<div style="width:100%;height:100%;">' + imgHTML + '</div>' + hitBadge + oosOverlay
+        + '</button>'
+        + '<div style="flex:1;padding:8px 12px 10px;display:flex;flex-direction:column;justify-content:space-between;">'
+        + '<h3 onclick="showProductDetail(\'' + p.id + '\')" style="font-family:\'Playfair Display\',serif;font-weight:700;font-size:11.5px;color:#2d1505;line-height:1.3;margin:0;cursor:pointer;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(p.name) + '</h3>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:4px;">'
+        + priceHTML
+        + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="2" style="flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;">' + (available ? cardBtnHTML(p.id, quantity, '2') : '') + '</div>'
+        + '</div></div></div></div>';
+    }
 
     function renderBestsellers() {
       var defaultIds = ['pastry-cheese', 'pastry-sausage', 'pastry-khachapuri', 'piroshki-meat', 'coffee-cappuccino'];
@@ -1940,20 +1971,22 @@
       _bsCloneCount = _bsTotalReal;
 
       // Layout: [clones of real][real cards][clones of real] — enables infinite loop
-      var realHTML = filtered.map(function(p) { return productCardHTML(p, true); });
+      var realHTML = filtered.map(function(p) { return bsCardHTML(p); });
       container.innerHTML = realHTML.concat(realHTML).concat(realHTML).join('');
 
       var cards = Array.from(container.querySelectorAll(':scope > div'));
       cards.forEach(function(card) {
         card.style.scrollSnapAlign = 'center';
-        card.style.flexShrink = '0';
         card.style.willChange = 'transform';
         card.style.transition = 'none';
-        card.style.transform = 'scale(0.86)';
-        card.style.opacity = '0.7';
+        card.style.transform = 'scale(0.93) translateY(0px)';
+        card.style.opacity = '0.72';
       });
 
       var startIdx = _bsCloneCount; // first real card (after left clone set)
+      var SPRING = 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.26s ease';
+      var SHADOW_ACTIVE = '0 10px 30px rgba(0,0,0,0.13)';
+      var SHADOW_REST   = '0 4px 14px rgba(0,0,0,0.06)';
 
       requestAnimationFrame(function() {
         if (!cards.length) return;
@@ -1973,13 +2006,14 @@
 
           requestAnimationFrame(function() {
             cards.forEach(function(card, i) {
-              card.style.transform = i === startIdx ? 'scale(1)' : 'scale(0.86)';
-              card.style.opacity = i === startIdx ? '1' : '0.7';
+              var isActive = i === startIdx;
+              card.style.transform = isActive ? 'scale(1.15) translateY(-8px)' : 'scale(0.93) translateY(0px)';
+              card.style.opacity = isActive ? '1' : '0.72';
+              var inner = card.querySelector('.bs-card-inner');
+              if (inner) inner.style.boxShadow = isActive ? SHADOW_ACTIVE : SHADOW_REST;
             });
             setTimeout(function() {
-              cards.forEach(function(card) {
-                card.style.transition = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.22s ease';
-              });
+              cards.forEach(function(card) { card.style.transition = SPRING; });
             }, 60);
           });
         });
@@ -1999,10 +2033,12 @@
           if (dist < minDist) { minDist = dist; activeIdx = i; }
         });
         cards.forEach(function(card, i) {
-          card.style.transform = i === activeIdx ? 'scale(1)' : 'scale(0.86)';
-          card.style.opacity = i === activeIdx ? '1' : '0.7';
+          var isActive = i === activeIdx;
+          card.style.transform = isActive ? 'scale(1.15) translateY(-8px)' : 'scale(0.93) translateY(0px)';
+          card.style.opacity = isActive ? '1' : '0.72';
+          var inner = card.querySelector('.bs-card-inner');
+          if (inner) inner.style.boxShadow = isActive ? '0 10px 30px rgba(0,0,0,0.13)' : '0 4px 14px rgba(0,0,0,0.06)';
         });
-        // After scroll settles, silently jump from clone region to real region
         clearTimeout(_bsScrollStopTimer);
         _bsScrollStopTimer = setTimeout(function() {
           _bsLoopCheck(el, cards, activeIdx);
@@ -2023,13 +2059,16 @@
       cards.forEach(function(card) { card.style.transition = 'none'; });
       el.scrollLeft += jump * (BS_CARD_W + BS_GAP);
       cards.forEach(function(card, i) {
-        card.style.transform = i === toIdx ? 'scale(1)' : 'scale(0.86)';
-        card.style.opacity = i === toIdx ? '1' : '0.7';
+        var isActive = i === toIdx;
+        card.style.transform = isActive ? 'scale(1.15) translateY(-8px)' : 'scale(0.93) translateY(0px)';
+        card.style.opacity = isActive ? '1' : '0.72';
+        var inner = card.querySelector('.bs-card-inner');
+        if (inner) inner.style.boxShadow = isActive ? '0 10px 30px rgba(0,0,0,0.13)' : '0 4px 14px rgba(0,0,0,0.06)';
       });
       requestAnimationFrame(function() {
         requestAnimationFrame(function() {
           cards.forEach(function(card) {
-            card.style.transition = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.22s ease';
+            card.style.transition = 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.26s ease';
           });
         });
       });
@@ -2472,7 +2511,7 @@
             });
             setTimeout(function() {
               cards.forEach(function(card) {
-                card.style.transition = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.22s ease';
+                card.style.transition = 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.26s ease';
               });
             }, 60);
           });
@@ -2516,7 +2555,7 @@
       requestAnimationFrame(function() {
         requestAnimationFrame(function() {
           cards.forEach(function(card) {
-            card.style.transition = 'transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.22s ease';
+            card.style.transition = 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.26s ease';
           });
         });
       });
