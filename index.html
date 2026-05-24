@@ -1965,10 +1965,10 @@
         + oosOverlay
         + '</button>'
         + hitBadge
-        /* narrow readability strip — just enough to make text legible, not a fog overlay */
-        + '<div style="position:absolute;left:0;right:0;bottom:0;height:78px;background:linear-gradient(to bottom,transparent 0%,rgba(255,252,248,0.22) 22%,rgba(255,252,248,0.78) 52%,rgba(255,252,248,0.97) 70%,#fffcf8 82%);pointer-events:none;z-index:2;"></div>'
-        /* compact footer — title + weight + price + CTA, all in one tight zone */
-        + '<div style="position:absolute;left:0;right:0;bottom:0;height:60px;z-index:3;padding:5px 10px 8px;display:flex;flex-direction:column;justify-content:space-between;">'
+        /* readability strip — matches footer height exactly */
+        + '<div style="position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(to bottom,transparent 0%,rgba(255,252,248,0.30) 25%,rgba(255,252,248,0.88) 55%,#fffcf8 72%);pointer-events:none;z-index:2;"></div>'
+        /* compact footer — auto height, content stacks tightly */
+        + '<div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:4px 10px 8px;display:flex;flex-direction:column;gap:3px;">'
         + '<div onclick="showProductDetail(\'' + p.id + '\')" style="cursor:pointer;touch-action:manipulation;">'
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#1a0900;margin:0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
         + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:9.5px;color:#9E7A56;margin:1px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
