@@ -1215,48 +1215,101 @@
      <button type="button" id="submit-preorder-btn" onclick="submitPreorder(null)" style="width:100%;padding:16px;background:linear-gradient(90deg,#C9A227,#B8961F);color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.01em;box-shadow:0 8px 36px rgba(45,21,5,0.16),0 2px 8px rgba(45,21,5,0.08);pointer-events:auto;text-align:center;">Подтвердить предзаказ • <span id="preorder-confirm-total">0.00</span> Б</button>
     </div>
    </div>
+   </div>
+  </div>
 
-   <!-- Coffee addons modal -->
-   <div id="coffee-addons-overlay" style="display:none;position:absolute;inset:0;background:rgba(45,21,5,0.45);z-index:25;align-items:flex-end;" onclick="closeCoffeeAddons()">
-    <div style="width:100%;background:#FFF8F0;border-radius:24px 24px 0 0;padding:20px 16px;padding-bottom:max(env(safe-area-inset-bottom,28px),28px);" onclick="event.stopPropagation()">
-     <div style="width:40px;height:4px;background:rgba(45,21,5,0.15);border-radius:2px;margin:0 auto 16px;"></div>
-     <div id="coffee-addons-title" style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#2d1505;margin-bottom:20px;">Как приготовить?</div>
-     <div style="margin-bottom:16px;">
-      <div style="font-size:11px;font-weight:700;color:#C9A227;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Молоко</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-       <button type="button" data-group="milk" data-value="" onclick="selectCoffeeAddon('milk','')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;box-shadow:0 2px 8px rgba(201,162,39,0.35);">Без молока</button>
-       <button type="button" data-group="milk" data-value="молоко" onclick="selectCoffeeAddon('milk','молоко')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">+Молоко</button>
+  <!-- Coffee addons modal — global -->
+  <div id="coffee-addons-overlay" style="display:none;position:fixed;inset:0;background:rgba(45,21,5,0.55);z-index:200;align-items:flex-end;justify-content:center;" onclick="closeCoffeeAddons()">
+   <div style="width:100%;max-width:480px;background:#FFF8F0;border-radius:28px 28px 0 0;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;" onclick="event.stopPropagation()">
+    <!-- Drag handle -->
+    <div style="padding-top:12px;display:flex;justify-content:center;flex-shrink:0;">
+     <div style="width:42px;height:4px;background:rgba(45,21,5,0.15);border-radius:2px;"></div>
+    </div>
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;padding:14px 20px 12px;gap:16px;flex-shrink:0;position:relative;">
+     <button type="button" onclick="closeCoffeeAddons()" style="position:absolute;top:10px;right:16px;width:36px;height:36px;border-radius:50%;background:#EDE0C4;border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#6B4423;">✕</button>
+     <div id="coffee-modal-img-wrap" style="width:88px;height:88px;border-radius:16px;overflow:hidden;flex-shrink:0;background:#F2E8D8;display:flex;align-items:center;justify-content:center;font-size:2.6rem;"></div>
+     <div style="flex:1;min-width:0;padding-right:44px;">
+      <div id="coffee-modal-name" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#2d1505;line-height:1.2;"></div>
+      <div id="coffee-modal-desc" style="font-family:'Montserrat',sans-serif;font-size:12px;color:#9a8060;margin-top:5px;line-height:1.45;"></div>
+      <div style="margin-top:9px;display:flex;align-items:baseline;gap:3px;">
+       <span id="coffee-modal-price" style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:800;color:#C9A227;"></span>
+       <span style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:#C9A227;">б</span>
       </div>
      </div>
-     <div style="margin-bottom:16px;">
-      <div style="font-size:11px;font-weight:700;color:#C9A227;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Сахар</div>
+    </div>
+    <!-- Scrollable groups -->
+    <div style="flex:1;overflow-y:auto;padding:0 20px 8px;">
+     <div style="height:1px;background:rgba(45,21,5,0.08);margin-bottom:16px;"></div>
+     <!-- Milk -->
+     <div style="margin-bottom:18px;">
+      <div style="display:flex;align-items:center;margin-bottom:10px;">
+       <div style="width:38px;height:38px;border-radius:50%;background:#F0EAE0;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8"/><path d="M9 2v3l-2 3v13a1 1 0 001 1h8a1 1 0 001-1V8l-2-3V2"/><path d="M9 11h6"/><path d="M9 15h4"/></svg>
+       </div>
+       <span style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;color:#2d1505;">Молоко</span>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-       <button type="button" data-group="sugar" data-value="" onclick="selectCoffeeAddon('sugar','')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;box-shadow:0 2px 8px rgba(201,162,39,0.35);">Без сахара</button>
-       <button type="button" data-group="sugar" data-value="1 ч.л. сахара" onclick="selectCoffeeAddon('sugar','1 ч.л. сахара')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">1 ч.л.</button>
-       <button type="button" data-group="sugar" data-value="2 ч.л. сахара" onclick="selectCoffeeAddon('sugar','2 ч.л. сахара')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">2 ч.л.</button>
+       <button type="button" data-group="milk" data-value="" data-extra="0" onclick="selectCoffeeAddon('milk','',0)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;box-shadow:0 2px 8px rgba(201,162,39,0.40);">Без молока <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+       <button type="button" data-group="milk" data-value="молоко" data-extra="0.5" onclick="selectCoffeeAddon('milk','молоко',0.5)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">+Молоко <span style="font-size:11px;color:#C9A227;font-weight:500;">+0.50 б</span></button>
       </div>
      </div>
-     <div style="margin-bottom:16px;">
-      <div style="font-size:11px;font-weight:700;color:#C9A227;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Сироп</div>
+     <!-- Sugar -->
+     <div style="margin-bottom:18px;">
+      <div style="display:flex;align-items:center;margin-bottom:10px;">
+       <div style="width:38px;height:38px;border-radius:50%;background:#F0EAE0;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="7" height="7" rx="1"/><rect x="14" y="9" width="7" height="7" rx="1"/><rect x="8.5" y="4" width="7" height="7" rx="1"/></svg>
+       </div>
+       <span style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;color:#2d1505;">Сахар</span>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-       <button type="button" data-group="syrup" data-value="" onclick="selectCoffeeAddon('syrup','')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;box-shadow:0 2px 8px rgba(201,162,39,0.35);">Без сиропа</button>
-       <button type="button" data-group="syrup" data-value="сироп ваниль" onclick="selectCoffeeAddon('syrup','сироп ваниль')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">Ваниль</button>
-       <button type="button" data-group="syrup" data-value="сироп карамель" onclick="selectCoffeeAddon('syrup','сироп карамель')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">Карамель</button>
-       <button type="button" data-group="syrup" data-value="сироп лесной орех" onclick="selectCoffeeAddon('syrup','сироп лесной орех')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">Лесной орех</button>
-       <button type="button" data-group="syrup" data-value="сироп кокос" onclick="selectCoffeeAddon('syrup','сироп кокос')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">Кокос</button>
+       <button type="button" data-group="sugar" data-value="" data-extra="0" onclick="selectCoffeeAddon('sugar','',0)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;box-shadow:0 2px 8px rgba(201,162,39,0.40);">Без сахара <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+       <button type="button" data-group="sugar" data-value="1 ч.л. сахара" data-extra="0" onclick="selectCoffeeAddon('sugar','1 ч.л. сахара',0)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">1 ч.л.</button>
+       <button type="button" data-group="sugar" data-value="2 ч.л. сахара" data-extra="0" onclick="selectCoffeeAddon('sugar','2 ч.л. сахара',0)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">2 ч.л.</button>
       </div>
      </div>
-     <div style="margin-bottom:22px;">
-      <div style="font-size:11px;font-weight:700;color:#C9A227;font-family:'Montserrat',sans-serif;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Корица</div>
+     <!-- Syrup -->
+     <div style="margin-bottom:18px;">
+      <div style="display:flex;align-items:center;margin-bottom:10px;">
+       <div style="width:38px;height:38px;border-radius:50%;background:#F0EAE0;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+       </div>
+       <span style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;color:#2d1505;">Сироп</span>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-       <button type="button" data-group="cinnamon" data-value="" onclick="selectCoffeeAddon('cinnamon','')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;box-shadow:0 2px 8px rgba(201,162,39,0.35);">Без корицы</button>
-       <button type="button" data-group="cinnamon" data-value="корица" onclick="selectCoffeeAddon('cinnamon','корица')" style="padding:8px 14px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">+Корица</button>
+       <button type="button" data-group="syrup" data-value="" data-extra="0" onclick="selectCoffeeAddon('syrup','',0)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;box-shadow:0 2px 8px rgba(201,162,39,0.40);">Без сиропа <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+       <button type="button" data-group="syrup" data-value="сироп ваниль" data-extra="0.5" onclick="selectCoffeeAddon('syrup','сироп ваниль',0.5)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">Ваниль <span style="font-size:11px;color:#C9A227;font-weight:500;">+0.50 б</span></button>
+       <button type="button" data-group="syrup" data-value="сироп карамель" data-extra="0.5" onclick="selectCoffeeAddon('syrup','сироп карамель',0.5)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">Карамель <span style="font-size:11px;color:#C9A227;font-weight:500;">+0.50 б</span></button>
+       <button type="button" data-group="syrup" data-value="сироп лесной орех" data-extra="0.5" onclick="selectCoffeeAddon('syrup','сироп лесной орех',0.5)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">Лесной орех <span style="font-size:11px;color:#C9A227;font-weight:500;">+0.50 б</span></button>
+       <button type="button" data-group="syrup" data-value="сироп кокос" data-extra="0.5" onclick="selectCoffeeAddon('syrup','сироп кокос',0.5)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">Кокос <span style="font-size:11px;color:#C9A227;font-weight:500;">+0.50 б</span></button>
       </div>
      </div>
-     <button type="button" onclick="confirmCoffeeAddon()" style="width:100%;padding:16px;background:linear-gradient(90deg,#C9A227,#E8B430);color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:16px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.01em;">Добавить в заказ</button>
+     <!-- Cinnamon -->
+     <div style="margin-bottom:8px;">
+      <div style="display:flex;align-items:center;margin-bottom:10px;">
+       <div style="width:38px;height:38px;border-radius:50%;background:#F0EAE0;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round"><line x1="5" y1="4" x2="17" y2="20"/><line x1="8" y1="4" x2="20" y2="20"/><line x1="4" y1="7" x2="16" y2="21"/></svg>
+       </div>
+       <span style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;color:#2d1505;">Корица</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+       <button type="button" data-group="cinnamon" data-value="" data-extra="0" onclick="selectCoffeeAddon('cinnamon','',0)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;box-shadow:0 2px 8px rgba(201,162,39,0.40);">Без корицы <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+       <button type="button" data-group="cinnamon" data-value="корица" data-extra="0.3" onclick="selectCoffeeAddon('cinnamon','корица',0.3)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">+Корица <span style="font-size:11px;color:#C9A227;font-weight:500;">+0.30 б</span></button>
+      </div>
+     </div>
+    </div>
+    <!-- Bottom bar -->
+    <div style="flex-shrink:0;padding:12px 20px;padding-bottom:max(env(safe-area-inset-bottom,18px),18px);display:flex;align-items:center;gap:12px;border-top:1px solid rgba(45,21,5,0.07);background:#FFF8F0;">
+     <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <button type="button" onclick="changeCoffeeModalQty(-1)" style="width:40px;height:40px;border-radius:50%;background:#F0EAE0;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;color:#6B4423;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-weight:700;line-height:1;">−</button>
+      <span id="coffee-modal-qty" style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:800;color:#2d1505;min-width:22px;text-align:center;">1</span>
+      <button type="button" onclick="changeCoffeeModalQty(1)" style="width:40px;height:40px;border-radius:50%;background:#F0EAE0;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;color:#6B4423;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-weight:700;line-height:1;">+</button>
+     </div>
+     <button type="button" id="coffee-modal-confirm-btn" onclick="confirmCoffeeAddon()" style="flex:1;padding:15px 16px;background:linear-gradient(90deg,#C9A227,#E8B430);color:#fff;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.01em;box-shadow:0 4px 16px rgba(201,162,39,0.42);white-space:nowrap;text-align:center;">Добавить в заказ • <span id="coffee-modal-total">0.00</span> б</button>
     </div>
    </div>
   </div>
+
 
   <!-- Review Modal -->
   <div id="review-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:50;align-items:flex-end;">
@@ -2019,7 +2072,7 @@
         </div>`;
       var btnSz = isCompact ? 36 : isBs ? 41 : 48;
       var btnFs = isCompact ? 20 : isBs ? 22 : 26;
-      return `<button onclick="addToCart('${pid}')" style="width:${btnSz}px;height:${btnSz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:${btnFs}px;flex-shrink:0;box-shadow:0 4px 14px rgba(201,162,39,0.45);">+</button>`;
+      return `<button onclick="addToCartWithCoffeeCheck('${pid}')" style="width:${btnSz}px;height:${btnSz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:${btnFs}px;flex-shrink:0;box-shadow:0 4px 14px rgba(201,162,39,0.45);">+</button>`;
     }
 
     function updateProductCardButtons(productId) {
@@ -2046,7 +2099,7 @@
           + '<button onclick="updateQuantity(\'' + pid + '\',1)" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
           + '</div>';
       }
-      return '<button onclick="addToCart(\'' + pid + '\')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;box-shadow:0 4px 12px rgba(201,162,39,0.55);">+</button>';
+      return '<button onclick="addToCartWithCoffeeCheck(\'' + pid + '\')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;box-shadow:0 4px 12px rgba(201,162,39,0.55);">+</button>';
     }
 
     function bsCardHTML(p) {
@@ -3351,22 +3404,46 @@
     }
 
     var _coffeeAddonProductId = null, _coffeeAddonPrice = 0;
+    var _coffeeAddonQty = 1;
+    var _coffeeModalMode = 'preorder';
     var _coffeeAddons = { milk: '', sugar: '', syrup: '', cinnamon: '' };
+    var _coffeeAddonExtras = { milk: 0, sugar: 0, syrup: 0, cinnamon: 0 };
 
-    function openCoffeeAddonsModal(productId, price) {
+    function openCoffeeModal(productId, price, mode) {
       _coffeeAddonProductId = productId;
       _coffeeAddonPrice = price;
+      _coffeeAddonQty = 1;
+      _coffeeModalMode = mode || 'preorder';
       _coffeeAddons = { milk: '', sugar: '', syrup: '', cinnamon: '' };
+      _coffeeAddonExtras = { milk: 0, sugar: 0, syrup: 0, cinnamon: 0 };
       var product = productsById.get(productId);
-      var titleEl = document.getElementById('coffee-addons-title');
-      if (titleEl && product) titleEl.textContent = product.name;
+      var nameEl = document.getElementById('coffee-modal-name');
+      if (nameEl) nameEl.textContent = product ? product.name : '';
+      var descEl = document.getElementById('coffee-modal-desc');
+      if (descEl) descEl.textContent = product && product.description ? product.description : '';
+      var imgWrap = document.getElementById('coffee-modal-img-wrap');
+      if (imgWrap) {
+        var imgSrc = (typeof coffeePreorderImages !== 'undefined' && coffeePreorderImages[productId]) || productImages[productId];
+        if (imgSrc) {
+          imgWrap.innerHTML = '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;" alt="">';
+        } else {
+          imgWrap.textContent = product ? (product.image || '\u2615') : '\u2615';
+        }
+      }
+      var qtyEl = document.getElementById('coffee-modal-qty');
+      if (qtyEl) qtyEl.textContent = '1';
       ['milk','sugar','syrup','cinnamon'].forEach(function(group) {
         document.querySelectorAll('#coffee-addons-overlay [data-group="' + group + '"]').forEach(function(btn) {
           _setAddonBtnActive(btn, btn.dataset.value === '');
         });
       });
+      updateCoffeeModalTotal();
       var ov = document.getElementById('coffee-addons-overlay');
       if (ov) ov.style.display = 'flex';
+    }
+
+    function openCoffeeAddonsModal(productId, price) {
+      openCoffeeModal(productId, price, 'preorder');
     }
 
     function closeCoffeeAddons() {
@@ -3374,18 +3451,21 @@
       if (ov) ov.style.display = 'none';
     }
 
-    function selectCoffeeAddon(group, value) {
+    function selectCoffeeAddon(group, value, extra) {
       _coffeeAddons[group] = value;
+      _coffeeAddonExtras[group] = extra || 0;
       document.querySelectorAll('#coffee-addons-overlay [data-group="' + group + '"]').forEach(function(btn) {
         _setAddonBtnActive(btn, btn.dataset.value === value);
       });
+      updateCoffeeModalTotal();
     }
 
     function _setAddonBtnActive(btn, active) {
       if (active) {
         btn.style.background = 'linear-gradient(135deg,#C9A227,#E8B430)';
         btn.style.color = '#fff';
-        btn.style.boxShadow = '0 2px 8px rgba(201,162,39,0.35)';
+        btn.style.boxShadow = '0 2px 8px rgba(201,162,39,0.40)';
+        btn.style.display = 'flex';
       } else {
         btn.style.background = '#F0EAE0';
         btn.style.color = '#6B4423';
@@ -3393,21 +3473,58 @@
       }
     }
 
+    function updateCoffeeModalTotal() {
+      var extra = _coffeeAddonExtras.milk + _coffeeAddonExtras.sugar + _coffeeAddonExtras.syrup + _coffeeAddonExtras.cinnamon;
+      var unitPrice = _coffeeAddonPrice + extra;
+      var total = unitPrice * _coffeeAddonQty;
+      var priceEl = document.getElementById('coffee-modal-price');
+      if (priceEl) priceEl.textContent = unitPrice.toFixed(2);
+      var totalEl = document.getElementById('coffee-modal-total');
+      if (totalEl) totalEl.textContent = total.toFixed(2);
+    }
+
+    function changeCoffeeModalQty(delta) {
+      _coffeeAddonQty = Math.max(1, _coffeeAddonQty + delta);
+      var qtyEl = document.getElementById('coffee-modal-qty');
+      if (qtyEl) qtyEl.textContent = _coffeeAddonQty;
+      updateCoffeeModalTotal();
+    }
+
+    function addToCartWithCoffeeCheck(pid) {
+      var p = productsById.get(pid);
+      if (p && pid.startsWith('coffee-')) {
+        openCoffeeModal(pid, happyPrice(p), 'cart');
+      } else {
+        addToCart(pid);
+      }
+    }
+
     function confirmCoffeeAddon() {
+      var extra = _coffeeAddonExtras.milk + _coffeeAddonExtras.sugar + _coffeeAddonExtras.syrup + _coffeeAddonExtras.cinnamon;
+      var finalPrice = _coffeeAddonPrice + extra;
       var parts = [_coffeeAddons.milk, _coffeeAddons.sugar, _coffeeAddons.syrup, _coffeeAddons.cinnamon].filter(Boolean);
       var addons = parts.join(', ');
       var product = productsById.get(_coffeeAddonProductId);
       if (!product) { closeCoffeeAddons(); return; }
-      var existing = preorderCart.find(function(i) { return i.product_id === _coffeeAddonProductId; });
-      if (existing) {
-        existing.quantity++;
-        if (addons) existing.addons = addons;
+      if (_coffeeModalMode === 'preorder') {
+        var existing = preorderCart.find(function(i) { return i.product_id === _coffeeAddonProductId && (i.addons || '') === addons; });
+        if (existing) { existing.quantity += _coffeeAddonQty; }
+        else {
+          var item = { product_id: _coffeeAddonProductId, product_name: product.name, price: finalPrice, quantity: _coffeeAddonQty };
+          if (addons) item.addons = addons;
+          preorderCart.push(item);
+        }
+        updatePreorderTotal(); updatePreorderCartUI();
       } else {
-        var item = { product_id: _coffeeAddonProductId, product_name: product.name, price: _coffeeAddonPrice, quantity: 1 };
-        if (addons) item.addons = addons;
-        preorderCart.push(item);
+        var existing = cart.find(function(i) { return i.product_id === _coffeeAddonProductId && (i.addons || '') === addons && !i.selected_size; });
+        if (existing) { existing.quantity += _coffeeAddonQty; }
+        else {
+          var cartItem = { product_id: _coffeeAddonProductId, product_name: product.name, price: finalPrice, quantity: _coffeeAddonQty };
+          if (addons) cartItem.addons = addons;
+          cart.push(cartItem);
+        }
+        updateCartUI(); updateFloatingCart(); updateProductCardButtons(_coffeeAddonProductId);
       }
-      updatePreorderTotal(); updatePreorderCartUI();
       closeCoffeeAddons();
     }
 
