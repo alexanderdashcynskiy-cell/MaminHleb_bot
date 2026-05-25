@@ -3122,7 +3122,7 @@
 
     function preorderCardHTML(p, isBakery) {
       var imgHTML = productImages[p.id]
-        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
       var now = new Date(); var h = now.getHours();
       var freshBadge = (isBakery && h >= 7 && h < 11) ? '<div style="position:absolute;top:9px;right:9px;background:#fff;color:#C0360A;font-size:9px;font-weight:800;padding:3px 8px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;box-shadow:0 1px 6px rgba(0,0,0,0.12);">Из печи 🔥</div>' : '';
@@ -3130,25 +3130,20 @@
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var cartItem = preorderCart.find(function(i) { return i.product_id === p.id; });
       var qty = cartItem ? cartItem.quantity : 0;
-      /* same dimensions and style as bestseller cards */
-      return '<div style="flex-shrink:0;width:150px;height:205px;position:relative;scroll-snap-align:start;">'
-        + '<div style="width:100%;height:100%;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.07);display:flex;flex-direction:column;">'
-        + '<div style="position:relative;width:100%;height:126px;flex-shrink:0;background:#F2E8D8;overflow:hidden;">' + imgHTML + badge + freshBadge + '</div>'
-        + '<div style="flex-shrink:0;height:44px;margin-top:-44px;background:linear-gradient(to bottom,transparent 0%,rgba(255,255,255,0.45) 45%,#ffffff 100%);position:relative;z-index:2;pointer-events:none;"></div>'
-        + '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;padding:4px 10px 8px;">'
-        + '<div>'
+      return '<div style="flex-shrink:0;width:150px;height:210px;position:relative;scroll-snap-align:start;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.10);">'
+        + '<div style="position:absolute;inset:0;">' + imgHTML + '</div>'
+        + badge + freshBadge
+        + '<div style="position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to top,rgba(255,248,240,0.98) 0%,rgba(255,248,240,0.82) 55%,transparent 100%);pointer-events:none;"></div>'
+        + '<div style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px 10px;display:flex;flex-direction:column;gap:2px;">'
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
         + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#A08060;margin:2px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
-        + '</div>'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'
         + '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:800;color:#2d1505;margin:0;line-height:1;">' + p.price.toFixed(2) + ' <span style="font-size:11px;font-weight:600;">Б</span></p>'
         + '<div class="preorder-btn-zone" data-pid="' + p.id + '" data-price="' + p.price + '" style="display:flex;align-items:center;">' + preorderBtnZoneHTML(p.id, p.price, qty) + '</div>'
         + '</div>'
         + '</div>'
-        + '</div>'
         + '</div>';
     }
-
     function preorderBtnZoneHTML(productId, price, qty) {
       if (qty > 0) {
         return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
