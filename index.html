@@ -3176,10 +3176,10 @@
       var imgHTML = coffeeImg
         ? '<img src="' + coffeeImg + '" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:3rem;padding-bottom:4px;">' + p.image + '</div>';
-      return '<div style="flex-shrink:0;width:160px;scroll-snap-align:start;padding-top:110px;">'
-        + '<div style="position:relative;background:#ffffff;border-radius:20px;box-shadow:0 4px 18px rgba(45,21,5,0.10);overflow:visible;">'
-        + '<div style="position:absolute;top:-110px;left:50%;transform:translateX(-50%);width:190px;height:190px;pointer-events:none;">' + imgHTML + '</div>'
-        + '<div style="padding:86px 12px 14px;display:flex;flex-direction:column;gap:3px;">'
+      return '<div style="flex-shrink:0;width:150px;scroll-snap-align:start;padding-top:65px;">'
+        + '<div style="position:relative;background:#ffffff;border-radius:18px;box-shadow:0 4px 18px rgba(45,21,5,0.10);overflow:visible;">'
+        + '<div style="position:absolute;top:-65px;left:50%;transform:translateX(-50%);width:130px;height:120px;pointer-events:none;">' + imgHTML + '</div>'
+        + '<div style="padding:62px 12px 12px;display:flex;flex-direction:column;gap:3px;">'
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#2d1505;margin:0;line-height:1.25;text-align:center;">' + escHtml(p.name) + '</h3>'
         + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#9a8060;margin:0;line-height:1;text-align:center;">' + escHtml(weightInfo) + '</p>' : '')
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">'
