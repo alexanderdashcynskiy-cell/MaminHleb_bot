@@ -1074,7 +1074,7 @@
       </div>
       <p style="font-family:'Montserrat',sans-serif;font-size:12px;color:#9a8060;margin:5px 0 0 32px;font-weight:400;">Идеальное дополнение к выпечке</p>
      </div>
-     <div id="preorder-coffee" class="hide-scrollbar" style="overflow-x:auto;padding:4px 20px 12px;display:flex;gap:12px;-webkit-overflow-scrolling:touch;"></div>
+     <div id="preorder-coffee" class="hide-scrollbar" style="overflow-x:auto;overflow-y:visible;padding:4px 20px 20px;display:flex;gap:14px;-webkit-overflow-scrolling:touch;"></div>
     </div>
 
     <!-- Special banner -->
@@ -3174,16 +3174,16 @@
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var coffeeImg = coffeePreorderImages[p.id] || productImages[p.id];
       var imgHTML = coffeeImg
-        ? '<img src="' + coffeeImg + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
-        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;">' + p.image + '</div>';
-      return '<div style="flex-shrink:0;width:115px;scroll-snap-align:start;">'
-        + '<div style="background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 2px 12px rgba(45,21,5,0.08);display:flex;flex-direction:column;">'
-        + '<div style="width:100%;height:108px;background:#faf8f5;overflow:hidden;flex-shrink:0;">' + imgHTML + '</div>'
-        + '<div style="padding:8px 10px 10px;display:flex;flex-direction:column;gap:2px;">'
-        + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
-        + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#9a8060;margin:0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'
-        + '<p style="font-family:\'Montserrat\',sans-serif;font-size:14px;font-weight:800;color:#C9A227;margin:0;line-height:1;">' + p.price.toFixed(2) + ' <span style="font-size:10px;font-weight:600;">Б</span></p>'
+        ? '<img src="' + coffeeImg + '" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        : '<div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:3rem;padding-bottom:4px;">' + p.image + '</div>';
+      return '<div style="flex-shrink:0;width:150px;scroll-snap-align:start;padding-top:55px;">'
+        + '<div style="position:relative;background:#ffffff;border-radius:20px;box-shadow:0 4px 18px rgba(45,21,5,0.10);overflow:visible;">'
+        + '<div style="position:absolute;top:-55px;left:50%;transform:translateX(-50%);width:120px;height:110px;pointer-events:none;">' + imgHTML + '</div>'
+        + '<div style="padding:60px 12px 12px;display:flex;flex-direction:column;gap:3px;">'
+        + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#2d1505;margin:0;line-height:1.25;text-align:center;">' + escHtml(p.name) + '</h3>'
+        + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#9a8060;margin:0;line-height:1;text-align:center;">' + escHtml(weightInfo) + '</p>' : '')
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">'
+        + '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:800;color:#C9A227;margin:0;line-height:1;">' + p.price.toFixed(2) + ' <span style="font-size:10px;font-weight:600;">Б</span></p>'
         + '<div class="preorder-btn-zone" data-pid="' + p.id + '" data-price="' + p.price + '" style="display:flex;align-items:center;">' + preorderBtnZoneHTML(p.id, p.price, qty) + '</div>'
         + '</div>'
         + '</div>'
