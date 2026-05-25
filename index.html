@@ -1098,24 +1098,23 @@
     </div>
    </div>
 
-   <!-- Bottom bar -->
-   <div id="preorder-bottom-bar" style="display:none;position:absolute;bottom:0;left:0;right:0;background:#FFF8F2;border-radius:22px 22px 0 0;padding:14px 16px;padding-bottom:max(env(safe-area-inset-bottom,18px),18px);box-shadow:0 -2px 18px rgba(45,21,5,0.09);z-index:10;">
-    <div style="display:flex;align-items:center;gap:14px;">
+   <!-- Bottom bar — floating pill -->
+   <div id="preorder-bottom-bar" style="display:none;position:absolute;bottom:25px;left:0;right:0;padding:0 14px;padding-bottom:max(0px,env(safe-area-inset-bottom,0px));z-index:10;pointer-events:none;">
+    <div style="background:#fff;border-radius:22px;padding:10px 12px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 36px rgba(45,21,5,0.16),0 2px 8px rgba(45,21,5,0.08);pointer-events:auto;">
      <div style="position:relative;flex-shrink:0;">
-      <div style="width:50px;height:50px;background:#EDE8DF;border-radius:14px;display:flex;align-items:center;justify-content:center;">
-       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B6040" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <div style="width:42px;height:42px;background:#EDE8DF;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B6040" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
       </div>
-      <div id="preorder-cart-badge" style="position:absolute;top:-6px;right:-6px;background:#C9A227;color:#fff;font-size:10px;font-weight:800;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;border:2px solid #FFF8F2;">0</div>
+      <div id="preorder-cart-badge" style="position:absolute;top:-6px;right:-6px;background:#C9A227;color:#fff;font-size:10px;font-weight:800;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;border:2px solid #fff;">0</div>
      </div>
-     <div style="flex:1;min-width:0;">
-      <div id="preorder-bar-total" style="font-weight:800;color:#2d1505;font-size:15px;font-family:'Montserrat',sans-serif;line-height:1.25;"></div>
-      <div id="preorder-bar-names" style="font-size:11px;color:#9a8060;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;font-family:'Montserrat',sans-serif;"></div>
-      <div style="font-size:11px;color:#9a8060;font-family:'Montserrat',sans-serif;margin-top:1px;">Готово к 07:00 – 11:00</div>
+     <div style="min-width:0;">
+      <div id="preorder-bar-total" style="font-weight:800;color:#3d1f0a;font-size:14px;font-family:'Montserrat',sans-serif;line-height:1.2;white-space:nowrap;"></div>
+      <div id="preorder-bar-names" style="font-size:11px;color:#9a8060;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;font-family:'Montserrat',sans-serif;"></div>
      </div>
-     <button onclick="openPreorderForm()" style="background:#C9A227;color:#fff;border:none;border-radius:16px;padding:11px 18px;cursor:pointer;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-align:center;min-width:130px;">
-      <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:15px;line-height:1.3;letter-spacing:0.01em;">Оформить предзаказ</div>
-      <div style="font-family:'Montserrat',sans-serif;font-weight:400;font-size:10px;opacity:0.82;margin-top:1px;letter-spacing:0.01em;">Перейти к оформлению</div>
-     </button>
+     <div style="width:1px;height:30px;background:rgba(0,0,0,0.08);flex-shrink:0;"></div>
+     <div style="flex:1;display:flex;min-width:0;">
+      <button onclick="openPreorderForm()" style="width:100%;background:linear-gradient(90deg,#C9A227,#E8B430);color:#fff;border:none;border-radius:50px;padding:14px 12px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:15px;font-weight:700;letter-spacing:0.01em;box-shadow:0 3px 12px rgba(201,162,39,0.38);white-space:nowrap;text-align:center;">Оформить →</button>
+     </div>
     </div>
    </div>
 
