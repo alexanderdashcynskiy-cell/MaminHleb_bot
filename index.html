@@ -1080,12 +1080,52 @@
      <div id="preorder-coffee" class="hide-scrollbar" style="overflow-x:auto;padding:65px 20px 20px;display:flex;gap:12px;-webkit-overflow-scrolling:touch;"></div>
     </div>
 
-    <div style="height:90px;"></div>
+    <!-- "Готовим свежо" banner -->
+    <div style="padding:16px 16px 0;">
+     <div style="background:linear-gradient(120deg,#FFF8EE 0%,#FDF5E6 100%);border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(45,21,5,0.06);">
+      <div style="width:46px;height:46px;border-radius:50%;border:2px solid rgba(201,162,39,0.55);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(255,255,255,0.70);">
+       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+       <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;color:#2d1505;line-height:1.3;">Готовим свежо каждый день</div>
+       <div style="font-family:'Montserrat',sans-serif;font-size:11px;color:#9a8060;margin-top:3px;line-height:1.3;">Ваш заказ будет готов в указанное время</div>
+      </div>
+      <!-- decorative wheat SVG -->
+      <svg style="position:absolute;right:10px;top:50%;transform:translateY(-50%);opacity:0.13;pointer-events:none;" width="70" height="60" viewBox="0 0 70 60" fill="none">
+       <ellipse cx="15" cy="50" rx="4" ry="14" fill="#C9A227" transform="rotate(-15 15 50)"/>
+       <ellipse cx="15" cy="30" rx="3" ry="8" fill="#C9A227" transform="rotate(-25 15 30)"/>
+       <ellipse cx="25" cy="48" rx="4" ry="14" fill="#C9A227" transform="rotate(-5 25 48)"/>
+       <ellipse cx="25" cy="28" rx="3" ry="8" fill="#C9A227" transform="rotate(-10 25 28)"/>
+       <ellipse cx="35" cy="50" rx="4" ry="14" fill="#C9A227" transform="rotate(5 35 50)"/>
+       <ellipse cx="35" cy="30" rx="3" ry="8" fill="#C9A227" transform="rotate(0 35 30)"/>
+       <ellipse cx="45" cy="48" rx="4" ry="14" fill="#C9A227" transform="rotate(15 45 48)"/>
+       <ellipse cx="45" cy="28" rx="3" ry="8" fill="#C9A227" transform="rotate(10 45 28)"/>
+      </svg>
+     </div>
+    </div>
+
+    <div style="height:100px;"></div>
    </div>
 
    <!-- Bottom bar — floating pill -->
    <div id="preorder-bottom-bar" style="display:none;position:absolute;bottom:25px;left:0;right:0;padding:0 14px;padding-bottom:max(0px,env(safe-area-inset-bottom,0px));z-index:10;pointer-events:none;">
-    <button id="preorder-bar-btn" onclick="openPreorderForm()" style="width:100%;background:linear-gradient(90deg,#C9A227,#B8961F);color:#fff;border:none;border-radius:50px;padding:16px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;letter-spacing:0.01em;box-shadow:0 8px 36px rgba(45,21,5,0.16),0 2px 8px rgba(45,21,5,0.08);text-align:center;pointer-events:auto;">Оформить предзаказ • 0.00 Б</button>
+    <div style="background:#fff;border-radius:22px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 36px rgba(45,21,5,0.16),0 2px 8px rgba(45,21,5,0.08);pointer-events:auto;">
+     <div style="width:42px;height:42px;border-radius:12px;background:#EDE0C4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="20" height="20" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+     </div>
+     <div style="min-width:0;">
+      <div style="font-size:14px;font-weight:700;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="preorder-bar-count">0</span> <span id="preorder-bar-item-word">товар</span></div>
+      <div style="font-size:11px;color:#aaa;margin-top:1px;white-space:nowrap;">Готово к 07:00–11:00 🕖</div>
+     </div>
+     <div style="width:1px;height:30px;background:rgba(0,0,0,0.08);flex-shrink:0;"></div>
+     <div style="min-width:0;">
+      <div style="font-size:17px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="preorder-bar-amount">0.00</span> <span style="font-size:12px;font-weight:600;color:#6B4423;">Б</span></div>
+      <div style="font-size:11px;color:#aaa;margin-top:1px;">Итого</div>
+     </div>
+     <div style="flex:1;display:flex;min-width:0;">
+      <button id="preorder-bar-btn" onclick="openPreorderForm()" style="width:100%;background:linear-gradient(90deg,#C9A227,#E8B430);border-radius:50px;padding:14px 12px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:15px;font-weight:700;color:#fff;letter-spacing:0.01em;box-shadow:0 3px 12px rgba(201,162,39,0.38);white-space:nowrap;text-align:center;">Оформить →</button>
+     </div>
+    </div>
     <div id="preorder-cart-badge" style="display:none;"></div>
     <div id="preorder-bar-total" style="display:none;"></div>
     <div id="preorder-bar-names" style="display:none;"></div>
@@ -3194,10 +3234,13 @@
     }
     function preorderBtnZoneHTML(productId, price, qty, isCoffee) {
       if (qty > 0) {
+        var plusFn = isCoffee
+          ? 'openCoffeeAddonsModal(\'' + productId + '\',' + price + ')'
+          : 'updatePreorderQuantity(\'' + productId + '\', 1)';
         return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
           + '<button type="button" onclick="updatePreorderQuantity(\'' + productId + '\', -1)" style="width:24px;height:24px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">−</button>'
           + '<span style="min-width:14px;text-align:center;font-weight:800;font-size:11px;color:#2d1505;font-family:\'Montserrat\',sans-serif;">' + qty + '</span>'
-          + '<button type="button" onclick="updatePreorderQuantity(\'' + productId + '\', 1)" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
+          + '<button type="button" onclick="' + plusFn + '" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
           + '</div>';
       }
       var addFn = isCoffee
@@ -3385,11 +3428,19 @@
 
     function updatePreorderBottomBar() {
       var total = preorderCart.reduce(function(s, i) { return s + i.price * i.quantity; }, 0);
+      var totalQty = preorderCart.reduce(function(s, i) { return s + i.quantity; }, 0);
       var bar = document.getElementById('preorder-bottom-bar');
       if (!bar) return;
       bar.style.display = preorderCart.length > 0 ? 'block' : 'none';
-      var btn = document.getElementById('preorder-bar-btn');
-      if (btn) btn.textContent = 'Оформить предзаказ • ' + total.toFixed(2) + ' Б';
+      var countEl = document.getElementById('preorder-bar-count');
+      if (countEl) countEl.textContent = totalQty;
+      var wordEl = document.getElementById('preorder-bar-item-word');
+      if (wordEl) {
+        var w = totalQty === 1 ? 'товар' : (totalQty >= 2 && totalQty <= 4 ? 'товара' : 'товаров');
+        wordEl.textContent = w;
+      }
+      var amtEl = document.getElementById('preorder-bar-amount');
+      if (amtEl) amtEl.textContent = total.toFixed(2);
     }
 
     function buildPreorderFormItemsHTML() {
