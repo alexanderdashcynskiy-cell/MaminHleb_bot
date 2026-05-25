@@ -3174,7 +3174,7 @@
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var coffeeImg = coffeePreorderImages[p.id] || productImages[p.id];
       var imgHTML = coffeeImg
-        ? '<img src="' + coffeeImg + '" style="width:100%;height:100%;object-fit:cover;object-position:center 65%;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        ? '<img src="' + coffeeImg + '" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:3.5rem;">' + p.image + '</div>';
       return '<div style="flex-shrink:0;width:155px;scroll-snap-align:start;position:relative;">'
         + '<div style="position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:155px;height:145px;pointer-events:none;z-index:2;">' + imgHTML + '</div>'
