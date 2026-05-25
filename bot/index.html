@@ -1124,6 +1124,7 @@
     <div style="width:100%;background:#FFF8F0;border-radius:24px 24px 0 0;padding:20px 16px;padding-bottom:max(env(safe-area-inset-bottom,24px),24px);max-height:88vh;overflow-y:auto;" onclick="event.stopPropagation()">
      <div style="width:40px;height:4px;background:rgba(45,21,5,0.15);border-radius:2px;margin:0 auto 20px;"></div>
      <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#2d1505;margin-bottom:16px;">Оформление заказа</div>
+     <div id="preorder-items-list" style="margin-bottom:16px;"></div>
      <form id="preorder-form" onsubmit="submitPreorder(event)">
       <div style="display:flex;gap:10px;margin-bottom:14px;">
        <div style="flex:1;min-width:0;">
@@ -3281,6 +3282,27 @@
     function openPreorderForm() {
       var overlay = document.getElementById('preorder-form-overlay');
       if (overlay) { overlay.style.display = 'flex'; }
+      var listEl = document.getElementById('preorder-items-list');
+      if (listEl) {
+        if (!preorderCart.length) { listEl.innerHTML = ''; return; }
+        var total = preorderCart.reduce(function(s, i) { return s + i.price * i.quantity; }, 0);
+        var rows = preorderCart.map(function(i) {
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(45,21,5,0.07);">'
+            + '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">'
+            + '<span style="font-size:12px;font-weight:700;color:#fff;background:#C9A227;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + i.quantity + '</span>'
+            + '<span style="font-size:13px;color:#3d1f0a;font-family:\'Montserrat\',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(i.product_name) + '</span>'
+            + '</div>'
+            + '<span style="font-size:13px;font-weight:600;color:#3d1f0a;font-family:\'Montserrat\',sans-serif;flex-shrink:0;margin-left:8px;">' + (i.price * i.quantity).toFixed(2) + ' р.</span>'
+            + '</div>';
+        }).join('');
+        listEl.innerHTML = '<div style="background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 1px 6px rgba(0,0,0,0.07);">'
+          + '<div style="font-size:11px;font-weight:700;color:#C9A227;font-family:\'Montserrat\',sans-serif;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">Ваш заказ</div>'
+          + rows
+          + '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;margin-top:2px;">'
+          + '<span style="font-size:13px;font-weight:700;color:#3d1f0a;font-family:\'Montserrat\',sans-serif;">Итого</span>'
+          + '<span style="font-size:14px;font-weight:700;color:#C9A227;font-family:\'Montserrat\',sans-serif;">' + total.toFixed(2) + ' р.</span>'
+          + '</div></div>';
+      }
     }
 
     function closePreorderForm() {
