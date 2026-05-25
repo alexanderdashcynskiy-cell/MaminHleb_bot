@@ -1056,7 +1056,7 @@
        <svg width="10" height="10" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
       </button>
      </div>
-     <div id="preorder-bakery-carousel" class="hide-scrollbar" style="overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 0 24px;">
+     <div id="preorder-bakery-carousel" class="hide-scrollbar" style="overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 0 24px;" onscroll="onPreorderBakeryScroll(this)">
       <div id="preorder-bakery" class="flex" style="gap:12px;padding-left:calc(50% - 75px);padding-right:calc(50% - 75px);"></div>
      </div>
     </div>
@@ -1942,6 +1942,7 @@
 
     var BS_CARD_W = 150, BS_GAP = 14;
     var _bsRaf = null;
+    var _pbRaf = null;
     var _bsScrollStopTimer = null;
     var _bsCloneCount = 0;
     var _bsTotalReal = 0;
@@ -3158,12 +3159,51 @@
       return '<button type="button" onclick="addPreorderItem(\'' + productId + '\', ' + price + ')" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
     }
 
+    var PB_SPRING = 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.26s ease';
+
     function renderPreorderBakery() {
       var allowed = ['pastries', 'pizza', 'bread', 'pies'];
       var items = products.filter(function(p) { return allowed.includes(p.category); });
       var el = document.getElementById('preorder-bakery');
-      if (el) el.innerHTML = items.map(function(p) { return preorderCardHTML(p, true); }).join('');
+      if (el) {
+        el.innerHTML = items.map(function(p) { return preorderCardHTML(p, true); }).join('');
+        requestAnimationFrame(function() {
+          var cards = Array.from(el.querySelectorAll(':scope > div'));
+          cards.forEach(function(card, i) {
+            card.style.transition = 'none';
+            card.style.willChange = 'transform';
+            card.style.transform = i === 0 ? 'scale(1.08)' : 'scale(0.93)';
+            card.style.opacity   = i === 0 ? '1' : '0.72';
+          });
+          setTimeout(function() {
+            cards.forEach(function(c) { c.style.transition = PB_SPRING; });
+          }, 60);
+        });
+      }
       updatePreorderCartUI();
+    }
+
+    function onPreorderBakeryScroll(el) {
+      if (_pbRaf) return;
+      _pbRaf = requestAnimationFrame(function() {
+        _pbRaf = null;
+        var container = document.getElementById('preorder-bakery');
+        var cards = container ? Array.from(container.querySelectorAll(':scope > div')) : [];
+        if (!cards.length) return;
+        var cRect = el.getBoundingClientRect();
+        var center = cRect.left + cRect.width / 2;
+        var activeIdx = 0, minDist = Infinity;
+        cards.forEach(function(card, i) {
+          var r = card.getBoundingClientRect();
+          var dist = Math.abs((r.left + r.width / 2) - center);
+          if (dist < minDist) { minDist = dist; activeIdx = i; }
+        });
+        cards.forEach(function(card, i) {
+          var isActive = i === activeIdx;
+          card.style.transform = isActive ? 'scale(1.08)' : 'scale(0.93)';
+          card.style.opacity   = isActive ? '1' : '0.72';
+        });
+      });
     }
 
     function coffeeCardHTML(p) {
