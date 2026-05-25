@@ -1017,7 +1017,7 @@
   <!-- Preorder Screen -->
   <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
    <!-- Scroll area -->
-   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overflow-x:hidden;">
+   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overflow-x:clip;">
     <!-- Hero Header -->
     <div style="background:linear-gradient(160deg,#FFF3E0 0%,#FFF8EE 60%,#FDF5ED 100%);padding:max(env(safe-area-inset-top,52px),52px) 20px 28px;position:relative;overflow:hidden;min-height:170px;">
      <button onclick="showScreen('main')" style="position:absolute;top:max(env(safe-area-inset-top,16px),16px);left:16px;width:40px;height:40px;background:rgba(255,255,255,0.85);border-radius:12px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 8px rgba(0,0,0,0.10);backdrop-filter:blur(8px);">
@@ -1056,8 +1056,8 @@
        <svg width="10" height="10" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
       </button>
      </div>
-     <div id="preorder-bakery-carousel" class="hide-scrollbar" style="overflow-x:auto;width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:12px;padding-bottom:8px;">
-      <div id="preorder-bakery" class="flex" style="gap:12px;"></div>
+     <div id="preorder-bakery-carousel" class="hide-scrollbar" style="overflow-x:auto;scroll-snap-type:x mandatory;padding:12px 0 8px;">
+      <div id="preorder-bakery" class="flex" style="gap:12px;padding-left:calc(50% - 75px);padding-right:calc(50% - 75px);"></div>
      </div>
     </div>
 
@@ -3162,20 +3162,7 @@
       var allowed = ['pastries', 'pizza', 'bread', 'pies'];
       var items = products.filter(function(p) { return allowed.includes(p.category); });
       var el = document.getElementById('preorder-bakery');
-      if (el) {
-        el.innerHTML = items.map(function(p) { return preorderCardHTML(p, true); }).join('');
-        requestAnimationFrame(function() {
-          var carousel = document.getElementById('preorder-bakery-carousel');
-          var firstCard = el.querySelector(':scope > div');
-          if (carousel && firstCard) {
-            var cardW = firstCard.offsetWidth;
-            var screenW = carousel.offsetWidth || window.innerWidth || 375;
-            var sideOff = Math.round((screenW - cardW) / 2);
-            el.style.paddingLeft = sideOff + 'px';
-            el.style.paddingRight = sideOff + 'px';
-          }
-        });
-      }
+      if (el) el.innerHTML = items.map(function(p) { return preorderCardHTML(p, true); }).join('');
       updatePreorderCartUI();
     }
 
