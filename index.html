@@ -3133,11 +3133,11 @@
       return '<div style="flex-shrink:0;width:150px;height:210px;position:relative;scroll-snap-align:start;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.10);">'
         + '<div style="position:absolute;inset:0;">' + imgHTML + '</div>'
         + badge + freshBadge
-        + '<div style="position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to top,rgba(255,248,240,0.98) 0%,rgba(255,248,240,0.82) 55%,transparent 100%);pointer-events:none;"></div>'
-        + '<div style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px 10px;display:flex;flex-direction:column;gap:2px;">'
+        + '<div style="position:absolute;bottom:0;left:0;right:0;height:130px;background:linear-gradient(to top,rgba(255,248,240,0.99) 0%,rgba(255,248,240,0.88) 55%,transparent 100%);pointer-events:none;"></div>'
+        + '<div style="position:absolute;bottom:10px;left:0;right:0;padding:0 10px;display:flex;flex-direction:column;gap:4px;">'
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
-        + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#A08060;margin:2px 0 0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'
+        + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#A08060;margin:0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">'
         + '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:800;color:#2d1505;margin:0;line-height:1;">' + p.price.toFixed(2) + ' <span style="font-size:11px;font-weight:600;">Б</span></p>'
         + '<div class="preorder-btn-zone" data-pid="' + p.id + '" data-price="' + p.price + '" style="display:flex;align-items:center;">' + preorderBtnZoneHTML(p.id, p.price, qty) + '</div>'
         + '</div>'
