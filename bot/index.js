@@ -10,6 +10,7 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.text({ type: 'text/plain', limit: '10mb' }));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
+app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
 
 // CORS — Mini App шлёт запросы из браузера
 app.use((req, res, next) => {
