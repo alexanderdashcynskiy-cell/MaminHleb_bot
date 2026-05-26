@@ -1119,7 +1119,7 @@
      </div>
      <div style="width:1px;height:30px;background:rgba(0,0,0,0.08);flex-shrink:0;"></div>
      <div style="min-width:0;">
-      <div style="font-size:17px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="preorder-bar-amount">0.00</span> <span style="font-size:12px;color:#6B4423;"><img src="/images/moneysign.png" style="display:inline-block;height:0.85em;width:auto;vertical-align:-0.08em;"></span></div>
+      <div style="font-size:17px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="preorder-bar-amount">0.00</span> <img src="/images/moneysign.png" style="display:inline-block;height:1em;width:auto;vertical-align:-0.12em;"></div>
       <div style="font-size:11px;color:#aaa;margin-top:1px;">Итого</div>
      </div>
      <div style="flex:1;display:flex;min-width:0;">
@@ -1212,7 +1212,7 @@
     </div>
     <!-- Floating confirm button -->
     <div style="position:absolute;bottom:40px;left:0;right:0;padding:0 14px;padding-bottom:max(0px,env(safe-area-inset-bottom,0px));pointer-events:none;">
-     <button type="button" id="submit-preorder-btn" onclick="submitPreorder(null)" style="width:100%;padding:16px;background:linear-gradient(90deg,#C9A227,#E8B430);color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.01em;box-shadow:0 8px 36px rgba(45,21,5,0.16),0 2px 8px rgba(45,21,5,0.08);pointer-events:auto;text-align:center;">Подтвердить предзаказ • <span id="preorder-confirm-total">0.00</span> <img src="/images/moneysign.png" style="display:inline-block;height:0.85em;width:auto;vertical-align:-0.08em;filter:brightness(0) invert(1);"></button>
+     <button type="button" id="submit-preorder-btn" onclick="submitPreorder(null)" style="width:100%;padding:16px;background:linear-gradient(90deg,#C9A227,#E8B430);color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.01em;box-shadow:0 8px 36px rgba(45,21,5,0.16),0 2px 8px rgba(45,21,5,0.08);pointer-events:auto;text-align:center;">Подтвердить предзаказ • <span id="preorder-confirm-total">0.00</span> <img src="/images/moneysign.png" style="display:inline-block;height:1em;width:auto;vertical-align:-0.12em;filter:brightness(0) invert(1);"></button>
     </div>
    </div>
    </div>
@@ -1457,7 +1457,7 @@
     };
 
     // ── State ──────────────────────────────────────────────────────────────────
-    const BYN = '<img src="/images/moneysign.png" style="display:inline-block;height:0.85em;width:auto;vertical-align:-0.08em;">';
+    const BYN = '<img src="/images/moneysign.png" style="display:inline-block;height:1em;width:auto;vertical-align:-0.12em;">';
     // Экранирование HTML для пользовательских строк (имена товаров из корзины, адреса, и т.п.)
     function escHtml(s) {
       if (s == null) return '';
@@ -2015,9 +2015,9 @@
         : disc < p.price
           ? `<div style="white-space:nowrap;line-height:1.2;">
                <span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)} ${BYN}</span><br>
-               <span style="font-size:15px;font-weight:800;color:#E05252;font-family:'Montserrat',sans-serif;">${disc.toFixed(2)} <span style="font-size:11px;">${BYN}</span></span>
+               <span style="font-size:15px;font-weight:800;color:#E05252;font-family:'Montserrat',sans-serif;">${disc.toFixed(2)} ${BYN}</span>
              </div>`
-          : `<span style="font-size:15px;font-weight:800;color:#2d1505;font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} <span style="font-size:11px;">${BYN}</span></span>`;
+          : `<span style="font-size:15px;font-weight:800;color:#2d1505;font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)} ${BYN}</span>`;
 
       return `
         <div data-pid="${p.id}" style="${!available ? 'opacity:0.55;' : ''}">
@@ -2118,7 +2118,7 @@
         + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#7A6050;margin:0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;" onclick="event.stopPropagation()">'
         + (available
-          ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:900;color:' + priceColor + ';margin:0;line-height:1;">' + priceStr + ' <span style="font-size:11px;">' + BYN + '</span></p>'
+          ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:900;color:' + priceColor + ';margin:0;line-height:1;">' + priceStr + ' ' + BYN + '</p>'
           : '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#aaa;margin:0;">Нет в наличии</p>')
         + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="3" style="display:flex;align-items:center;">'
         + (available ? bsFloatBtnHTML(p.id, quantity) : '')
@@ -2614,7 +2614,7 @@
         + '<div style="flex:1;background:#fff;padding:5px 8px 8px;display:flex;flex-direction:column;justify-content:space-between;">'
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:11px;color:#2d1505;margin:0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;" onclick="event.stopPropagation()">'
-        + '<p style="font-family:\'Montserrat\',sans-serif;font-size:13px;font-weight:800;color:#2d1505;margin:0;line-height:1;">' + price.toFixed(2) + ' <span style="font-size:10px;">' + BYN + '</span></p>'
+        + '<p style="font-family:\'Montserrat\',sans-serif;font-size:13px;font-weight:800;color:#2d1505;margin:0;line-height:1;">' + price.toFixed(2) + ' ' + BYN + '</p>'
         + '<div class="cs-btn-zone" data-pid="' + p.id + '" style="display:flex;align-items:center;">' + csSuggBtnHTML(p.id, qty) + '</div>'
         + '</div>'
         + '</div>'
@@ -3271,7 +3271,7 @@
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
         + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#7A6050;margin:0;line-height:1;">' + escHtml(weightInfo) + '</p>' : '')
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">'
-        + '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:900;color:#2d1505;margin:0;line-height:1;">' + p.price.toFixed(2) + ' <span style="font-size:11px;">' + BYN + '</span></p>'
+        + '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:900;color:#2d1505;margin:0;line-height:1;">' + p.price.toFixed(2) + ' ' + BYN + '</p>'
         + '<div class="preorder-btn-zone" data-pid="' + p.id + '" data-price="' + p.price + '" style="display:flex;align-items:center;">' + preorderBtnZoneHTML(p.id, p.price, qty) + '</div>'
         + '</div>'
         + '</div>'
@@ -3415,7 +3415,7 @@
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:12px;color:#2d1505;margin:0;line-height:1.25;text-align:center;">' + escHtml(p.name) + '</h3>'
         + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#A08060;margin:2px 0 0;line-height:1;text-align:center;">' + escHtml(weightInfo) + '</p>' : '')
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">'
-        + '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:800;color:#C9A227;margin:0;line-height:1;">' + p.price.toFixed(2) + ' <span style="font-size:11px;">' + BYN + '</span></p>'
+        + '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:800;color:#C9A227;margin:0;line-height:1;">' + p.price.toFixed(2) + ' ' + BYN + '</p>'
         + '<div class="preorder-btn-zone" data-pid="' + p.id + '" data-price="' + p.price + '" data-coffee="1" style="display:flex;align-items:center;">' + preorderBtnZoneHTML(p.id, p.price, qty, true) + '</div>'
         + '</div>'
         + '</div>'
