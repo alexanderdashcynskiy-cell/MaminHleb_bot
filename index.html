@@ -2529,36 +2529,39 @@
             + '<span style="background:#f2ece4;color:#8b6040;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap;">' + escHtml(sizeOrWeight) + '</span>'
             + '</div>'
           : '';
-        var trashSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
-        var weightChip = sizeOrWeight
-          ? '<span style="display:inline-flex;background:#EDE0C4;color:#8b6040;font-size:9px;font-weight:600;padding:2px 6px;border-radius:99px;white-space:nowrap;line-height:1.4;">' + escHtml(sizeOrWeight) + '</span>'
-          : '';
+        var trashSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6B4423" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
         var isNew = product && product.isNew;
         var isHot = product && !isNew && (product.category === 'bread' || product.category === 'pastries' || product.category === 'pies');
         var tagHtml = isNew
-          ? '<span style="background:#E05252;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.03em;">НОВИНКА</span>'
+          ? '<span style="background:#E05252;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.03em;white-space:nowrap;">НОВИНКА</span>'
           : isHot
-            ? '<span style="background:#D4722A;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.03em;">ИЗ ПЕЧИ</span>'
+            ? '<span style="background:#D4722A;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.03em;white-space:nowrap;">ИЗ ПЕЧИ</span>'
             : '';
         var ratingVal = product ? (4.5 + ((pid.split('').reduce(function(h,c){return (h*31+c.charCodeAt(0))&0xFFFF;},0) % 6) * 0.1)).toFixed(1) : '';
-        var ratingHtml = ratingVal ? '<div style="display:inline-flex;align-items:center;gap:2px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="#C9A227"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg><span style="font-size:10px;font-weight:600;color:#8b6040;">' + ratingVal + '</span></div>' : '';
-        return '<div style="background:#fff;border-radius:18px;display:flex;align-items:stretch;gap:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
-          + '<div style="width:86px;height:86px;flex-shrink:0;border-radius:14px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;align-self:center;">' + imgHTML + '</div>'
-          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:2px;">'
-          + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;">'
-          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;color:#2d1505;font-size:14px;line-height:1.25;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(item.product_name) + '</div>'
-          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:800;font-size:14px;color:#2d1505;white-space:nowrap;flex-shrink:0;">' + (item.price * item.quantity).toFixed(2) + '<span style="font-size:9px;font-weight:600;color:#6B4423;margin-left:2px;">Br</span></div>'
+        var dot = '<span style="font-size:9px;color:#C8A87A;line-height:1;">•</span>';
+        var secondaryRow = '';
+        if (sizeOrWeight) secondaryRow += '<span style="font-size:10px;color:#a07b50;white-space:nowrap;">' + escHtml(sizeOrWeight) + '</span>';
+        if (sizeOrWeight && tagHtml) secondaryRow += dot;
+        if (tagHtml) secondaryRow += tagHtml;
+        if ((sizeOrWeight || tagHtml) && ratingVal) secondaryRow += dot;
+        if (ratingVal) secondaryRow += '<span style="font-size:10px;font-weight:600;color:#8b6040;white-space:nowrap;">★ ' + ratingVal + '</span>';
+        return '<div style="background:#fff;border-radius:18px;display:flex;align-items:stretch;gap:12px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
+          + '<div style="width:76px;height:76px;flex-shrink:0;border-radius:12px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;align-self:center;">' + imgHTML + '</div>'
+          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;">'
+          + '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:4px;margin-bottom:4px;">'
+          + '<div style="font-family:\'Playfair Display\',serif;font-weight:700;color:#2d1505;font-size:14px;line-height:1.15;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(item.product_name) + '</div>'
+          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#2d1505;white-space:nowrap;flex-shrink:0;margin-left:4px;">' + (item.price * item.quantity).toFixed(2) + '<span style="font-size:9px;font-weight:600;color:#6B4423;margin-left:2px;">Br</span></div>'
           + '</div>'
-          + '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">'
-          + (weightChip || '') + (tagHtml ? tagHtml : '') + (ratingHtml ? ratingHtml : '')
+          + '<div style="display:flex;align-items:center;gap:4px;margin-bottom:8px;overflow:hidden;">'
+          + secondaryRow
           + '</div>'
           + '<div style="display:flex;align-items:center;justify-content:space-between;">'
-          + '<div style="display:flex;align-items:center;gap:5px;">'
-          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:30px;height:30px;border-radius:50%;background:#EDE0C4;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:18px;line-height:1;font-weight:700;">−</button>'
-          + '<span style="font-weight:700;font-size:15px;color:#2d1505;min-width:18px;text-align:center;">' + item.quantity + '</span>'
-          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;line-height:1;font-weight:700;">+</button>'
+          + '<div style="display:inline-flex;align-items:center;background:#F5EDDA;border-radius:50px;padding:2px;gap:0;">'
+          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:26px;height:26px;border-radius:50%;background:#EDE0C4;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#6B4423;font-size:15px;line-height:1;font-weight:700;">−</button>'
+          + '<span style="font-weight:700;font-size:13px;color:#2d1505;min-width:20px;text-align:center;">' + item.quantity + '</span>'
+          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;line-height:1;font-weight:700;">+</button>'
           + '</div>'
-          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:24px;height:24px;border:none;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;opacity:0.3;padding:0;">' + trashSvg + '</button>'
+          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:28px;height:28px;border:none;background:rgba(237,224,196,0.5);border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;opacity:0.65;padding:0;">' + trashSvg + '</button>'
           + '</div>'
           + '</div></div>';
       }).join('');
