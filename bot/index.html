@@ -1241,19 +1241,6 @@
     <!-- Scrollable groups -->
     <div style="flex:1;overflow-y:auto;padding:0 20px 8px;">
      <div style="height:1px;background:rgba(45,21,5,0.08);margin-bottom:16px;"></div>
-     <!-- Milk -->
-     <div style="margin-bottom:18px;">
-      <div style="display:flex;align-items:center;margin-bottom:10px;">
-       <div style="width:38px;height:38px;border-radius:50%;background:#F0EAE0;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8"/><path d="M9 2v3l-2 3v13a1 1 0 001 1h8a1 1 0 001-1V8l-2-3V2"/><path d="M9 11h6"/><path d="M9 15h4"/></svg>
-       </div>
-       <span style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;color:#2d1505;">Молоко</span>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-       <button type="button" data-group="milk" data-value="" data-extra="0" onclick="selectCoffeeAddon('milk','',0)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;box-shadow:0 2px 8px rgba(201,162,39,0.40);">Без молока <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
-       <button type="button" data-group="milk" data-value="молоко" data-extra="0.5" onclick="selectCoffeeAddon('milk','молоко',0.5)" style="padding:9px 16px;border-radius:50px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#F0EAE0;color:#6B4423;">+Молоко <span style="font-size:11px;color:#C9A227;font-weight:500;">+0.50 б</span></button>
-      </div>
-     </div>
      <!-- Sugar -->
      <div style="margin-bottom:18px;">
       <div style="display:flex;align-items:center;margin-bottom:10px;">
@@ -3471,16 +3458,16 @@
     var _coffeeAddonProductId = null, _coffeeAddonPrice = 0;
     var _coffeeAddonQty = 1;
     var _coffeeModalMode = 'preorder';
-    var _coffeeAddons = { milk: '', sugar: '', syrup: '', cinnamon: '' };
-    var _coffeeAddonExtras = { milk: 0, sugar: 0, syrup: 0, cinnamon: 0 };
+    var _coffeeAddons = { sugar: '', syrup: '', cinnamon: '' };
+    var _coffeeAddonExtras = { sugar: 0, syrup: 0, cinnamon: 0 };
 
     function openCoffeeModal(productId, price, mode) {
       _coffeeAddonProductId = productId;
       _coffeeAddonPrice = price;
       _coffeeAddonQty = 1;
       _coffeeModalMode = mode || 'preorder';
-      _coffeeAddons = { milk: '', sugar: '', syrup: '', cinnamon: '' };
-      _coffeeAddonExtras = { milk: 0, sugar: 0, syrup: 0, cinnamon: 0 };
+      _coffeeAddons = { sugar: '', syrup: '', cinnamon: '' };
+      _coffeeAddonExtras = { sugar: 0, syrup: 0, cinnamon: 0 };
       var product = productsById.get(productId);
       var nameEl = document.getElementById('coffee-modal-name');
       if (nameEl) nameEl.textContent = product ? product.name : '';
@@ -3497,7 +3484,7 @@
       }
       var qtyEl = document.getElementById('coffee-modal-qty');
       if (qtyEl) qtyEl.textContent = '1';
-      ['milk','sugar','syrup','cinnamon'].forEach(function(group) {
+      ['sugar','syrup','cinnamon'].forEach(function(group) {
         document.querySelectorAll('#coffee-addons-overlay [data-group="' + group + '"]').forEach(function(btn) {
           _setAddonBtnActive(btn, btn.dataset.value === '');
         });
@@ -3539,7 +3526,7 @@
     }
 
     function updateCoffeeModalTotal() {
-      var extra = _coffeeAddonExtras.milk + _coffeeAddonExtras.sugar + _coffeeAddonExtras.syrup + _coffeeAddonExtras.cinnamon;
+      var extra = _coffeeAddonExtras.sugar + _coffeeAddonExtras.syrup + _coffeeAddonExtras.cinnamon;
       var unitPrice = _coffeeAddonPrice + extra;
       var total = unitPrice * _coffeeAddonQty;
       var priceEl = document.getElementById('coffee-modal-price');
@@ -3565,9 +3552,9 @@
     }
 
     function confirmCoffeeAddon() {
-      var extra = _coffeeAddonExtras.milk + _coffeeAddonExtras.sugar + _coffeeAddonExtras.syrup + _coffeeAddonExtras.cinnamon;
+      var extra = _coffeeAddonExtras.sugar + _coffeeAddonExtras.syrup + _coffeeAddonExtras.cinnamon;
       var finalPrice = _coffeeAddonPrice + extra;
-      var parts = [_coffeeAddons.milk, _coffeeAddons.sugar, _coffeeAddons.syrup, _coffeeAddons.cinnamon].filter(Boolean);
+      var parts = [_coffeeAddons.sugar, _coffeeAddons.syrup, _coffeeAddons.cinnamon].filter(Boolean);
       var addons = parts.join(', ');
       var product = productsById.get(_coffeeAddonProductId);
       if (!product) { closeCoffeeAddons(); return; }
