@@ -530,7 +530,7 @@
       </div>
       <div style="width:1px;height:30px;background:rgba(0,0,0,0.08);flex-shrink:0;"></div>
       <div style="min-width:0;">
-       <div style="font-size:17px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-total-full">0.00</span> <span style="font-size:12px;font-weight:600;color:#6B4423;">BYN</span></div>
+       <div style="font-size:17px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="cart-total-full">0.00</span><span class="icon icon-rub"></span></div>
        <div style="font-size:11px;color:#aaa;margin-top:1px;">Итого</div>
       </div>
       <div style="flex:1;display:flex;min-width:0;">
@@ -727,7 +727,7 @@
        </div>
        <div style="display:flex;align-items:baseline;gap:5px;">
         <span style="font-size:35px;font-weight:400;color:#B8922A;font-family:'Montserrat',sans-serif;line-height:1;"><span id="checkout-total">0.00</span></span>
-        <span style="font-size:16px;font-weight:400;color:#B8922A;font-family:'Montserrat',sans-serif;letter-spacing:0.02em;">BYN</span>
+        <span class="icon icon-rub"></span>
        </div>
       </div>
 
@@ -1032,7 +1032,7 @@
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
        <span id="receipt-payment-method" style="font-size:16px;font-weight:600;color:#3d1f0a;font-family:'Montserrat',sans-serif;">Картой</span>
-       <span id="receipt-total" style="font-family:'Montserrat',sans-serif;font-size:24px;font-weight:800;color:#C9A227;">0.00 BYN</span>
+       <span id="receipt-total" style="font-family:'Montserrat',sans-serif;font-size:24px;font-weight:800;color:#C9A227;"><span id="receipt-amount-static">0.00</span><span class="icon icon-rub"></span></span>
       </div>
      </div>
     </div>
@@ -3164,7 +3164,7 @@
       document.getElementById('receipt-order-id').textContent = 'ЗАКАЗ №' + numStr;
       document.getElementById('receipt-customer-name').textContent = customerName;
       document.getElementById('receipt-customer-phone').textContent = customerPhone;
-      document.getElementById('receipt-total').textContent = total.toFixed(2) + ' BYN';
+      document.getElementById('receipt-total').innerHTML = total.toFixed(2) + BYN;
       var pmLabel = paymentMethod === 'card' ? 'Картой' : paymentMethod === 'cash' ? 'Наличными' : (paymentMethod || 'При получении');
       document.getElementById('receipt-payment-method').textContent = pmLabel;
       document.getElementById('receipt-items').innerHTML = cartSnapshot.map(item => {
@@ -3172,7 +3172,7 @@
         if (item.selected_size) nameStr += ' (' + escHtml(item.selected_size) + ')';
         return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
           + '<span style="font-size:14px;font-weight:600;color:#3d1f0a;font-family:\'Montserrat\',sans-serif;flex:1;line-height:1.3;">' + nameStr + '</span>'
-          + '<span style="font-size:14px;font-weight:600;color:#888;font-family:\'Montserrat\',sans-serif;white-space:nowrap;">' + item.quantity + ' × ' + item.price.toFixed(2) + ' BYN</span>'
+          + '<span style="font-size:14px;font-weight:600;color:#888;font-family:\'Montserrat\',sans-serif;white-space:nowrap;">' + item.quantity + ' × ' + item.price.toFixed(2) + BYN + '</span>'
           + '</div>';
       }).join('');
       if (method === 'pickup') {
@@ -3252,7 +3252,7 @@
             <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-beige flex items-center justify-center text-2xl">${product.image}</div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-semibold text-coffee truncate">${escHtml(item.product_name)}</p>
-              <p class="text-xs text-caramel">${item.price.toFixed(2)} ${BYN} × ${item.quantity}</p>
+              <p class="text-xs text-caramel">${item.price.toFixed(2)}${BYN} × ${item.quantity}</p>
             </div>
             <div class="flex items-center gap-1">
               <button onclick="updateQuantity('${item.product_id}', -1, '${item.selected_size || ''}')" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">−</button>
@@ -3761,14 +3761,14 @@
       document.getElementById('receipt-order-id').textContent = 'ЗАКАЗ №' + numStr;
       document.getElementById('receipt-customer-name').textContent = customerName;
       document.getElementById('receipt-customer-phone').textContent = customerPhone;
-      document.getElementById('receipt-total').textContent = total.toFixed(2) + ' BYN';
+      document.getElementById('receipt-total').innerHTML = total.toFixed(2) + BYN;
       document.getElementById('receipt-payment-method').textContent = 'При получении';
       document.getElementById('receipt-items').innerHTML = cartSnapshot.map(item => {
         var nameStr = escHtml(item.product_name);
         if (item.selected_size) nameStr += ' (' + escHtml(item.selected_size) + ')';
         return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
           + '<span style="font-size:14px;font-weight:600;color:#3d1f0a;font-family:\'Montserrat\',sans-serif;flex:1;line-height:1.3;">' + nameStr + '</span>'
-          + '<span style="font-size:14px;font-weight:600;color:#888;font-family:\'Montserrat\',sans-serif;white-space:nowrap;">' + item.quantity + ' × ' + item.price.toFixed(2) + ' BYN</span>'
+          + '<span style="font-size:14px;font-weight:600;color:#888;font-family:\'Montserrat\',sans-serif;white-space:nowrap;">' + item.quantity + ' × ' + item.price.toFixed(2) + BYN + '</span>'
           + '</div>';
       }).join('');
       document.getElementById('receipt-location-label').textContent = 'Пекарня получения';
