@@ -440,7 +440,7 @@
         </button>
        </div>
        <!-- Left-aligned carousel, partial preview of next card -->
-       <div id="cart-suggestions" class="hide-scrollbar" style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:4px;padding-bottom:14px;"><div id="cs-items" class="flex" style="gap:8px;align-items:flex-start;padding-left:8px;padding-right:8px;"></div></div>
+       <div id="cart-suggestions" class="hide-scrollbar" style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:4px;padding-bottom:14px;" onscroll="onCartSuggestionsScroll(this)"><div id="cs-items" class="flex" style="gap:8px;align-items:center;"></div></div>
       </div>
      </div>
 
@@ -2621,7 +2621,7 @@
       var imgHTML = productImages[p.id]
         ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:#F2E8D8;">' + p.image + '</div>';
-      return '<div style="flex-shrink:0;width:132px;height:171px;scroll-snap-align:start;position:relative;">'
+      return '<div style="flex-shrink:0;width:132px;height:171px;scroll-snap-align:center;position:relative;">'
         + '<div style="width:100%;height:100%;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(45,21,5,0.07);background:#fff;display:flex;flex-direction:column;cursor:pointer;" onclick="showProductDetail(\'' + p.id + '\')">'
         + '<div style="position:relative;height:99px;flex-shrink:0;overflow:hidden;border-radius:14px;margin:5px 5px 0;">' + imgHTML + '</div>'
         + '<div style="flex:1;background:#fff;padding:5px 8px 8px;display:flex;flex-direction:column;justify-content:space-between;">'
@@ -2662,10 +2662,93 @@
       _csTotalReal = picks.length;
       _csCloneCount = _csTotalReal;
 
-      container.style.paddingLeft = '8px';
-      container.style.paddingRight = '8px';
-      container.innerHTML = picks.map(function(p) { return csSuggCardHTML(p); }).join('');
-      if (csEl) csEl.scrollLeft = 0;
+      container.style.paddingLeft = '0';
+      container.style.paddingRight = '0';
+
+      var realHTML = picks.map(function(p) { return csSuggCardHTML(p); });
+      container.innerHTML = realHTML.concat(realHTML).concat(realHTML).join('');
+
+      var cards = Array.from(container.querySelectorAll(':scope > div'));
+      cards.forEach(function(card) {
+        card.style.scrollSnapAlign = 'center';
+        card.style.willChange = 'transform';
+        card.style.transition = 'none';
+        card.style.transform = 'scale(0.93) translateY(0px)';
+        card.style.opacity = '0.72';
+      });
+      var startIdx = _csCloneCount;
+      var CS_SPRING = 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.26s ease';
+
+      requestAnimationFrame(function() {
+        if (!cards.length) return;
+        var realW = cards[0].offsetWidth;
+        if (realW > 0) CS_CARD_W = realW;
+        if (cards.length > 1) {
+          var gap = cards[1].offsetLeft - cards[0].offsetLeft - CS_CARD_W;
+          if (gap >= 0) CS_GAP = gap;
+        }
+        var screenW = (csEl ? csEl.offsetWidth : 0) || window.innerWidth || 375;
+        var sideOff = Math.round((screenW - CS_CARD_W) / 2);
+        container.style.paddingLeft = sideOff + 'px';
+        container.style.paddingRight = sideOff + 'px';
+        requestAnimationFrame(function() {
+          if (csEl) csEl.scrollLeft = startIdx * (CS_CARD_W + CS_GAP);
+          requestAnimationFrame(function() {
+            cards.forEach(function(card, i) {
+              var isActive = i === startIdx;
+              card.style.transform = isActive ? 'scale(1.08)' : 'scale(0.93)';
+              card.style.opacity = isActive ? '1' : '0.72';
+            });
+            setTimeout(function() {
+              cards.forEach(function(card) { card.style.transition = CS_SPRING; });
+            }, 60);
+          });
+        });
+      });
+    }
+
+    function onCartSuggestionsScroll(el) {
+      if (_csRaf) return;
+      _csRaf = requestAnimationFrame(function() {
+        _csRaf = null;
+        var cards = document.querySelectorAll('#cs-items > div');
+        if (!cards.length) return;
+        var center = el.scrollLeft + el.offsetWidth / 2;
+        var activeIdx = 0, minDist = Infinity;
+        cards.forEach(function(card, i) {
+          var dist = Math.abs((card.offsetLeft + card.offsetWidth / 2) - center);
+          if (dist < minDist) { minDist = dist; activeIdx = i; }
+        });
+        cards.forEach(function(card, i) {
+          var isActive = i === activeIdx;
+          card.style.transform = isActive ? 'scale(1.08)' : 'scale(0.93)';
+          card.style.opacity = isActive ? '1' : '0.72';
+        });
+        clearTimeout(_csScrollStopTimer);
+        _csScrollStopTimer = setTimeout(function() { _csLoopCheck(el, cards, activeIdx); }, 80);
+      });
+    }
+
+    function _csLoopCheck(el, cards, activeIdx) {
+      var jump = 0;
+      if (activeIdx < _csCloneCount) jump = _csTotalReal;
+      else if (activeIdx >= _csCloneCount + _csTotalReal) jump = -_csTotalReal;
+      if (!jump) return;
+      var toIdx = activeIdx + jump;
+      cards.forEach(function(card) { card.style.transition = 'none'; });
+      el.scrollLeft += jump * (CS_CARD_W + CS_GAP);
+      cards.forEach(function(card, i) {
+        var isActive = i === toIdx;
+        card.style.transform = isActive ? 'scale(1.08)' : 'scale(0.93)';
+        card.style.opacity = isActive ? '1' : '0.72';
+      });
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          cards.forEach(function(card) {
+            card.style.transition = 'transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.26s ease';
+          });
+        });
+      });
     }
 
 
