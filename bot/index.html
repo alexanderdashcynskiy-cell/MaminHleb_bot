@@ -1119,7 +1119,7 @@
      </div>
      <div style="width:1px;height:30px;background:rgba(0,0,0,0.08);flex-shrink:0;"></div>
      <div style="min-width:0;">
-      <div style="font-size:17px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="preorder-bar-amount">0.00</span> <img src="/images/moneysign.png" style="display:inline-block;height:1em;width:auto;vertical-align:-0.12em;"></div>
+      <div style="font-size:17px;font-weight:800;color:#3d1f0a;line-height:1.2;white-space:nowrap;"><span id="preorder-bar-amount">0.00</span> <img src="/images/moneysign.png" style="display:inline-block;height:1.25em;width:auto;vertical-align:-0.18em;margin-left:1px;"></div>
       <div style="font-size:11px;color:#aaa;margin-top:1px;">Итого</div>
      </div>
      <div style="flex:1;display:flex;min-width:0;">
@@ -1212,7 +1212,7 @@
     </div>
     <!-- Floating confirm button -->
     <div style="position:absolute;bottom:40px;left:0;right:0;padding:0 14px;padding-bottom:max(0px,env(safe-area-inset-bottom,0px));pointer-events:none;">
-     <button type="button" id="submit-preorder-btn" onclick="submitPreorder(null)" style="width:100%;padding:16px;background:linear-gradient(90deg,#C9A227,#E8B430);color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.01em;box-shadow:0 8px 36px rgba(45,21,5,0.16),0 2px 8px rgba(45,21,5,0.08);pointer-events:auto;text-align:center;">Подтвердить предзаказ • <span id="preorder-confirm-total">0.00</span> <img src="/images/moneysign.png" style="display:inline-block;height:1em;width:auto;vertical-align:-0.12em;filter:brightness(0) invert(1);"></button>
+     <button type="button" id="submit-preorder-btn" onclick="submitPreorder(null)" style="width:100%;padding:16px;background:linear-gradient(90deg,#C9A227,#E8B430);color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.01em;box-shadow:0 8px 36px rgba(45,21,5,0.16),0 2px 8px rgba(45,21,5,0.08);pointer-events:auto;text-align:center;">Подтвердить предзаказ • <span id="preorder-confirm-total">0.00</span> <img src="/images/moneysign.png" style="display:inline-block;height:1.25em;width:auto;vertical-align:-0.18em;margin-left:1px;filter:brightness(0) invert(1);"></button>
     </div>
    </div>
    </div>
@@ -1457,7 +1457,7 @@
     };
 
     // ── State ──────────────────────────────────────────────────────────────────
-    const BYN = '<img src="/images/moneysign.png" style="display:inline-block;height:1em;width:auto;vertical-align:-0.12em;">';
+    const BYN = '<img src="/images/moneysign.png" style="display:inline-block;height:1.25em;width:auto;vertical-align:-0.18em;margin-left:1px;">';
     // Экранирование HTML для пользовательских строк (имена товаров из корзины, адреса, и т.п.)
     function escHtml(s) {
       if (s == null) return '';
