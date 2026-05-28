@@ -54,6 +54,68 @@ async function initDB() {
   }
 }
 
+const CATALOG = [
+  { name: 'Круассан Французский',   price: 3.50 },
+  { name: 'Пончик Глазированный',   price: 2.20 },
+  { name: 'Макарон Малина',          price: 4.50 },
+  { name: 'Багет Французский',       price: 2.95 },
+  { name: 'Хлеб Чёрный',            price: 2.10 },
+  { name: 'Хлеб Пшеничный',         price: 1.80 },
+  { name: 'Хлеб Цельнозерновой',    price: 3.20 },
+  { name: 'Пирог с Ягодами',        price: 9.50 },
+  { name: 'Пирог с Курицей',        price: 19.20 },
+  { name: 'Пирог Яблочный',         price: 8.30 },
+  { name: 'Пирог Рыбный',           price: 16.50 },
+  { name: 'Торт Орео',              price: 73.00 },
+  { name: 'Торт Молочный',          price: 35.00 },
+  { name: 'Торт Шоколадный',        price: 52.00 },
+  { name: 'Торт Ягодный',           price: 58.00 },
+  { name: 'Перепечи с Сыром',       price: 2.50 },
+  { name: 'Сосиска в Тесте',        price: 1.85 },
+  { name: 'Хачапури',               price: 2.10 },
+  { name: 'Пирожок с Мясом',        price: 1.75 },
+  { name: 'Эчпочмак',               price: 2.10 },
+  { name: 'Слойка с Грибами',       price: 3.20 },
+  { name: 'Пицца Ветчина',          price: 3.90 },
+  { name: 'Кальцоне',               price: 2.90 },
+  { name: 'Пицца Пепперони',        price: 4.20 },
+  { name: 'Пицца Овощная',          price: 3.50 },
+  { name: 'Капучино',               price: 3.00 },
+  { name: 'Латте',                  price: 3.20 },
+  { name: 'Американо',              price: 2.50 },
+  { name: 'Макиято',                price: 3.30 },
+  { name: 'Кейк-попсы',             price: 4.50 },
+  { name: 'Эклер шоколадный',       price: 3.50 },
+  { name: 'Творожное кольцо',       price: 2.80 },
+  { name: 'Медовик',                price: 3.90 },
+  { name: 'Молочный десерт',        price: 3.20 },
+  { name: 'Красный Бархат',         price: 4.80 },
+  { name: 'Капкейк Клубника',       price: 3.50 },
+  { name: 'Эклер клубничный',       price: 3.50 },
+  { name: 'Тарт лимонный',          price: 4.20 },
+  { name: 'Тарт карамель с орехами',price: 4.50 },
+  { name: 'Тарт малина-фисташка',   price: 4.80 },
+  { name: 'Трубочки со сгущёнкой',  price: 2.50 },
+];
+
+async function syncCatalogToWarehouse() {
+  if (!pgPool) return;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    for (const item of CATALOG) {
+      await pgPool.query(
+        `INSERT INTO "Склад" ("Название","Цена","Остаток","Активен","Дата")
+         SELECT $1,$2,$3,$4,$5
+         WHERE NOT EXISTS (SELECT 1 FROM "Склад" WHERE "Название" = $1)`,
+        [item.name, item.price, 0, true, today]
+      );
+    }
+    console.log(`Склад synced: ${CATALOG.length} items`);
+  } catch(e) {
+    console.error('syncCatalogToWarehouse:', e.message);
+  }
+}
+
 async function saveOrderToDB(body, isPreorder, total) {
   if (!pgPool) return;
   try {
@@ -753,5 +815,6 @@ setInterval(() => {
 app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
   await initDB();
+  await syncCatalogToWarehouse();
   await setWebhook();
 });
