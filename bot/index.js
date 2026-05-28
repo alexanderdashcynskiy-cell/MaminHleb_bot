@@ -39,6 +39,8 @@ async function initDB() {
     console.warn('DATABASE_URL not set — state stored in memory only (lost on restart)');
     return;
   }
+
+  // bot_state — обязательная таблица
   try {
     await pgPool.query(`
       CREATE TABLE IF NOT EXISTS bot_state (
@@ -46,108 +48,32 @@ async function initDB() {
         value TEXT NOT NULL
       )
     `);
+  } catch(e) { console.error('CREATE bot_state:', e.message); }
 
-    await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS "Заказы" (
-        id                SERIAL PRIMARY KEY,
-        "Дата"            TEXT,
-        "Время"           TEXT,
-        "Имя"             TEXT,
-        telegram_id       TEXT,
-        "Номер_телефона"  TEXT,
-        "Состав_заказа"   TEXT,
-        "Сумма"           NUMERIC(10,2),
-        "Адрес_доставки"  TEXT,
-        "Статус_заказа"   TEXT DEFAULT 'Новый',
-        "Примечание"      TEXT
-      )
-    `);
+  // Загружаем состояние
+  try {
+    const res = await pgPool.query('SELECT key, value FROM bot_state');
+    res.rows.forEach(row => store.set(row.key, row.value));
+    console.log(`PostgreSQL state loaded: ${store.size} keys`);
+  } catch(e) { console.error('load bot_state:', e.message); }
 
-    await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS "Предзаказ" (
-        id                SERIAL PRIMARY KEY,
-        "Дата"            TEXT,
-        "Время"           TEXT,
-        "Имя"             TEXT,
-        telegram_id       TEXT,
-        "Номер_телефона"  TEXT,
-        "Состав_заказа"   TEXT,
-        "Сумма"           NUMERIC(10,2),
-        "Адрес_доставки"  TEXT,
-        "Статус_заказа"   TEXT DEFAULT 'Новый',
-        "Примечание"      TEXT
-      )
-    `);
-
-    await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS "Отзывы" (
-        id                SERIAL PRIMARY KEY,
-        telegram_id       TEXT,
-        "Дата"            TEXT,
-        "Время"           TEXT,
-        "Имя"             TEXT,
-        "Состав_Заказа"   TEXT,
-        "Примечание"      TEXT,
-        "Отзыв"           TEXT,
-        "Ответ_админа"    TEXT
-      )
-    `);
-
-    await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS "Склад" (
-        id          SERIAL PRIMARY KEY,
-        "Название"  TEXT UNIQUE,
-        "Цена"      NUMERIC(10,2),
-        "Остаток"   INTEGER DEFAULT 0,
-        "Активен"   BOOLEAN DEFAULT true,
-        "Дата"      TEXT
-      )
-    `);
-
-    await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS "Логи_сессий" (
-        id          SERIAL PRIMARY KEY,
-        telegram_id TEXT,
-        "Дата"      TEXT,
-        "Время"     TEXT,
-        "Действие"  TEXT,
-        "Данные"    TEXT
-      )
-    `);
-
-    await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS "Сотрудники" (
-        id          SERIAL PRIMARY KEY,
-        "Имя"       TEXT,
-        telegram_id TEXT,
-        "Роль"      TEXT DEFAULT 'Сотрудник',
-        "Активен"   BOOLEAN DEFAULT true,
-        "Дата"      TEXT
-      )
-    `);
-
-    console.log('All tables ready');
-
-    // Логируем структуру всех таблиц
+  // Логируем все таблицы и колонки
+  try {
     const tables = await pgPool.query(`
-      SELECT table_name FROM information_schema.tables
-      WHERE table_schema = 'public' ORDER BY table_name
+      SELECT table_schema, table_name
+      FROM information_schema.tables
+      WHERE table_type='BASE TABLE'
+        AND table_schema NOT IN ('pg_catalog','information_schema')
+      ORDER BY table_schema, table_name
     `);
     for (const t of tables.rows) {
       const cols = await pgPool.query(`
         SELECT column_name, data_type FROM information_schema.columns
-        WHERE table_schema='public' AND table_name=$1 ORDER BY ordinal_position
-      `, [t.table_name]);
-      console.log(`TABLE [${t.table_name}]:`, cols.rows.map(c => `${c.column_name}(${c.data_type})`).join(', '));
+        WHERE table_schema=$1 AND table_name=$2 ORDER BY ordinal_position
+      `, [t.table_schema, t.table_name]);
+      console.log(`TABLE [${t.table_schema}.${t.table_name}]:`, cols.rows.map(c => `${c.column_name}(${c.data_type})`).join(', '));
     }
-
-    const res = await pgPool.query('SELECT key, value FROM bot_state');
-    res.rows.forEach(row => store.set(row.key, row.value));
-    console.log(`PostgreSQL state loaded: ${store.size} keys`);
-
-  } catch(e) {
-    console.error('initDB failed, continuing without persistent state:', e.message);
-  }
+  } catch(e) { console.error('list tables:', e.message); }
 }
 
 const CATALOG = [
