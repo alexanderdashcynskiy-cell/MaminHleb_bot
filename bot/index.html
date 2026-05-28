@@ -3890,12 +3890,10 @@
 
     // ── API ────────────────────────────────────────────────────────────────────
     async function sendOrderToServer(order) {
-        const GOOGLE_APP_URL = 'https://maminhlebbot-production.up.railway.app/order';
         try {
-            await fetch(GOOGLE_APP_URL, {
+            await fetch('/order', {
                 method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: order.type,
                     name: order.name,
