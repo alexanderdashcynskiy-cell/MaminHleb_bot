@@ -49,6 +49,17 @@ async function initDB() {
     const res = await pgPool.query('SELECT key, value FROM bot_state');
     res.rows.forEach(row => store.set(row.key, row.value));
     console.log(`PostgreSQL state loaded: ${store.size} keys`);
+
+    // Логируем точные названия колонок таблицы Заказы
+    try {
+      const cols = await pgPool.query(`
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'Заказы' ORDER BY ordinal_position
+      `);
+      console.log('Заказы columns:', cols.rows.map(r => r.column_name).join(', '));
+    } catch(e) {
+      console.error('Cant read Заказы columns:', e.message);
+    }
   } catch(e) {
     console.error('initDB failed, continuing without persistent state:', e.message);
   }
@@ -755,10 +766,12 @@ app.post('/webhook', (req, res) => {
 app.post('/order', (req, res) => {
   res.json({ ok: true });
   let body = req.body;
+  console.log('/order received, content-type:', req.headers['content-type'], 'body type:', typeof body);
   if (typeof body === 'string') {
-    try { body = JSON.parse(body); } catch(e) { return; }
+    try { body = JSON.parse(body); } catch(e) { console.error('/order JSON parse failed:', e.message); return; }
   }
-  if (!body || (!body.phone && !body.items)) return;
+  if (!body || (!body.phone && !body.items)) { console.log('/order skipped — no phone/items'); return; }
+  console.log('/order processing, type:', body.type, 'name:', body.name, 'phone:', body.phone);
   handleOrder(body).catch(e => console.error('order err:', e));
 });
 
