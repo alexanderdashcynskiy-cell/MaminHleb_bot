@@ -299,7 +299,8 @@ async function handleOrder(body) {
   setProp(`order_address_${orderNum}`,body.address || 'Самовывоз');
   setProp(`order_total_${orderNum}`,  totalStr);
   setProp(`order_payment_${orderNum}`,body.payment || '');
-  setProp(`order_note_${orderNum}`,   noteStr);
+  setProp(`order_note_${orderNum}`,        noteStr);
+  setProp(`order_items_text_${orderNum}`,  itemsText);
 
   saveOrderToDB(body, isPreorder, total > 0 ? total : Number(body.total || 0));
 
@@ -697,6 +698,30 @@ async function handleTextMessage(message) {
 
   const data   = JSON.parse(pendingRaw);
   const isSkip = msgText === '/skip';
+
+  if (!isSkip && pgPool) {
+    try {
+      const now      = new Date();
+      const rowNum   = data.rowNum;
+      const name     = getProp(`client_name_${rowNum}`) || 'Гость';
+      const items    = getProp(`order_items_text_${rowNum}`) || null;
+      await pgPool.query(
+        `INSERT INTO "Отзывы" ("telegram_id","Дата","Время","Имя","Состав_Заказа","Отзыв")
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [
+          senderId,
+          now.toISOString().slice(0, 10),
+          now.toTimeString().slice(0, 5),
+          name,
+          items,
+          msgText
+        ]
+      );
+      console.log(`Review saved for order ${rowNum}`);
+    } catch(e) {
+      console.error('review DB save:', e.message);
+    }
+  }
 
   const calls = [];
   if (data.reviewReqMsgId) calls.push(['deleteMessage',
