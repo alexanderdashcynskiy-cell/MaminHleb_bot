@@ -118,8 +118,8 @@ async function syncCatalogToWarehouse() {
 
 async function saveOrderToDB(body, isPreorder, total) {
   if (!pgPool) return;
+  const table = isPreorder ? '"Предзаказ"' : '"Заказы"';
   try {
-    const table = isPreorder ? '"Предзаказ"' : '"Заказы"';
     const now   = new Date();
     const items = typeof body.items === 'string' ? body.items : JSON.stringify(body.items || []);
 
@@ -132,6 +132,8 @@ async function saveOrderToDB(body, isPreorder, total) {
       dateVal = now.toISOString().slice(0, 10);
       timeVal = now.toTimeString().slice(0, 5);
     }
+
+    console.log(`saveOrderToDB → ${table}`, { name: body.name, phone: body.phone, total });
 
     await pgPool.query(
       `INSERT INTO ${table} ("Дата","Время","Имя","Telegram_ID","Номер_телефона","Состав_заказа","Сумма","Адрес_доставки","Статус_заказа","Примечание")
@@ -149,9 +151,10 @@ async function saveOrderToDB(body, isPreorder, total) {
         (body.note || '').trim() || null
       ]
     );
-    console.log(`Saved to ${table}`);
+    console.log(`saveOrderToDB ✓ saved to ${table}`);
   } catch(e) {
-    console.error('saveOrderToDB:', e.message);
+    console.error(`saveOrderToDB FAILED (${table}):`, e.message);
+    console.error('  code:', e.code, '| detail:', e.detail, '| hint:', e.hint);
   }
 }
 
