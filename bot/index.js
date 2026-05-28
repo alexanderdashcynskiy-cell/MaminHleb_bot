@@ -46,23 +46,6 @@ async function initDB() {
         value TEXT NOT NULL
       )
     `);
-    await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS orders (
-        id          SERIAL PRIMARY KEY,
-        order_num   INTEGER NOT NULL,
-        type        VARCHAR(32) NOT NULL DEFAULT 'pickup',
-        client_name VARCHAR(255),
-        phone       VARCHAR(64),
-        address     TEXT,
-        items       JSONB,
-        total       NUMERIC(10,2),
-        payment     VARCHAR(32),
-        note        TEXT,
-        preorder_time VARCHAR(128),
-        telegram_id VARCHAR(64),
-        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `);
     const res = await pgPool.query('SELECT key, value FROM bot_state');
     res.rows.forEach(row => store.set(row.key, row.value));
     console.log(`PostgreSQL state loaded: ${store.size} keys`);
@@ -71,32 +54,6 @@ async function initDB() {
   }
 }
 
-async function saveOrderToDB(orderNum, body, orderType, total) {
-  if (!pgPool) return;
-  try {
-    const items = typeof body.items === 'string' ? JSON.parse(body.items) : (body.items || []);
-    await pgPool.query(
-      `INSERT INTO orders (order_num, type, client_name, phone, address, items, total, payment, note, preorder_time, telegram_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-      [
-        orderNum,
-        orderType,
-        body.name    || 'Гость',
-        body.phone   || null,
-        body.address || 'Самовывоз',
-        JSON.stringify(items),
-        parseFloat(total) || 0,
-        body.payment || null,
-        (body.note   || '').trim() || null,
-        body.time    || null,
-        String(body.telegramId || '0')
-      ]
-    );
-    console.log(`Order ${orderNum} saved to DB`);
-  } catch(e) {
-    console.error('saveOrderToDB:', e.message);
-  }
-}
 
 function getProp(key) { return store.get(key) || null; }
 
@@ -244,7 +201,6 @@ async function handleOrder(body) {
   setProp(`order_payment_${orderNum}`,body.payment || '');
   setProp(`order_note_${orderNum}`,   noteStr);
 
-  saveOrderToDB(orderNum, body, orderType, total > 0 ? total : Number(body.total || 0));
 
   // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
