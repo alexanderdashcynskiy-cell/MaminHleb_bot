@@ -123,60 +123,44 @@ const CATALOG = [
 async function syncCatalogToWarehouse() {
   if (!pgPool) return;
   try {
-    const today = new Date().toISOString().slice(0, 10);
     for (const item of CATALOG) {
       await pgPool.query(
-        `INSERT INTO "Склад" ("Название","Цена","Остаток","Активен","Дата")
-         SELECT $1,$2,$3,$4,$5
-         WHERE NOT EXISTS (SELECT 1 FROM "Склад" WHERE "Название" = $1)`,
-        [item.name, item.price, 0, true, today]
+        `INSERT INTO "Product" (name, stock, price)
+         SELECT $1, 0, $2
+         WHERE NOT EXISTS (SELECT 1 FROM "Product" WHERE name = $1)`,
+        [item.name, item.price]
       );
     }
-    console.log(`Склад synced: ${CATALOG.length} items`);
+    console.log(`Product synced: ${CATALOG.length} items`);
   } catch(e) {
     console.error('syncCatalogToWarehouse:', e.message);
   }
 }
 
-async function saveOrderToDB(body, isPreorder, total) {
+async function saveOrderToDB(body, isPreorder, total, orderNum) {
   if (!pgPool) return;
-  const table = isPreorder ? '"Предзаказ"' : '"Заказы"';
   try {
-    const now   = new Date();
     const items = typeof body.items === 'string' ? body.items : JSON.stringify(body.items || []);
-
-    let dateVal, timeVal;
-    if (isPreorder && body.time) {
-      const [datePart, timePart] = body.time.split(' в ');
-      dateVal = datePart || now.toISOString().slice(0, 10);
-      timeVal = (timePart || '').trim() || null;
-    } else {
-      dateVal = now.toISOString().slice(0, 10);
-      timeVal = now.toTimeString().slice(0, 5);
-    }
-
-    console.log(`saveOrderToDB → ${table}`, { name: body.name, phone: body.phone, total });
-
+    console.log('saveOrderToDB → Order', { name: body.name, phone: body.phone, total, isPreorder });
     await pgPool.query(
-      `INSERT INTO ${table} ("Дата","Время","Имя",telegram_id,"Номер_телефона","Состав_заказа","Сумма","Адрес_доставки","Статуc_заказа","Примечание")
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+      `INSERT INTO "Order" ("orderNumber","customerName","phone","content","amount","status","address","isPreorder","telegramId")
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [
-        dateVal,
-        timeVal,
-        body.name  || 'Гость',
-        String(body.telegramId || '0'),
-        body.phone || null,
+        String(orderNum),
+        body.name    || 'Гость',
+        body.phone   || null,
         items,
         parseFloat(total) || 0,
-        body.address || 'Самовывоз',
         'Новый',
-        (body.note || '').trim() || null
+        body.address || 'Самовывоз',
+        isPreorder,
+        String(body.telegramId || '0')
       ]
     );
-    console.log(`saveOrderToDB ✓ saved to ${table}`);
+    console.log('saveOrderToDB ✓ saved to Order');
   } catch(e) {
-    console.error(`saveOrderToDB FAILED (${table}):`, e.message);
-    console.error('  code:', e.code, '| detail:', e.detail, '| hint:', e.hint);
+    console.error('saveOrderToDB FAILED:', e.message);
+    console.error('  code:', e.code, '| detail:', e.detail);
   }
 }
 
@@ -327,7 +311,7 @@ async function handleOrder(body) {
   setProp(`order_note_${orderNum}`,        noteStr);
   setProp(`order_items_text_${orderNum}`,  itemsText);
 
-  saveOrderToDB(body, isPreorder, total > 0 ? total : Number(body.total || 0));
+  saveOrderToDB(body, isPreorder, total > 0 ? total : Number(body.total || 0), orderNum);
 
   // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
@@ -726,21 +710,10 @@ async function handleTextMessage(message) {
 
   if (!isSkip && pgPool) {
     try {
-      const now      = new Date();
-      const rowNum   = data.rowNum;
-      const name     = getProp(`client_name_${rowNum}`) || 'Гость';
-      const items    = getProp(`order_items_text_${rowNum}`) || null;
+      const rowNum = data.rowNum;
       await pgPool.query(
-        `INSERT INTO "Отзывы" ("telegram_id","Дата","Время","Имя","Состав_Заказа","Отзыв")
-         VALUES ($1,$2,$3,$4,$5,$6)`,
-        [
-          senderId,
-          now.toISOString().slice(0, 10),
-          now.toTimeString().slice(0, 5),
-          name,
-          items,
-          msgText
-        ]
+        `UPDATE "Order" SET review=$1, rating=$2 WHERE "orderNumber"=$3`,
+        [msgText, data.stars || null, String(rowNum)]
       );
       console.log(`Review saved for order ${rowNum}`);
     } catch(e) {
@@ -786,34 +759,6 @@ app.post('/order', (req, res) => {
   handleOrder(body).catch(e => console.error('order err:', e));
 });
 
-app.post('/review', async (req, res) => {
-  res.json({ ok: true });
-  let body = req.body;
-  if (typeof body === 'string') { try { body = JSON.parse(body); } catch(e) { return; } }
-  if (!body || !body.text) return;
-  if (!pgPool) return;
-  try {
-    const now  = new Date();
-    const date = now.toISOString().slice(0, 10);
-    const time = now.toTimeString().slice(0, 5);
-    await pgPool.query(
-      `INSERT INTO "Отзывы" ("telegram_id","Дата","Время","Имя","Состав_Заказа","Примечание","Отзыв")
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [
-        String(body.telegramId || '0'),
-        date,
-        time,
-        body.name  || 'Гость',
-        body.items || null,
-        null,
-        body.text
-      ]
-    );
-    console.log('Review saved');
-  } catch(e) {
-    console.error('review save:', e.message);
-  }
-});
 
 app.get('/api/stock', (req, res) => {
   res.json({ ok: true, stock: {}, catalog: [], flags: {} });
