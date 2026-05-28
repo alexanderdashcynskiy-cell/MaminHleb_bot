@@ -20,7 +20,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const BOT_TOKEN        = (process.env.BOT_TOKEN        || '').trim();
+const BOT_TOKEN        = (process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN        || '').trim();
 const ADMIN_ID         = (process.env.ADMIN_ID         || '').trim();
 const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
 const PREORDER_CHAT_ID = (process.env.PREORDER_CHAT_ID || '').trim();
