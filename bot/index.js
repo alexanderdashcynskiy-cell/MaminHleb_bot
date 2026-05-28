@@ -128,6 +128,19 @@ async function initDB() {
 
     console.log('All tables ready');
 
+    // Логируем структуру всех таблиц
+    const tables = await pgPool.query(`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_schema = 'public' ORDER BY table_name
+    `);
+    for (const t of tables.rows) {
+      const cols = await pgPool.query(`
+        SELECT column_name, data_type FROM information_schema.columns
+        WHERE table_schema='public' AND table_name=$1 ORDER BY ordinal_position
+      `, [t.table_name]);
+      console.log(`TABLE [${t.table_name}]:`, cols.rows.map(c => `${c.column_name}(${c.data_type})`).join(', '));
+    }
+
     const res = await pgPool.query('SELECT key, value FROM bot_state');
     res.rows.forEach(row => store.set(row.key, row.value));
     console.log(`PostgreSQL state loaded: ${store.size} keys`);
