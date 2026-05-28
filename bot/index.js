@@ -54,6 +54,44 @@ async function initDB() {
   }
 }
 
+async function saveOrderToDB(body, isPreorder, total) {
+  if (!pgPool) return;
+  try {
+    const table = isPreorder ? '"Предзаказ"' : '"Заказы"';
+    const now   = new Date();
+    const items = typeof body.items === 'string' ? body.items : JSON.stringify(body.items || []);
+
+    let dateVal, timeVal;
+    if (isPreorder && body.time) {
+      const [datePart, timePart] = body.time.split(' в ');
+      dateVal = datePart || now.toISOString().slice(0, 10);
+      timeVal = (timePart || '').trim() || null;
+    } else {
+      dateVal = now.toISOString().slice(0, 10);
+      timeVal = now.toTimeString().slice(0, 5);
+    }
+
+    await pgPool.query(
+      `INSERT INTO ${table} ("Дата","Время","Имя","Telegram_ID","Номер_телефона","Состав_заказа","Сумма","Адрес_доставки","Статус_заказа","Примечание")
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+      [
+        dateVal,
+        timeVal,
+        body.name  || 'Гость',
+        String(body.telegramId || '0'),
+        body.phone || null,
+        items,
+        parseFloat(total) || 0,
+        body.address || 'Самовывоз',
+        'Новый',
+        (body.note || '').trim() || null
+      ]
+    );
+    console.log(`Saved to ${table}`);
+  } catch(e) {
+    console.error('saveOrderToDB:', e.message);
+  }
+}
 
 function getProp(key) { return store.get(key) || null; }
 
@@ -201,6 +239,7 @@ async function handleOrder(body) {
   setProp(`order_payment_${orderNum}`,body.payment || '');
   setProp(`order_note_${orderNum}`,   noteStr);
 
+  saveOrderToDB(body, isPreorder, total > 0 ? total : Number(body.total || 0));
 
   // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
