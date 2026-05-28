@@ -147,7 +147,7 @@ async function saveOrderToDB(body, isPreorder, total) {
     console.log(`saveOrderToDB → ${table}`, { name: body.name, phone: body.phone, total });
 
     await pgPool.query(
-      `INSERT INTO ${table} ("Дата","Время","Имя","Telegram_ID","Номер_телефона","Состав_заказа","Сумма","Адрес_доставки","Статус_заказа","Примечание")
+      `INSERT INTO ${table} ("Дата","Время","Имя",telegram_id,"Номер_телефона","Состав_заказа","Сумма","Адрес_доставки","Статуc_заказа","Примечание")
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
       [
         dateVal,
