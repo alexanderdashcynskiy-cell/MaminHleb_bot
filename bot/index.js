@@ -46,20 +46,92 @@ async function initDB() {
         value TEXT NOT NULL
       )
     `);
+
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS "Заказы" (
+        id                SERIAL PRIMARY KEY,
+        "Дата"            TEXT,
+        "Время"           TEXT,
+        "Имя"             TEXT,
+        telegram_id       TEXT,
+        "Номер_телефона"  TEXT,
+        "Состав_заказа"   TEXT,
+        "Сумма"           NUMERIC(10,2),
+        "Адрес_доставки"  TEXT,
+        "Статус_заказа"   TEXT DEFAULT 'Новый',
+        "Примечание"      TEXT
+      )
+    `);
+
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS "Предзаказ" (
+        id                SERIAL PRIMARY KEY,
+        "Дата"            TEXT,
+        "Время"           TEXT,
+        "Имя"             TEXT,
+        telegram_id       TEXT,
+        "Номер_телефона"  TEXT,
+        "Состав_заказа"   TEXT,
+        "Сумма"           NUMERIC(10,2),
+        "Адрес_доставки"  TEXT,
+        "Статус_заказа"   TEXT DEFAULT 'Новый',
+        "Примечание"      TEXT
+      )
+    `);
+
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS "Отзывы" (
+        id                SERIAL PRIMARY KEY,
+        telegram_id       TEXT,
+        "Дата"            TEXT,
+        "Время"           TEXT,
+        "Имя"             TEXT,
+        "Состав_Заказа"   TEXT,
+        "Примечание"      TEXT,
+        "Отзыв"           TEXT,
+        "Ответ_админа"    TEXT
+      )
+    `);
+
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS "Склад" (
+        id          SERIAL PRIMARY KEY,
+        "Название"  TEXT UNIQUE,
+        "Цена"      NUMERIC(10,2),
+        "Остаток"   INTEGER DEFAULT 0,
+        "Активен"   BOOLEAN DEFAULT true,
+        "Дата"      TEXT
+      )
+    `);
+
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS "Логи_сессий" (
+        id          SERIAL PRIMARY KEY,
+        telegram_id TEXT,
+        "Дата"      TEXT,
+        "Время"     TEXT,
+        "Действие"  TEXT,
+        "Данные"    TEXT
+      )
+    `);
+
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS "Сотрудники" (
+        id          SERIAL PRIMARY KEY,
+        "Имя"       TEXT,
+        telegram_id TEXT,
+        "Роль"      TEXT DEFAULT 'Сотрудник',
+        "Активен"   BOOLEAN DEFAULT true,
+        "Дата"      TEXT
+      )
+    `);
+
+    console.log('All tables ready');
+
     const res = await pgPool.query('SELECT key, value FROM bot_state');
     res.rows.forEach(row => store.set(row.key, row.value));
     console.log(`PostgreSQL state loaded: ${store.size} keys`);
 
-    // Логируем точные названия колонок таблицы Заказы
-    try {
-      const cols = await pgPool.query(`
-        SELECT column_name FROM information_schema.columns
-        WHERE table_name = 'Заказы' ORDER BY ordinal_position
-      `);
-      console.log('Заказы columns:', cols.rows.map(r => r.column_name).join(', '));
-    } catch(e) {
-      console.error('Cant read Заказы columns:', e.message);
-    }
   } catch(e) {
     console.error('initDB failed, continuing without persistent state:', e.message);
   }
