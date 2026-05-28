@@ -734,6 +734,35 @@ app.post('/order', (req, res) => {
   handleOrder(body).catch(e => console.error('order err:', e));
 });
 
+app.post('/review', async (req, res) => {
+  res.json({ ok: true });
+  let body = req.body;
+  if (typeof body === 'string') { try { body = JSON.parse(body); } catch(e) { return; } }
+  if (!body || !body.text) return;
+  if (!pgPool) return;
+  try {
+    const now  = new Date();
+    const date = now.toISOString().slice(0, 10);
+    const time = now.toTimeString().slice(0, 5);
+    await pgPool.query(
+      `INSERT INTO "Отзывы" ("telegram_id","Дата","Время","Имя","Состав_Заказа","Примечание","Отзыв")
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [
+        String(body.telegramId || '0'),
+        date,
+        time,
+        body.name  || 'Гость',
+        body.items || null,
+        null,
+        body.text
+      ]
+    );
+    console.log('Review saved');
+  } catch(e) {
+    console.error('review save:', e.message);
+  }
+});
+
 app.get('/api/stock', (req, res) => {
   res.json({ ok: true, stock: {}, catalog: [], flags: {} });
 });
