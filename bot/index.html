@@ -617,7 +617,38 @@
       { name: 'Трубочки со сгущёнкой',  price: 2.50,  category: 'Десерты',  emoji: '🥮', desc: 'Хрустящие трубочки с нежной начинкой из сгущёнки' },
     ];
 
+    // ── Mini Арх #2: product schema + validator ───────────────────────────────────
+    var PRODUCT_SCHEMA = { name: 'string', price: 'number', category: 'string', emoji: 'string', desc: 'string' };
+
+    function validateProduct(p) {
+      for (var field in PRODUCT_SCHEMA) {
+        if (typeof p[field] !== PRODUCT_SCHEMA[field]) return false;
+      }
+      return p.price >= 0 && p.name.length > 0 && p.category.length > 0;
+    }
+
     var BESTSELLERS = ['Круассан Французский','Торт Орео','Пирог с Курицей','Капучино','Макарон Малина','Медовик'];
+
+    // ── Mini Арх #3: API client (pure async, no side-effects) ────────────────────
+    var api = {
+      fetchStock: async function() {
+        var res = await fetch(API_BASE + '/api/stock');
+        return await res.json();
+      },
+      syncHappyHour: async function() {
+        var res = await fetch(API_BASE + '/api/happyhour');
+        return await res.json();
+      },
+      postOrder: async function(payload) {
+        var res = await fetch(API_BASE + '/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var data = await res.json().catch(function() { return null; });
+        return { ok: res.ok && data != null && data.ok === true };
+      }
+    };
 
     // ── Stock ─────────────────────────────────────────────────────────────────────
     function inStock(name) {
@@ -636,8 +667,7 @@
 
     async function fetchStock() {
       try {
-        const res  = await fetch(`${API_BASE}/api/stock`);
-        const data = await res.json();
+        var data = await api.fetchStock();
         stockAttempted = true;
         if (data.ok && data.stock) {
           stockData = data.stock;
@@ -896,8 +926,7 @@
 
     async function syncHappyHour() {
       try {
-        var r = await fetch(API_BASE + '/api/happyhour');
-        var d = await r.json();
+        var d = await api.syncHappyHour();
         if (d.ok) _serverHH = { active: d.active, minLeft: d.minLeft, ts: Date.now() };
       } catch(e) { /* use local clock fallback */ }
     }
@@ -1031,6 +1060,57 @@
       } catch(e) { console.error('showScreen error:', e); }
     }
 
+    // ── Mini Арх #4: pure validation + payload builders ───────────────────────────
+    function validateCheckoutForm(name, phone, time, address) {
+      if (!name)  return 'Введите ваше имя';
+      if (!phone) return 'Введите номер телефона';
+      if (cart.length === 0) return 'Корзина пуста';
+      if (selectedDelivery === 'pickup' && time && !validateTime(time)) return 'Время самовывоза: 07:00–11:00';
+      if (selectedDelivery === 'delivery' && !address) return 'Введите адрес доставки';
+      return null;
+    }
+
+    function buildOrderPayload(name, phone, time, address, note) {
+      var itemsSnapshot;
+      try { itemsSnapshot = JSON.parse(JSON.stringify(cart)); }
+      catch(e) { itemsSnapshot = cart.slice(); }
+      return {
+        name: name, phone: phone,
+        items: itemsSnapshot,
+        total: getEffectiveTotal(),
+        type: selectedDelivery === 'delivery' ? 'Доставка' : 'Самовывоз',
+        time: selectedDelivery === 'pickup' ? time : '',
+        address: selectedDelivery === 'delivery' ? address : 'Самовывоз',
+        payment: selectedPayment,
+        note: note, telegramId: telegramId, initData: initData,
+        deliveryMethod: selectedDelivery
+      };
+    }
+
+    function validatePreorderForm(name, phone, date, time, items) {
+      if (!name)  return 'Введите ваше имя';
+      if (!phone) return 'Введите номер телефона';
+      if (!date)  return 'Выберите дату';
+      if (!time)  return 'Выберите время';
+      if (time < '07:00' || time > '11:00') return 'Время предзаказа: 07:00–11:00';
+      if (items.length === 0) return 'Добавьте товары в корзину';
+      return null;
+    }
+
+    function buildPreorderPayload(name, phone, date, time, note) {
+      var itemsSnapshot;
+      try { itemsSnapshot = JSON.parse(JSON.stringify(preorderCart)); }
+      catch(e) { itemsSnapshot = preorderCart.slice(); }
+      var total = itemsSnapshot.reduce(function(s, i) { return s + i.price * i.quantity; }, 0);
+      return {
+        name: name, phone: phone,
+        items: itemsSnapshot, total: total,
+        type: 'Предзаказ',
+        time: date + ' в ' + time,
+        note: note, telegramId: telegramId, initData: initData
+      };
+    }
+
     // ── Checkout ──────────────────────────────────────────────────────────────────
     function setDelivery(type) {
       selectedDelivery = type;
@@ -1081,71 +1161,37 @@
       return h >= 7 && (h < 11 || (h === 11 && m === 0));
     }
 
+    // P2 #12: дожидаемся подтверждения сервера; при сбое НЕ чистим корзину и НЕ показываем чек
     async function submitOrder() {
-      var name  = (document.getElementById('checkout-name')  || {}).value || '';
-      var phone = (document.getElementById('checkout-phone') || {}).value || '';
-      var time  = (document.getElementById('checkout-time')  || {}).value || '';
-      var note  = (document.getElementById('checkout-note')  || {}).value || '';
-      var address = (document.getElementById('checkout-address') || {}).value || '';
-      name  = name.trim();
-      phone = phone.trim();
-      time  = time.trim();
-      if (!name)  { showToast('Введите ваше имя');     return; }
-      if (!phone) { showToast('Введите номер телефона'); return; }
-      if (cart.length === 0) { showToast('Корзина пуста'); return; }
-      if (selectedDelivery === 'pickup' && time && !validateTime(time)) {
-        showToast('Время самовывоза: 07:00–11:00');
-        return;
-      }
-      if (selectedDelivery === 'delivery' && !address.trim()) {
-        showToast('Введите адрес доставки');
-        return;
-      }
+      var name    = ((document.getElementById('checkout-name')    || {}).value || '').trim();
+      var phone   = ((document.getElementById('checkout-phone')   || {}).value || '').trim();
+      var time    = ((document.getElementById('checkout-time')    || {}).value || '').trim();
+      var note    =  (document.getElementById('checkout-note')    || {}).value || '';
+      var address = ((document.getElementById('checkout-address') || {}).value || '').trim();
+      var err = validateCheckoutForm(name, phone, time, address);
+      if (err) { showToast(err); return; }
       var btn = document.getElementById('checkout-submit-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Оформляем...'; }
-      var orderType = selectedDelivery === 'delivery' ? 'Доставка' : 'Самовывоз';
-      var total = getEffectiveTotal();
-      var itemsSnapshot;
-      try {
-        itemsSnapshot = JSON.parse(JSON.stringify(cart));
-      } catch(e) {
-        itemsSnapshot = cart.slice();
-      }
-      // P2 #12: дожидаемся подтверждения сервера; при сбое НЕ чистим корзину и НЕ показываем чек
+      var payload = buildOrderPayload(name, phone, time, address, note);
       var ok = false;
       try {
-        var resp = await fetch(`${API_BASE}/order`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name, phone, items: itemsSnapshot, total, type: orderType,
-            time: selectedDelivery === 'pickup' ? time : '',
-            address: selectedDelivery === 'delivery' ? address : 'Самовывоз',
-            payment: selectedPayment,
-            note, telegramId, initData,
-            deliveryMethod: selectedDelivery
-          })
-        });
-        var data = await resp.json().catch(function() { return null; });
-        ok = resp.ok && data && data.ok === true;
+        var result = await api.postOrder(payload);
+        ok = result.ok;
       } catch(e) {
-        console.warn('submitOrder fetch error:', e);
+        console.warn('submitOrder error:', e);
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Оформить заказ'; }
       }
-      if (!ok) {
-        showToast('Не удалось оформить заказ — попробуйте ещё раз');
-        return; // корзина сохранена, чек не показываем
-      }
+      if (!ok) { showToast('Не удалось оформить заказ — попробуйте ещё раз'); return; }
       var receiptEl = document.getElementById('receipt-summary');
       if (receiptEl) {
         receiptEl.innerHTML =
           '<p style="font-size:14px;color:#6B5744;margin:0 0 8px;"><strong>Состав заказа:</strong></p>' +
-          itemsSnapshot.map(function(i) {
+          payload.items.map(function(i) {
             return '<p style="font-size:13px;color:#8B7355;margin:0 0 4px;">• ' + escHtml(i.product_name) + ' × ' + i.quantity + ' — ' + (i.price * i.quantity).toFixed(2) + ' Br</p>';
           }).join('') +
           '<hr style="border:none;border-top:1px solid var(--color-border);margin:12px 0;">' +
-          '<p style="font-size:16px;font-weight:700;color:var(--color-coffee);margin:0;">Итого: ' + total.toFixed(2) + ' Br</p>';
+          '<p style="font-size:16px;font-weight:700;color:var(--color-coffee);margin:0;">Итого: ' + payload.total.toFixed(2) + ' Br</p>';
       }
       clearCart();
       showScreen('receipt');
@@ -1177,53 +1223,28 @@
       }).join('');
     }
 
+    // P2 #12: дожидаемся подтверждения сервера; при сбое НЕ чистим корзину
     async function submitPreorder() {
-      var name  = (document.getElementById('preorder-name')  || {}).value || '';
-      var phone = (document.getElementById('preorder-phone') || {}).value || '';
-      var date  = (document.getElementById('preorder-date')  || {}).value || '';
-      var time  = (document.getElementById('preorder-time')  || {}).value || '';
-      var note  = (document.getElementById('preorder-note')  || {}).value || '';
-      name  = name.trim();
-      phone = phone.trim();
-      if (!name)  { showToast('Введите ваше имя'); return; }
-      if (!phone) { showToast('Введите номер телефона'); return; }
-      if (!date)  { showToast('Выберите дату'); return; }
-      if (!time)  { showToast('Выберите время'); return; }
-      if (time < '07:00' || time > '11:00') { showToast('Время предзаказа: 07:00–11:00'); return; }
-      if (preorderCart.length === 0) { showToast('Добавьте товары в корзину'); return; }
+      var name  = ((document.getElementById('preorder-name')  || {}).value || '').trim();
+      var phone = ((document.getElementById('preorder-phone') || {}).value || '').trim();
+      var date  =  (document.getElementById('preorder-date')  || {}).value || '';
+      var time  =  (document.getElementById('preorder-time')  || {}).value || '';
+      var note  =  (document.getElementById('preorder-note')  || {}).value || '';
+      var err = validatePreorderForm(name, phone, date, time, preorderCart);
+      if (err) { showToast(err); return; }
       var btn = document.getElementById('preorder-submit-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Оформляем...'; }
-      var total = preorderCart.reduce(function(s,i) { return s + i.price * i.quantity; }, 0);
-      var itemsSnapshot;
-      try {
-        itemsSnapshot = JSON.parse(JSON.stringify(preorderCart));
-      } catch(e) {
-        itemsSnapshot = preorderCart.slice();
-      }
-      // P2 #12: дожидаемся подтверждения сервера; при сбое НЕ чистим корзину
+      var payload = buildPreorderPayload(name, phone, date, time, note);
       var ok = false;
       try {
-        var resp = await fetch(`${API_BASE}/order`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name, phone, items: itemsSnapshot, total,
-            type: 'Предзаказ',
-            time: date + ' в ' + time,
-            note, telegramId, initData
-          })
-        });
-        var data = await resp.json().catch(function() { return null; });
-        ok = resp.ok && data && data.ok === true;
+        var result = await api.postOrder(payload);
+        ok = result.ok;
       } catch(e) {
-        console.warn('submitPreorder fetch error:', e);
+        console.warn('submitPreorder error:', e);
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Оформить предзаказ'; }
       }
-      if (!ok) {
-        showToast('Не удалось оформить предзаказ — попробуйте ещё раз');
-        return; // корзина сохранена
-      }
+      if (!ok) { showToast('Не удалось оформить предзаказ — попробуйте ещё раз'); return; }
       clearCart();
       preorderCart = [];
       showToast('Предзаказ оформлен!');
@@ -1273,6 +1294,9 @@
         const greetingName = document.getElementById('user-greeting-name');
         if (greetingName) greetingName.textContent = telegramName;
         }
+      CATALOG.forEach(function(p, i) {
+        if (!validateProduct(p)) console.warn('[catalog] Invalid product at index ' + i + ':', p);
+      });
       loadCart();          // P2 #9: восстановить корзину из localStorage
       updateCartBadge();
       selectCategory('all');
