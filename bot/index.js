@@ -43,7 +43,6 @@ const hhLimiter    = rateLimit({ windowMs: 60 * 1000, max: 60,  standardHeaders:
 const { BOT_TOKEN, ADMIN_ID, DELIVERY_CHAT_ID, PREORDER_CHAT_ID, WEBHOOK_SECRET, PORT } = config;
 
 // ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
-const store  = new Map();
 const cbSeen = new Map(); // id → timestamp; pruned hourly
 setInterval(() => {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
@@ -54,30 +53,54 @@ const pgPool = config.DATABASE_URL
   ? new Pool({ connectionString: config.DATABASE_URL, ssl: { rejectUnauthorized: false } })
   : null;
 
+// Bot Арх #3: storage adapter — pluggable key-value store; swap backend by replacing this object
+const storageAdapter = (() => {
+  const _store = new Map();
+  return {
+    get(key)        { return _store.get(key) || null; },
+    size()          { return _store.size; },
+    set(key, value) {
+      _store.set(key, value);
+      if (pgPool) {
+        pgPool.query(
+          'INSERT INTO bot_state (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+          [key, String(value)]
+        ).catch(e => console.error('[storage] set failed:', e.message));
+      }
+    },
+    del(key) {
+      _store.delete(key);
+      if (pgPool) {
+        pgPool.query('DELETE FROM bot_state WHERE key = $1', [key])
+          .catch(e => console.error('[storage] del failed:', e.message));
+      }
+    },
+    async init() {
+      if (!pgPool) {
+        console.warn('[storage] PostgreSQL not configured — state in memory only (lost on restart)');
+        return;
+      }
+      try {
+        await pgPool.query(`
+          CREATE TABLE IF NOT EXISTS bot_state (
+            key   VARCHAR(512) PRIMARY KEY,
+            value TEXT NOT NULL
+          )
+        `);
+      } catch(e) { console.error('[storage] CREATE bot_state:', e.message); }
+      try {
+        const res = await pgPool.query('SELECT key, value FROM bot_state');
+        res.rows.forEach(row => _store.set(row.key, row.value));
+        console.log(`[storage] loaded ${_store.size} keys from PostgreSQL`);
+      } catch(e) { console.error('[storage] load:', e.message); }
+    }
+  };
+})();
+
 async function initDB() {
-  if (!pgPool) {
-    console.warn('DATABASE_URL not set — state stored in memory only (lost on restart)');
-    return;
-  }
-
-  // bot_state — обязательная таблица
-  try {
-    await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS bot_state (
-        key   VARCHAR(512) PRIMARY KEY,
-        value TEXT NOT NULL
-      )
-    `);
-  } catch(e) { console.error('CREATE bot_state:', e.message); }
-
-  // Загружаем состояние
-  try {
-    const res = await pgPool.query('SELECT key, value FROM bot_state');
-    res.rows.forEach(row => store.set(row.key, row.value));
-    console.log(`PostgreSQL state loaded: ${store.size} keys`);
-  } catch(e) { console.error('load bot_state:', e.message); }
-
-  // Логируем все таблицы и колонки
+  await storageAdapter.init();
+  if (!pgPool) return;
+  // Логируем все таблицы и колонки (отладка)
   try {
     const tables = await pgPool.query(`
       SELECT table_schema, table_name
@@ -96,48 +119,49 @@ async function initDB() {
   } catch(e) { console.error('list tables:', e.message); }
 }
 
+// Bot Арх #5: shared catalog schema with frontend — server is the canonical source
 const CATALOG = [
-  { name: 'Круассан Французский',   price: 3.50 },
-  { name: 'Пончик Глазированный',   price: 2.20 },
-  { name: 'Макарон Малина',          price: 4.50 },
-  { name: 'Багет Французский',       price: 2.95 },
-  { name: 'Хлеб Чёрный',            price: 2.10 },
-  { name: 'Хлеб Пшеничный',         price: 1.80 },
-  { name: 'Хлеб Цельнозерновой',    price: 3.20 },
-  { name: 'Пирог с Ягодами',        price: 9.50 },
-  { name: 'Пирог с Курицей',        price: 19.20 },
-  { name: 'Пирог Яблочный',         price: 8.30 },
-  { name: 'Пирог Рыбный',           price: 16.50 },
-  { name: 'Торт Орео',              price: 73.00 },
-  { name: 'Торт Молочный',          price: 35.00 },
-  { name: 'Торт Шоколадный',        price: 52.00 },
-  { name: 'Торт Ягодный',           price: 58.00 },
-  { name: 'Перепечи с Сыром',       price: 2.50 },
-  { name: 'Сосиска в Тесте',        price: 1.85 },
-  { name: 'Хачапури',               price: 2.10 },
-  { name: 'Пирожок с Мясом',        price: 1.75 },
-  { name: 'Эчпочмак',               price: 2.10 },
-  { name: 'Слойка с Грибами',       price: 3.20 },
-  { name: 'Пицца Ветчина',          price: 3.90 },
-  { name: 'Кальцоне',               price: 2.90 },
-  { name: 'Пицца Пепперони',        price: 4.20 },
-  { name: 'Пицца Овощная',          price: 3.50 },
-  { name: 'Капучино',               price: 3.00 },
-  { name: 'Латте',                  price: 3.20 },
-  { name: 'Американо',              price: 2.50 },
-  { name: 'Макиято',                price: 3.30 },
-  { name: 'Кейк-попсы',             price: 4.50 },
-  { name: 'Эклер шоколадный',       price: 3.50 },
-  { name: 'Творожное кольцо',       price: 2.80 },
-  { name: 'Медовик',                price: 3.90 },
-  { name: 'Молочный десерт',        price: 3.20 },
-  { name: 'Красный Бархат',         price: 4.80 },
-  { name: 'Капкейк Клубника',       price: 3.50 },
-  { name: 'Эклер клубничный',       price: 3.50 },
-  { name: 'Тарт лимонный',          price: 4.20 },
-  { name: 'Тарт карамель с орехами',price: 4.50 },
-  { name: 'Тарт малина-фисташка',   price: 4.80 },
-  { name: 'Трубочки со сгущёнкой',  price: 2.50 },
+  { name: 'Круассан Французский',    price: 3.50,  category: 'Выпечка',  emoji: '🥐', desc: 'Классический французский круассан с хрустящей слоёной корочкой' },
+  { name: 'Пончик Глазированный',    price: 2.20,  category: 'Выпечка',  emoji: '🍩', desc: 'Воздушный пончик с сахарной глазурью' },
+  { name: 'Макарон Малина',          price: 4.50,  category: 'Выпечка',  emoji: '🎨', desc: 'Нежный французский макарон с малиновой начинкой' },
+  { name: 'Багет Французский',       price: 2.95,  category: 'Хлеб',     emoji: '🥖', desc: 'Традиционный французский багет с хрустящей корочкой' },
+  { name: 'Хлеб Чёрный',            price: 2.10,  category: 'Хлеб',     emoji: '🍞', desc: 'Ароматный ржаной хлеб на закваске' },
+  { name: 'Хлеб Пшеничный',         price: 1.80,  category: 'Хлеб',     emoji: '🍞', desc: 'Мягкий пшеничный хлеб для всей семьи' },
+  { name: 'Хлеб Цельнозерновой',    price: 3.20,  category: 'Хлеб',     emoji: '🌾', desc: 'Полезный цельнозерновой хлеб с семенами' },
+  { name: 'Пирог с Ягодами',        price: 9.50,  category: 'Пироги',   emoji: '🫐', desc: 'Сочный пирог с микс ягодной начинкой' },
+  { name: 'Пирог с Курицей',        price: 19.20, category: 'Пироги',   emoji: '🥧', desc: 'Сытный закрытый пирог с курицей и грибами' },
+  { name: 'Пирог Яблочный',         price: 8.30,  category: 'Пироги',   emoji: '🍎', desc: 'Классический яблочный пирог с корицей' },
+  { name: 'Пирог Рыбный',           price: 16.50, category: 'Пироги',   emoji: '🐟', desc: 'Традиционный рыбный пирог с сёмгой' },
+  { name: 'Торт Орео',              price: 73.00, category: 'Торты',    emoji: '🎂', desc: 'Шоколадный торт с кремом из печенья Орео' },
+  { name: 'Торт Молочный',          price: 35.00, category: 'Торты',    emoji: '🍰', desc: 'Нежный молочный торт с ванильным кремом' },
+  { name: 'Торт Шоколадный',        price: 52.00, category: 'Торты',    emoji: '🍫', desc: 'Насыщенный шоколадный торт с ганашем' },
+  { name: 'Торт Ягодный',           price: 58.00, category: 'Торты',    emoji: '🍓', desc: 'Лёгкий бисквитный торт с ягодами и кремом' },
+  { name: 'Перепечи с Сыром',       price: 2.50,  category: 'Снеки',    emoji: '🧀', desc: 'Удмуртские открытые пирожки с сырной начинкой' },
+  { name: 'Сосиска в Тесте',        price: 1.85,  category: 'Снеки',    emoji: '🌭', desc: 'Сочная сосиска в мягком тесте' },
+  { name: 'Хачапури',               price: 2.10,  category: 'Снеки',    emoji: '🫓', desc: 'Грузинская лепёшка с сыром' },
+  { name: 'Пирожок с Мясом',        price: 1.75,  category: 'Снеки',    emoji: '🥟', desc: 'Сочный пирожок с мясной начинкой' },
+  { name: 'Эчпочмак',               price: 2.10,  category: 'Снеки',    emoji: '🥟', desc: 'Татарский треугольный пирожок с мясом и картофелем' },
+  { name: 'Слойка с Грибами',       price: 3.20,  category: 'Снеки',    emoji: '🍄', desc: 'Хрустящая слойка с грибной начинкой' },
+  { name: 'Пицца Ветчина',          price: 3.90,  category: 'Пиццы',    emoji: '🍕', desc: 'Классическая пицца с ветчиной и сыром' },
+  { name: 'Кальцоне',               price: 2.90,  category: 'Пиццы',    emoji: '🫓', desc: 'Закрытая пицца с начинкой из сыра и ветчины' },
+  { name: 'Пицца Пепперони',        price: 4.20,  category: 'Пиццы',    emoji: '🍕', desc: 'Острая пицца с пепперони и моцареллой' },
+  { name: 'Пицца Овощная',          price: 3.50,  category: 'Пиццы',    emoji: '🥦', desc: 'Лёгкая пицца с сезонными овощами' },
+  { name: 'Капучино',               price: 3.00,  category: 'Напитки',  emoji: '☕', desc: 'Классический капучино с нежной молочной пенкой' },
+  { name: 'Латте',                  price: 3.20,  category: 'Напитки',  emoji: '🥛', desc: 'Мягкий кофе латте с бархатистым молоком' },
+  { name: 'Американо',              price: 2.50,  category: 'Напитки',  emoji: '☕', desc: 'Классический американо — насыщенный и ароматный' },
+  { name: 'Макиято',                price: 3.30,  category: 'Напитки',  emoji: '☕', desc: 'Эспрессо с небольшим количеством вспененного молока' },
+  { name: 'Кейк-попсы',            price: 4.50,  category: 'Десерты',  emoji: '🍭', desc: 'Шоколадные кейк-попсы на палочке' },
+  { name: 'Эклер шоколадный',      price: 3.50,  category: 'Десерты',  emoji: '🍫', desc: 'Классический эклер с шоколадным кремом' },
+  { name: 'Творожное кольцо',      price: 2.80,  category: 'Десерты',  emoji: '🍩', desc: 'Нежное творожное кольцо с сахарной пудрой' },
+  { name: 'Медовик',               price: 3.90,  category: 'Десерты',  emoji: '🍯', desc: 'Традиционный медовый торт с нежным кремом' },
+  { name: 'Молочный десерт',       price: 3.20,  category: 'Десерты',  emoji: '🍮', desc: 'Нежный молочный десерт с карамелью' },
+  { name: 'Красный Бархат',        price: 4.80,  category: 'Десерты',  emoji: '❤️', desc: 'Классический красный бархат с сырным кремом' },
+  { name: 'Капкейк Клубника',      price: 3.50,  category: 'Десерты',  emoji: '🍓', desc: 'Воздушный капкейк с клубничным кремом' },
+  { name: 'Эклер клубничный',      price: 3.50,  category: 'Десерты',  emoji: '🍓', desc: 'Нежный эклер с клубничной начинкой' },
+  { name: 'Тарт лимонный',         price: 4.20,  category: 'Десерты',  emoji: '🍋', desc: 'Французский тарт с лимонным курдом' },
+  { name: 'Тарт карамель с орехами',price: 4.50, category: 'Десерты',  emoji: '🥜', desc: 'Тарт с карамелью и хрустящими орехами' },
+  { name: 'Тарт малина-фисташка',  price: 4.80,  category: 'Десерты',  emoji: '🍃', desc: 'Изысканный тарт с малиной и фисташковым кремом' },
+  { name: 'Трубочки со сгущёнкой', price: 2.50,  category: 'Десерты',  emoji: '🥮', desc: 'Хрустящие трубочки с нежной начинкой из сгущёнки' },
 ];
 
 async function syncCatalogToWarehouse() {
@@ -193,25 +217,9 @@ async function saveOrderToDB(body, isPreorder, total, orderNum, clientId) {
   }
 }
 
-function getProp(key) { return store.get(key) || null; }
-
-function setProp(key, value) {
-  store.set(key, value);
-  if (pgPool) {
-    pgPool.query(
-      'INSERT INTO bot_state (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
-      [key, String(value)]
-    ).catch(e => console.error('setProp DB:', e.message));
-  }
-}
-
-function delProp(key) {
-  store.delete(key);
-  if (pgPool) {
-    pgPool.query('DELETE FROM bot_state WHERE key = $1', [key])
-      .catch(e => console.error('delProp DB:', e.message));
-  }
-}
+function getProp(key)        { return storageAdapter.get(key); }
+function setProp(key, value) { storageAdapter.set(key, value); }
+function delProp(key)        { storageAdapter.del(key); }
 
 // Атомарный счётчик заказов (синхронный — без гонок в event loop Node.js)
 function getNextOrderNum() {
@@ -941,6 +949,11 @@ app.get('/api/stock', stockLimiter, async (req, res) => {
     console.error('/api/stock DB error:', e.message);
     res.json({ ok: false, error: 'db_error', stock: {}, catalog: [], flags: {} });
   }
+});
+
+// Bot Арх #5: canonical catalog endpoint — server is the single source of truth
+app.get('/api/catalog', stockLimiter, (req, res) => {
+  res.json({ ok: true, catalog: CATALOG });
 });
 
 // P2 #13: happy hour статус по серверному времени (UTC+3, Минск)
