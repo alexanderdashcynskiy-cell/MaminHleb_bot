@@ -995,6 +995,7 @@
           allScreens[_i].style.transform = '';
           allScreens[_i].style.transition = '';
         }
+        if (screenName !== 'main') clearInterval(carouselAutoplay);
         var targetScreen = document.getElementById('screen-' + screenName);
         if (targetScreen) {
           var flexScreens = ['product', 'cart', 'checkout', 'receipt', 'preorder', 'bestsellers'];

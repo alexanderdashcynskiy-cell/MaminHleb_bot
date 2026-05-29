@@ -950,7 +950,15 @@ app.get('/api/happyhour', hhLimiter, (req, res) => {
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/health', (req, res) => res.send('MaminHleb bot is running ✓'));
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: Math.floor(process.uptime()),
+    sheets: !!process.env.GOOGLE_SHEET_ID,
+    telegram: !!process.env.BOT_TOKEN,
+    ts: new Date().toISOString(),
+  });
+});
 
 // ─── Установка вебхука ────────────────────────────────────────────────────────
 async function setWebhook() {
