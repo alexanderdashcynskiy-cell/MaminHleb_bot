@@ -281,16 +281,17 @@ async function handleOrder(body) {
   try {
     const parsed = typeof body.items === 'string' ? JSON.parse(body.items) : body.items;
     if (Array.isArray(parsed)) {
-      itemsText = parsed.map(i => {
+      itemsText = parsed.flatMap(i => {
         const name = (i.product_name || '').trim();
-        const qty  = Math.max(1, Math.floor(Number(i.quantity) || 1));
+        const qty  = Math.floor(Number(i.quantity));
+        if (!name || !Number.isFinite(qty) || qty <= 0) return [];
         const serverPrice = catalogPriceMap[name.toLowerCase()];
         const clientPrice = Number(i.price);
         const price = (serverPrice !== undefined) ? serverPrice
           : (isNaN(clientPrice) || clientPrice <= 0 ? 0 : clientPrice);
         if (serverPrice === undefined) console.warn(`handleOrder: unknown product "${name}", using client price`);
         total += price * qty;
-        return `◆ ${name} x${qty} — ${(price * qty).toFixed(2)} Br`;
+        return [`◆ ${name} x${qty} — ${(price * qty).toFixed(2)} Br`];
       }).join('\n');
     } else {
       itemsText = String(body.items || '');
@@ -845,6 +846,7 @@ app.post('/order', orderLimiter, (req, res) => {
   handleOrder(body).catch(e => console.error('order err:', e));
 });
 
+
 app.get('/api/stock', async (req, res) => {
   if (!pgPool) {
     return res.json({ ok: false, error: 'db_unavailable', stock: {}, catalog: [], flags: {} });
@@ -858,6 +860,21 @@ app.get('/api/stock', async (req, res) => {
     console.error('/api/stock DB error:', e.message);
     res.json({ ok: false, error: 'db_error', stock: {}, catalog: [], flags: {} });
   }
+});
+
+// P2 #13: happy hour статус по серверному времени (UTC+3, Минск)
+app.get('/api/happyhour', (req, res) => {
+  const now = new Date();
+  const msk = new Date(now.getTime() + 3 * 3600_000);
+  const day = msk.getUTCDay();
+  const h   = msk.getUTCHours();
+  const m   = msk.getUTCMinutes();
+  const weekday = day >= 1 && day <= 5;
+  const weekend = day === 0 || day === 6;
+  const active  = (weekday && h >= 19 && h < 20) || (weekend && h >= 17 && h < 18);
+  const endH    = weekday ? 20 : 18;
+  const minLeft = active ? (endH * 60) - (h * 60 + m) : 0;
+  res.json({ ok: true, active, minLeft });
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
