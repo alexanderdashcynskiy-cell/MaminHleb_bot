@@ -301,6 +301,16 @@ function isDuplicateOrder(body) {
   return false;
 }
 
+function isHappyHourNow() {
+  const now = new Date();
+  const msk = new Date(now.getTime() + 3 * 3600_000);
+  const day = msk.getUTCDay();
+  const h   = msk.getUTCHours();
+  const weekday = day >= 1 && day <= 5;
+  const weekend = day === 0 || day === 6;
+  return (weekday && h >= 19 && h < 20) || (weekend && h >= 17 && h < 18);
+}
+
 // ─── Обработка заказа ─────────────────────────────────────────────────────────
 async function handleOrder(body) {
   if (isDuplicateOrder(body)) { console.log('Duplicate order ignored'); return { ok: true, duplicate: true }; }
@@ -348,8 +358,10 @@ async function handleOrder(body) {
     itemsText = String(body.items || '');
   }
 
-  // Всегда используем серверный total; body.total от клиента игнорируется
-  const totalStr = total.toFixed(2) + ' Br';
+  // P3 #14: применяем скидку happy hour на стороне сервера
+  const hhActive = !isPreorder && isHappyHourNow();
+  if (hhActive) total = Math.round(total * 0.7 * 100) / 100;
+  const totalStr = (hhActive ? `~~${(total / 0.7).toFixed(2)}~~ ` : '') + total.toFixed(2) + ' Br' + (hhActive ? ' 🎉 -30% Счастливый час' : '');
 
   let deliveryBlock = '';
   if (isPreorder && body.time && body.time !== 'undefined') {
@@ -620,9 +632,9 @@ async function handleCallback(cb) {
     return;
   }
 
-  const rowNum      = parseInt(parts[1]);
+  const rowNum      = parseInt(parts[1]); // rowNum IS the orderNum (PostgreSQL era: no Sheets row divergence)
   const clientId    = parts[2];
-  const orderNum    = getProp(`order_num_${rowNum}`) || String(rowNum);
+  const orderNum    = String(rowNum); // direct assignment — always equal after PostgreSQL migration
   const adminChatId = cb.message?.chat?.id || ADMIN_ID;
   const adminMsgId  = cb.message?.message_id;
   const adminBase   = getProp(`admin_base_${rowNum}`) || '';

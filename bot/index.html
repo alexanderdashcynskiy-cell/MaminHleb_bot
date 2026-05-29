@@ -674,6 +674,11 @@
       return cart.reduce(function(s,i) { return s + i.price * i.quantity; }, 0);
     }
 
+    function getEffectiveTotal() {
+      var raw = getCartTotal();
+      return getHappyHourState().active ? Math.round(raw * 0.7 * 100) / 100 : raw;
+    }
+
     function getCartCount() {
       return cart.reduce(function(s,i) { return s + i.quantity; }, 0);
     }
@@ -860,7 +865,10 @@
       }
       if (empty)  empty.style.display  = 'none';
       if (footer) footer.style.display = 'block';
-      if (totalEl) totalEl.textContent = getCartTotal().toFixed(2) + ' Br';
+      var effTotal = getEffectiveTotal();
+      if (totalEl) totalEl.textContent = getHappyHourState().active
+        ? '🎉 ' + effTotal.toFixed(2) + ' Br (-30%)'
+        : effTotal.toFixed(2) + ' Br';
       container.innerHTML = cart.map(function(item) {
         return '<div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--color-border);">' +
           '<div style="flex:1;">' +
@@ -1095,7 +1103,7 @@
       var btn = document.getElementById('checkout-submit-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Оформляем...'; }
       var orderType = selectedDelivery === 'delivery' ? 'Доставка' : 'Самовывоз';
-      var total = getCartTotal();
+      var total = getEffectiveTotal();
       var itemsSnapshot;
       try {
         itemsSnapshot = JSON.parse(JSON.stringify(cart));
