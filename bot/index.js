@@ -16,19 +16,29 @@ app.use(express.text({ type: 'text/plain', limit: '1mb' }));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
 
-// CORS — разрешаем только из ALLOWED_ORIGINS (или любой, если не задан)
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+// P1 Bot Без #2: CORS с явным allowlist методов и заголовков.
+// Без ALLOWED_ORIGINS в .env разрешает Telegram WebApp origin (t.me / web.telegram.org).
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+const TELEGRAM_ORIGINS = ['https://web.telegram.org', 'https://t.me'];
+
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
-  if (!ALLOWED_ORIGINS.length || ALLOWED_ORIGINS.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin || '*');
+  const allowed = ALLOWED_ORIGINS.length
+    ? ALLOWED_ORIGINS.includes(origin)
+    : TELEGRAM_ORIGINS.includes(origin) || !origin; // без origin — same-origin или non-browser
+  if (allowed) {
+    res.header('Access-Control-Allow-Origin',   origin || '*');
+    res.header('Access-Control-Allow-Methods',  'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers',  'Content-Type');
   }
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 
-const orderLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
+const orderLimiter = rateLimit({ windowMs: 60 * 1000, max: 10,  standardHeaders: true, legacyHeaders: false });
+const stockLimiter = rateLimit({ windowMs: 60 * 1000, max: 30,  standardHeaders: true, legacyHeaders: false });
+const hhLimiter    = rateLimit({ windowMs: 60 * 1000, max: 60,  standardHeaders: true, legacyHeaders: false });
 
 const BOT_TOKEN        = (process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN        || '').trim();
 const ADMIN_ID         = (process.env.ADMIN_ID         || '').trim();
@@ -222,17 +232,28 @@ function parsePreorderTime(timeStr) {
 // ─── Telegram API ─────────────────────────────────────────────────────────────
 const TG_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
-async function tg(method, payload) {
+// P1 #10: AbortController с 10-секундным таймаутом — зависание Telegram API
+// не держит весь async flow сервера бесконечно.
+async function tg(method, payload, timeoutMs = 10_000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(`${TG_BASE}/${method}`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload)
+      body:    JSON.stringify(payload),
+      signal:  ctrl.signal
     });
     return res.json();
   } catch(e) {
-    console.error(`tg(${method}):`, e.message);
+    if (e.name === 'AbortError') {
+      console.error(`tg(${method}): timeout after ${timeoutMs}ms`);
+    } else {
+      console.error(`tg(${method}):`, e.message);
+    }
     return { ok: false };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -877,7 +898,7 @@ app.post('/order', orderLimiter, async (req, res) => {
 });
 
 
-app.get('/api/stock', async (req, res) => {
+app.get('/api/stock', stockLimiter, async (req, res) => {
   if (!pgPool) {
     return res.json({ ok: false, error: 'db_unavailable', stock: {}, catalog: [], flags: {} });
   }
@@ -893,7 +914,7 @@ app.get('/api/stock', async (req, res) => {
 });
 
 // P2 #13: happy hour статус по серверному времени (UTC+3, Минск)
-app.get('/api/happyhour', (req, res) => {
+app.get('/api/happyhour', hhLimiter, (req, res) => {
   const now = new Date();
   const msk = new Date(now.getTime() + 3 * 3600_000);
   const day = msk.getUTCDay();
