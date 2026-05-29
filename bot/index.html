@@ -1008,6 +1008,13 @@
       carouselAutoplay = setInterval(nextSlide, 5000);
     }
 
+    function setupCarouselPause() {
+      var container = document.getElementById('carousel-container');
+      if (!container) return;
+      container.addEventListener('touchstart', function() { clearInterval(carouselAutoplay); }, { passive: true });
+      container.addEventListener('touchend',   function() { startCarousel(); },                 { passive: true });
+    }
+
     // ── Screen navigation ──────────────────────────────────────────────────────────
     function closeSizeSelect() { showScreen('main'); }
 
@@ -1309,6 +1316,7 @@
       setupSwipeBack();
       setupProductModalSwipe();
       setupKeyboardDismiss();
+      setupCarouselPause();
       fetchStock();
     }
 
