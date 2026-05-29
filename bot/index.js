@@ -810,21 +810,54 @@ app.post('/webhook', (req, res) => {
   }
 });
 
+const VALID_ORDER_TYPES = new Set(['Предзаказ', 'Доставка', 'Самовывоз', '']);
+const PHONE_RE = /^\+?[\d\s\-()]{7,20}$/;
+
 app.post('/order', orderLimiter, (req, res) => {
-  res.json({ ok: true });
   let body = req.body;
-  console.log('/order received, content-type:', req.headers['content-type'], 'body type:', typeof body);
   if (typeof body === 'string') {
-    try { body = JSON.parse(body); } catch(e) { console.error('/order JSON parse failed:', e.message); return; }
+    try { body = JSON.parse(body); } catch(e) {
+      console.error('/order JSON parse failed:', e.message);
+      return res.status(400).json({ ok: false, error: 'invalid_json' });
+    }
   }
-  if (!body || (!body.phone && !body.items)) { console.log('/order skipped — no phone/items'); return; }
-  console.log('/order processing, type:', body.type, 'name:', body.name, 'phone:', body.phone);
+  if (!body) return res.status(400).json({ ok: false, error: 'empty_body' });
+
+  const phone = String(body.phone || '').trim();
+  const name  = String(body.name  || '').trim();
+  const type  = String(body.type  || '').trim();
+
+  if (!phone || !PHONE_RE.test(phone)) {
+    console.warn('/order rejected: missing or invalid phone', JSON.stringify(phone));
+    return res.status(400).json({ ok: false, error: 'invalid_phone' });
+  }
+  if (!name) {
+    console.warn('/order rejected: missing name');
+    return res.status(400).json({ ok: false, error: 'missing_name' });
+  }
+  if (!VALID_ORDER_TYPES.has(type)) {
+    console.warn('/order rejected: invalid type', JSON.stringify(type));
+    return res.status(400).json({ ok: false, error: 'invalid_type' });
+  }
+
+  res.json({ ok: true });
+  console.log('/order accepted, type:', type, 'name:', name, 'phone:', phone);
   handleOrder(body).catch(e => console.error('order err:', e));
 });
 
-
-app.get('/api/stock', (req, res) => {
-  res.json({ ok: true, stock: {}, catalog: [], flags: {} });
+app.get('/api/stock', async (req, res) => {
+  if (!pgPool) {
+    return res.json({ ok: false, error: 'db_unavailable', stock: {}, catalog: [], flags: {} });
+  }
+  try {
+    const result = await pgPool.query('SELECT name, stock FROM "Product"');
+    const stock = {};
+    result.rows.forEach(r => { stock[r.name] = r.stock; });
+    res.json({ ok: true, stock, catalog: CATALOG, flags: {} });
+  } catch(e) {
+    console.error('/api/stock DB error:', e.message);
+    res.json({ ok: false, error: 'db_error', stock: {}, catalog: [], flags: {} });
+  }
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
