@@ -950,6 +950,19 @@ app.get('/api/happyhour', hhLimiter, (req, res) => {
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.post('/api/admin/checkin', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!WEBHOOK_SECRET || secret !== WEBHOOK_SECRET) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  try {
+    await sendAdminCheckin();
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
