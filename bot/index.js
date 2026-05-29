@@ -174,7 +174,13 @@ async function saveOrderToDB(body, isPreorder, total, orderNum, clientId) {
         items,
         parseFloat(total) || 0,
         'Новый',
-        body.address || 'Самовывоз',
+        // P2 #6: встраиваем время самовывоза в поле address чтобы CRM мог показать pickupTime
+        (() => {
+          const addr = body.address || 'Самовывоз';
+          const t = (body.time || '').trim();
+          if (!isPreorder && addr === 'Самовывоз' && t) return `Самовывоз (${t})`;
+          return addr;
+        })(),
         isPreorder,
         clientId || '0'
       ]
