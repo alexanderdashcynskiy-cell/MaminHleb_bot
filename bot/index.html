@@ -476,8 +476,8 @@
        <input type="tel" id="preorder-phone" class="input-field" placeholder="Телефон *">
        <input type="date" id="preorder-date" class="input-field" style="color:var(--color-text);">
        <div style="position:relative;">
-        <input type="time" id="preorder-time" class="input-field" min="07:00" max="09:00">
-        <p style="font-size:12px; color:#8B7355; margin:4px 0 0;">Время получения: 07:00–09:00</p>
+        <input type="time" id="preorder-time" class="input-field" min="07:00" max="11:00">
+        <p style="font-size:12px; color:#8B7355; margin:4px 0 0;">Время получения: 07:00–11:00</p>
        </div>
       </div>
      </div>
@@ -825,16 +825,32 @@
     }
 
     // ── Happy Hour ────────────────────────────────────────────────────────────────
-    function updateHappyHourBanner() {
-      var banner = document.getElementById('happy-hour-banner');
-      if (!banner) return;
+    var _serverHH = null;
+
+    async function syncHappyHour() {
+      try {
+        var r = await fetch(API_BASE + '/api/happyhour');
+        var d = await r.json();
+        if (d.ok) _serverHH = { active: d.active, minLeft: d.minLeft, ts: Date.now() };
+      } catch(e) { /* use local clock fallback */ }
+    }
+
+    function getHappyHourState() {
+      if (_serverHH && (Date.now() - _serverHH.ts) < 70000) {
+        return { active: _serverHH.active };
+      }
       var now = new Date();
       var h = now.getHours();
       var day = now.getDay();
       var isWeekday = day >= 1 && day <= 5;
       var isWeekend = day === 0 || day === 6;
-      var isHappyHour = (isWeekday && h >= 19 && h < 22) || (isWeekend && h >= 17 && h < 20);
-      banner.style.display = isHappyHour ? 'block' : 'none';
+      return { active: (isWeekday && h >= 19 && h < 20) || (isWeekend && h >= 17 && h < 18) };
+    }
+
+    function updateHappyHourBanner() {
+      var banner = document.getElementById('happy-hour-banner');
+      if (!banner) return;
+      banner.style.display = getHappyHourState().active ? 'block' : 'none';
     }
 
     // ── Reviews ───────────────────────────────────────────────────────────────────
@@ -1094,7 +1110,7 @@
       if (!phone) { showToast('Введите номер телефона'); return; }
       if (!date)  { showToast('Выберите дату'); return; }
       if (!time)  { showToast('Выберите время'); return; }
-      if (time < '07:00' || time > '09:00') { showToast('Время предзаказа: 07:00–09:00'); return; }
+      if (time < '07:00' || time > '11:00') { showToast('Время предзаказа: 07:00–11:00'); return; }
       if (preorderCart.length === 0) { showToast('Добавьте товары в корзину'); return; }
       var btn = document.getElementById('preorder-submit-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Оформляем...'; }
@@ -1172,7 +1188,8 @@
         }
       selectCategory('all');
       renderBestsellers();
-      updateHappyHourBanner();
+      syncHappyHour().then(updateHappyHourBanner);
+      setInterval(function() { syncHappyHour().then(updateHappyHourBanner); }, 60000);
       startCarousel();
       renderReviews();
       updateCoffeeBalance();
