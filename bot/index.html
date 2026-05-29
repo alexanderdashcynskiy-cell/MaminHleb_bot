@@ -1095,8 +1095,10 @@
       } catch(e) {
         itemsSnapshot = cart.slice();
       }
+      // P2 #12: дожидаемся подтверждения сервера; при сбое НЕ чистим корзину и НЕ показываем чек
+      var ok = false;
       try {
-        await fetch(`${API_BASE}/order`, {
+        var resp = await fetch(`${API_BASE}/order`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1108,10 +1110,16 @@
             deliveryMethod: selectedDelivery
           })
         });
+        var data = await resp.json().catch(function() { return null; });
+        ok = resp.ok && data && data.ok === true;
       } catch(e) {
         console.warn('submitOrder fetch error:', e);
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Оформить заказ'; }
+      }
+      if (!ok) {
+        showToast('Не удалось оформить заказ — попробуйте ещё раз');
+        return; // корзина сохранена, чек не показываем
       }
       var receiptEl = document.getElementById('receipt-summary');
       if (receiptEl) {
@@ -1176,8 +1184,10 @@
       } catch(e) {
         itemsSnapshot = preorderCart.slice();
       }
+      // P2 #12: дожидаемся подтверждения сервера; при сбое НЕ чистим корзину
+      var ok = false;
       try {
-        await fetch(`${API_BASE}/order`, {
+        var resp = await fetch(`${API_BASE}/order`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1187,10 +1197,16 @@
             note, telegramId, initData
           })
         });
+        var data = await resp.json().catch(function() { return null; });
+        ok = resp.ok && data && data.ok === true;
       } catch(e) {
         console.warn('submitPreorder fetch error:', e);
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Оформить предзаказ'; }
+      }
+      if (!ok) {
+        showToast('Не удалось оформить предзаказ — попробуйте ещё раз');
+        return; // корзина сохранена
       }
       clearCart();
       preorderCart = [];

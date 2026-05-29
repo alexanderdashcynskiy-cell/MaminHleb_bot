@@ -148,8 +148,9 @@ async function syncCatalogToWarehouse() {
   }
 }
 
+// P2 #16: возвращает true/false — вызывающий код подтверждает запись перед выдачей чека
 async function saveOrderToDB(body, isPreorder, total, orderNum, clientId) {
-  if (!pgPool) return;
+  if (!pgPool) return true; // БД не настроена (dev): не блокируем заказ, считаем «нечего терять»
   try {
     const items = typeof body.items === 'string' ? body.items : JSON.stringify(body.items || []);
     console.log('saveOrderToDB → Order', { name: body.name, phone: body.phone, total, isPreorder });
@@ -169,9 +170,11 @@ async function saveOrderToDB(body, isPreorder, total, orderNum, clientId) {
       ]
     );
     console.log('saveOrderToDB ✓ saved to Order');
+    return true;
   } catch(e) {
     console.error('saveOrderToDB FAILED:', e.message);
     console.error('  code:', e.code, '| detail:', e.detail);
+    return false;
   }
 }
 
@@ -200,6 +203,20 @@ function getNextOrderNum() {
   const n = parseInt(getProp('order_counter') || '0') + 1;
   setProp('order_counter', String(n));
   return n;
+}
+
+// P2 #15: разбор времени предзаказа "YYYY-MM-DD в HH:MM" с явной валидацией формата.
+// Возвращает { valid, niceDate, rawTime }; при некорректном формате пишет warning,
+// а не молча кладёт битый блок в сообщение.
+function parsePreorderTime(timeStr) {
+  const str = String(timeStr || '').trim();
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})\s+в\s+(\d{2}:\d{2})$/);
+  if (!m) {
+    console.warn(`parsePreorderTime: неожиданный формат времени предзаказа: ${JSON.stringify(str)}`);
+    const parts = str.split(' в ');
+    return { valid: false, niceDate: parts[0] || '—', rawTime: parts[1] || '—' };
+  }
+  return { valid: true, niceDate: `${m[3]}.${m[2]}.${m[1]}`, rawTime: m[4] };
 }
 
 // ─── Telegram API ─────────────────────────────────────────────────────────────
@@ -255,7 +272,7 @@ function isDuplicateOrder(body) {
 
 // ─── Обработка заказа ─────────────────────────────────────────────────────────
 async function handleOrder(body) {
-  if (isDuplicateOrder(body)) { console.log('Duplicate order ignored'); return; }
+  if (isDuplicateOrder(body)) { console.log('Duplicate order ignored'); return { ok: true, duplicate: true }; }
   const isPreorder = body.type === 'Предзаказ';
 
   // P1 #2: Верифицируем Telegram initData; fallback на body.telegramId (для совместимости)
@@ -305,13 +322,9 @@ async function handleOrder(body) {
 
   let deliveryBlock = '';
   if (isPreorder && body.time && body.time !== 'undefined') {
-    // P2 #15: безопасный split с валидацией формата
-    const timeParts = String(body.time).split(' в ');
-    const rawDate = timeParts[0] || '';
-    const rawTime = timeParts[1] || '';
-    const dp = rawDate.split('-');
-    const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
-    deliveryBlock = `*ПРЕДЗАКАЗ:*\n📅 Дата: ${niceDate || '—'}\n🕐 Время: ${rawTime || '—'}`;
+    // P2 #15: валидируем формат "YYYY-MM-DD в HH:MM"
+    const pt = parsePreorderTime(body.time);
+    deliveryBlock = `*ПРЕДЗАКАЗ:*\n📅 Дата: ${pt.niceDate}\n🕐 Время: ${pt.rawTime}`;
   } else if (body.address && body.address !== 'undefined' && body.address !== 'Самовывоз') {
     const payLabel = body.payment === 'card' ? '💳 Картой' : body.payment === 'cash' ? '💵 Наличными' : '';
     deliveryBlock = `*АДРЕС ДОСТАВКИ:*\n🚕 ${body.address}${payLabel ? `\n${payLabel}` : ''}`;
@@ -325,6 +338,15 @@ async function handleOrder(body) {
   const noteLine = noteStr ? `\n💬 *ПРИМЕЧАНИЕ:* ${noteStr}\n` : '';
 
   const orderNum = getNextOrderNum();
+
+  // P2 #16: подтверждаем запись заказа в БД ДО генерации чека/админ-сообщений.
+  // Если запись не удалась — не выдаём номер заказа, который не существует в CRM
+  // (предотвращает фантомные заказы и рассинхрон callback-ов статусов).
+  const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId);
+  if (!saved) {
+    console.error(`handleOrder: order #${orderNum} NOT persisted — aborting receipt/admin notifications`);
+    return { ok: false, error: 'save_failed' };
+  }
 
   const receiptBase =
     `🧾 *${isPreorder ? 'ВАШ ПРЕДЗАКАЗ' : 'ВАШ ЗАКАЗ'} №${orderNum}*\n` +
@@ -369,8 +391,6 @@ async function handleOrder(body) {
   setProp(`order_note_${orderNum}`,        noteStr);
   setProp(`order_items_text_${orderNum}`,  itemsText);
 
-  saveOrderToDB(body, isPreorder, total, orderNum, clientId);
-
   // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
     const clientsRaw = getProp('known_clients') || '[]';
@@ -392,16 +412,14 @@ async function handleOrder(body) {
   }
 
   if (isPreorder && PREORDER_CHAT_ID) {
-    const preorderTimeParts = String(body.time || '').split(' в ');
-    const rawDate = preorderTimeParts[0] || '';
-    const rawTime = preorderTimeParts[1] || '';
-    const dp = rawDate.split('-');
-    const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
+    const pt = parsePreorderTime(body.time); // P2 #15
+    const niceDate = pt.niceDate;
+    const rawTime  = pt.rawTime;
     const preorderText =
       `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n🟡 Статус: Новый\n\n` +
       `👤 ${clientName}\n` +
       `📞 ${body.phone || '—'}\n` +
-      `📅 ${niceDate}  🕐 ${rawTime || '—'}\n\n` +
+      `📅 ${niceDate}  🕐 ${rawTime}\n\n` +
       `*Состав:*\n${itemsText}\n\n` +
       `💰 ${totalStr}`;
     calls.push(['sendMessage', {
@@ -440,6 +458,8 @@ async function handleOrder(body) {
     const chatId = (isPreorder && PREORDER_CHAT_ID) ? PREORDER_CHAT_ID : ADMIN_ID;
     setProp(`admin_msg_${orderNum}`, JSON.stringify({ chatId, msgId: adminR.result.message_id }));
   }
+
+  return { ok: true, orderNum };
 }
 
 // ─── Вспомогательные функции статусов ────────────────────────────────────────
@@ -814,7 +834,7 @@ app.post('/webhook', (req, res) => {
 const VALID_ORDER_TYPES = new Set(['Предзаказ', 'Доставка', 'Самовывоз', '']);
 const PHONE_RE = /^\+?[\d\s\-()]{7,20}$/;
 
-app.post('/order', orderLimiter, (req, res) => {
+app.post('/order', orderLimiter, async (req, res) => {
   let body = req.body;
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch(e) {
@@ -841,9 +861,19 @@ app.post('/order', orderLimiter, (req, res) => {
     return res.status(400).json({ ok: false, error: 'invalid_type' });
   }
 
-  res.json({ ok: true });
+  // P2 #12 (сервер): дожидаемся подтверждения записи заказа и отдаём клиенту реальный
+  // результат, чтобы фронт не очищал корзину и не показывал чек при сбое.
   console.log('/order accepted, type:', type, 'name:', name, 'phone:', phone);
-  handleOrder(body).catch(e => console.error('order err:', e));
+  try {
+    const result = await handleOrder(body);
+    if (result && result.ok) {
+      return res.json({ ok: true, orderNum: result.orderNum });
+    }
+    return res.status(502).json({ ok: false, error: (result && result.error) || 'order_failed' });
+  } catch(e) {
+    console.error('order err:', e);
+    return res.status(500).json({ ok: false, error: 'internal' });
+  }
 });
 
 
