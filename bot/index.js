@@ -49,7 +49,11 @@ const PORT              = process.env.PORT || 3000;
 
 // ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
 const store  = new Map();
-const cbSeen = new Set();
+const cbSeen = new Map(); // id → timestamp; pruned hourly
+setInterval(() => {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  cbSeen.forEach((ts, id) => { if (ts < cutoff) cbSeen.delete(id); });
+}, 60 * 60 * 1000);
 
 const pgPool = process.env.DATABASE_URL
   ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
@@ -553,8 +557,7 @@ async function handleCallback(cb) {
     await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
     return;
   }
-  cbSeen.add(cb.id);
-  if (cbSeen.size > 10000) Array.from(cbSeen).slice(0, 1000).forEach(id => cbSeen.delete(id));
+  cbSeen.set(cb.id, Date.now());
 
   const parts  = cb.data.split('_');
   const action = parts[0];
