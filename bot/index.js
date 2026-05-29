@@ -423,33 +423,18 @@ async function handleOrder(body) {
   const isDeliveryAddr = body.address && body.address !== 'Самовывоз' && body.address !== 'undefined';
   const orderType = isPreorder ? 'preorder'
     : (body.deliveryMethod === 'delivery' || isDeliveryAddr) ? 'delivery' : 'pickup';
-  setProp(`order_type_${orderNum}`, orderType);
   console.log(`Order ${orderNum} type=${orderType}`);
 
   const orderTypeLabel = isPreorder ? 'ПРЕДЗАКАЗ' : orderType === 'delivery' ? 'ДОСТАВКА' : 'НОВЫЙ ЗАКАЗ';
-  const adminHeader    = `🥐 *${orderTypeLabel} — №${orderNum}*`;
-  const adminBody      =
-    `\n*КЛИЕНТ:*\n` +
-    `👤 ${clientName}\n` +
+  const adminText =
+    `🥐 *${orderTypeLabel} — №${orderNum}*\n🟡 Новый заказ\n` +
+    `\n👤 ${clientName}\n` +
     `📞 ${body.phone || '—'}\n` +
     `\n${deliveryBlock}\n` +
-    `\n*ПОЗИЦИИ:*\n` +
-    `${itemsText}\n` +
-    `━ ━ ━ ━ ━ ━ ━ ━ ━ ━\n` +
-    `💰 *Сумма заказа:* ${totalStr}` +
+    `\n*Состав:*\n${itemsText}\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `💰 *Итого:* ${totalStr}` +
     noteLine;
-
-  setProp(`receipt_base_${orderNum}`, receiptBase);
-  setProp(`admin_base_${orderNum}`,   adminHeader);
-  setProp(`admin_body_${orderNum}`,   adminBody);
-  setProp(`client_name_${orderNum}`,  clientName);
-  setProp(`order_num_${orderNum}`,    String(orderNum));
-  setProp(`order_phone_${orderNum}`,  body.phone   || '—');
-  setProp(`order_address_${orderNum}`,body.address || 'Самовывоз');
-  setProp(`order_total_${orderNum}`,  totalStr);
-  setProp(`order_payment_${orderNum}`,body.payment || '');
-  setProp(`order_note_${orderNum}`,        noteStr);
-  setProp(`order_items_text_${orderNum}`,  itemsText);
 
   // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
@@ -464,96 +449,25 @@ async function handleOrder(body) {
 
   const calls = [];
   if (clientId !== '0') {
-    calls.push(['sendMessage', {
-      chat_id:    clientId,
-      text:       receiptBase,
-      parse_mode: 'Markdown'
-    }]);
+    calls.push(['sendMessage', { chat_id: clientId, text: receiptBase, parse_mode: 'Markdown' }]);
   }
 
   if (isPreorder && PREORDER_CHAT_ID) {
-    const pt = parsePreorderTime(body.time); // P2 #15
-    const niceDate = pt.niceDate;
-    const rawTime  = pt.rawTime;
+    const pt = parsePreorderTime(body.time);
     const preorderText =
-      `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n🟡 Статус: Новый\n\n` +
+      `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n🟡 Новый\n\n` +
       `👤 ${clientName}\n` +
       `📞 ${body.phone || '—'}\n` +
-      `📅 ${niceDate}  🕐 ${rawTime}\n\n` +
+      `📅 ${pt.niceDate}  🕐 ${pt.rawTime}\n\n` +
       `*Состав:*\n${itemsText}\n\n` +
       `💰 ${totalStr}`;
-    calls.push(['sendMessage', {
-      chat_id:      PREORDER_CHAT_ID,
-      text:         preorderText,
-      parse_mode:   'Markdown',
-      reply_markup: { inline_keyboard: [[
-        { text: '✅ Принять заказ', callback_data: `accept_${orderNum}_${clientId}` },
-        { text: '❌ Отклонить',     callback_data: `decline_${orderNum}_${clientId}` }
-      ]]}
-    }]);
+    calls.push(['sendMessage', { chat_id: PREORDER_CHAT_ID, text: preorderText, parse_mode: 'Markdown' }]);
   } else {
-    calls.push(['sendMessage', {
-      chat_id:      ADMIN_ID,
-      text:         `${adminHeader}\n🟡 Статус: Новый${adminBody}`,
-      parse_mode:   'Markdown',
-      reply_markup: { inline_keyboard: [[
-        { text: '✅ Принять заказ', callback_data: `accept_${orderNum}_${clientId}` },
-        { text: '❌ Отклонить',     callback_data: `decline_${orderNum}_${clientId}` }
-      ]]}
-    }]);
+    calls.push(['sendMessage', { chat_id: ADMIN_ID, text: adminText, parse_mode: 'Markdown' }]);
   }
 
-  const responses = await tgAll(calls);
-  let offset = 0;
-
-  if (clientId !== '0') {
-    const r = responses[0];
-    if (r.ok) setProp(`receipt_${orderNum}`,
-      JSON.stringify({ chatId: clientId, msgId: r.result.message_id }));
-    offset = 1;
-  }
-
-  const adminR = responses[offset];
-  if (adminR?.ok) {
-    const chatId = (isPreorder && PREORDER_CHAT_ID) ? PREORDER_CHAT_ID : ADMIN_ID;
-    setProp(`admin_msg_${orderNum}`, JSON.stringify({ chatId, msgId: adminR.result.message_id }));
-  }
-
+  await tgAll(calls);
   return { ok: true, orderNum };
-}
-
-// ─── Вспомогательные функции статусов ────────────────────────────────────────
-
-async function editAdminMsg(adminChatId, adminMsgId, adminBase, statusLine, keyboard, adminBody) {
-  return tg('editMessageText', {
-    chat_id:      adminChatId,
-    message_id:   adminMsgId,
-    text:         `${adminBase}\n${statusLine}${adminBody || ''}`,
-    parse_mode:   'Markdown',
-    reply_markup: { inline_keyboard: keyboard }
-  });
-}
-
-async function notifyClient(clientId, text, keyboard) {
-  if (!clientId || clientId === '0') return null;
-  return tg('sendMessage', {
-    chat_id:    String(clientId),
-    text,
-    parse_mode: 'Markdown',
-    ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {})
-  });
-}
-
-async function deleteStoredMsg(key) {
-  const raw = getProp(key);
-  if (!raw) return;
-  try {
-    const info = JSON.parse(raw);
-    await tg('deleteMessage', { chat_id: info.chatId, message_id: info.msgId });
-  } catch(e) {
-    console.error(`deleteStoredMsg(${key}):`, e.message);
-  }
-  delProp(key);
 }
 
 const RATING_KEYBOARD = [[
@@ -581,6 +495,8 @@ async function sendAdminCheckin() {
 }
 
 // ─── Обработка кнопок ─────────────────────────────────────────────────────────
+// ─── Обработка кнопок (checkin + оценка) ─────────────────────────────────────
+// Управление заказами ведётся в CRM-дашборде, не через Telegram-кнопки.
 async function handleCallback(cb) {
   if (cbSeen.has(cb.id)) {
     await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
@@ -648,174 +564,8 @@ async function handleCallback(cb) {
     }));
     return;
   }
-
-  const rowNum      = parseInt(parts[1]); // rowNum IS the orderNum (PostgreSQL era: no Sheets row divergence)
-  const clientId    = parts[2];
-  const orderNum    = String(rowNum); // direct assignment — always equal after PostgreSQL migration
-  const adminChatId = cb.message?.chat?.id || ADMIN_ID;
-  const adminMsgId  = cb.message?.message_id;
-  const adminBase   = getProp(`admin_base_${rowNum}`) || '';
-  const adminBody   = getProp(`admin_body_${rowNum}`) || '';
-  const orderType   = getProp(`order_type_${rowNum}`) || 'pickup';
-
-  // ── 1. Принять ────────────────────────────────────────────────────────────
-  if (action === 'accept') {
-    await deleteStoredMsg(`decline_msg_${rowNum}`);
-    await deleteStoredMsg(`restore_msg_${rowNum}`);
-
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, '🟢 Статус: Принят', [[
-      { text: '✅ Готово',    callback_data: `ready_${rowNum}_${clientId}` },
-      { text: '❌ Отменить', callback_data: `cancel_${rowNum}_${clientId}` }
-    ]], adminBody);
-
-    const acceptText = orderType === 'preorder'
-      ? `☀️ *Доброе утро!*\n\nВаш заказ №${orderNum} принят! Мы уже готовим его для вас. 🍞`
-      : `✅ *Ваш заказ №${orderNum} принят!*\n\n🍞 Мы уже приступаем к приготовлению. Сообщим о готовности!`;
-    const r = await notifyClient(clientId, acceptText);
-    if (r?.ok) setProp(`accept_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-    return;
-  }
-
-  // ── 2. В работе ───────────────────────────────────────────────────────────
-  if (action === 'working') {
-    await deleteStoredMsg(`accept_msg_${rowNum}`);
-
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Статус: 👨‍🍳 В работе', [[
-      { text: '🍞 Готово', callback_data: `ready_${rowNum}_${clientId}` }
-    ]], adminBody);
-
-    const r = await notifyClient(clientId,
-      `👨‍🍳 *Заказ №${orderNum} готовится!*\n\nМы уже работаем над вашим заказом. Скоро сообщим о готовности.`);
-    if (r?.ok) setProp(`working_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-    return;
-  }
-
-  // ── 3. Готов ──────────────────────────────────────────────────────────────
-  if (action === 'ready') {
-    await deleteStoredMsg(`accept_msg_${rowNum}`);
-    await deleteStoredMsg(`working_msg_${rowNum}`);
-
-    const isDeliveryOrder = orderType === 'delivery';
-
-    if (isDeliveryOrder) {
-      await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [[
-        { text: '🚗 Отправить доставку', callback_data: `courier_${rowNum}_${clientId}` }
-      ]], adminBody);
-    } else {
-      await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
-      const readyText = orderType === 'preorder'
-        ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
-        : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\n⭐ *Оцените качество обслуживания:*`;
-      const r = await notifyClient(clientId, readyText, ratingKeyboard(rowNum));
-      if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-    }
-    return;
-  }
-
-  // ── 4a. Передан курьеру (только доставка) ────────────────────────────────
-  if (action === 'courier') {
-    if (orderType !== 'delivery') {
-      console.warn(`courier action for non-delivery order ${rowNum}, orderType=${orderType} — skipped`);
-      return;
-    }
-    await deleteStoredMsg(`ready_msg_${rowNum}`);
-
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, '🚗 В доставке', [], adminBody);
-
-    if (DELIVERY_CHAT_ID) {
-      const phone   = getProp(`order_phone_${rowNum}`)   || '—';
-      const address = getProp(`order_address_${rowNum}`) || '—';
-      const total   = getProp(`order_total_${rowNum}`)   || '—';
-      const name    = getProp(`client_name_${rowNum}`)   || '—';
-      const payment = getProp(`order_payment_${rowNum}`) || '';
-      const note    = getProp(`order_note_${rowNum}`)    || '';
-      const payLabel = payment === 'card' ? '💳 Картой' : payment === 'cash' ? '💵 Наличными' : '';
-      const deliveryText =
-        `🚗 *ДОСТАВКА — №${orderNum}*\n\n` +
-        `👤 ${name}\n` +
-        `📞 ${phone}\n` +
-        `📍 ${address}\n` +
-        (payLabel ? `${payLabel}\n` : '') +
-        `💰 ${total}` +
-        (note ? `\n\n💬 *Примечание:* ${note}` : '');
-      const dr = await tg('sendMessage', {
-        chat_id:      DELIVERY_CHAT_ID,
-        text:         deliveryText,
-        parse_mode:   'Markdown',
-        reply_markup: { inline_keyboard: [[
-          { text: '✅ Доставлен', callback_data: `done_${rowNum}_${clientId}` }
-        ]]}
-      });
-      if (dr?.ok) setProp(`delivery_msg_${rowNum}`, JSON.stringify({ chatId: DELIVERY_CHAT_ID, msgId: dr.result.message_id }));
-    }
-
-    await notifyClient(clientId,
-      `🚗 *Заказ №${orderNum} отправлен!*\n\n⏱ Ориентировочное время доставки: *30–45 минут* в зависимости от загруженности.\nПо приезде заказа, курьер с вами свяжется!\n\nС уважением команда «Мамин Хлеб»\nЕсли возникли вопросы звоните по номеру:\n☎️ +375(29)722-20-22`);
-    return;
-  }
-
-  // ── 4b. Доставлен ─────────────────────────────────────────────────────────
-  if (action === 'done') {
-    await deleteStoredMsg(`ready_msg_${rowNum}`);
-
-    const deliveryMsgRaw = getProp(`delivery_msg_${rowNum}`);
-    if (deliveryMsgRaw) {
-      const dm = JSON.parse(deliveryMsgRaw);
-      await tg('editMessageReplyMarkup', { chat_id: dm.chatId, message_id: dm.msgId, reply_markup: { inline_keyboard: [] } });
-      delProp(`delivery_msg_${rowNum}`);
-    }
-
-    const adminMsgRaw = getProp(`admin_msg_${rowNum}`);
-    const storedAdmin = adminMsgRaw ? JSON.parse(adminMsgRaw) : null;
-    const targetChatId = storedAdmin ? storedAdmin.chatId : adminChatId;
-    const targetMsgId  = storedAdmin ? storedAdmin.msgId  : adminMsgId;
-    await editAdminMsg(targetChatId, targetMsgId, adminBase, '✅ Доставлен', [], adminBody);
-
-    const r = await notifyClient(clientId,
-      `🎉 *Ваш заказ №${orderNum} доставлен!*\n\nСпасибо, что выбрали нас! 🍞\n\n⭐ *Оцените качество обслуживания:*`,
-      ratingKeyboard(rowNum));
-    if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-    return;
-  }
-
-  // ── 5. Отклонить / Отменить ───────────────────────────────────────────────
-  if (action === 'decline' || action === 'cancel') {
-    const label = action === 'cancel' ? 'Отменён' : 'Отклонён';
-    const clientText = action === 'cancel'
-      ? `🚫 *Ваш заказ №${orderNum} отменён.*\n\nПриносим извинения. Обратитесь к нам напрямую.`
-      : `❌ *Ваш заказ №${orderNum} отклонён.*\n\nПриносим извинения. Свяжитесь с нами.`;
-
-    await Promise.all([
-      deleteStoredMsg(`accept_msg_${rowNum}`),
-      deleteStoredMsg(`working_msg_${rowNum}`),
-      deleteStoredMsg(`ready_msg_${rowNum}`)
-    ]);
-
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, `Статус: ${label}`, [[
-      { text: '↩️ Вернуть в работу', callback_data: `restore_${rowNum}_${clientId}` }
-    ]], adminBody);
-
-    const r = await notifyClient(clientId, clientText);
-    if (r?.ok) setProp(`decline_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-    return;
-  }
-
-  // ── 6. Вернуть в работу ───────────────────────────────────────────────────
-  if (action === 'restore') {
-    await deleteStoredMsg(`decline_msg_${rowNum}`);
-
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, '🟡 Статус: Новый', [[
-      { text: '✅ Принять заказ', callback_data: `accept_${rowNum}_${clientId}` },
-      { text: '❌ Отклонить',     callback_data: `decline_${rowNum}_${clientId}` }
-    ]], adminBody);
-
-    const r = await notifyClient(clientId,
-      `🔄 *Ваш заказ №${orderNum} снова в обработке.*\n\nСкоро свяжемся с вами!`);
-    if (r?.ok) setProp(`restore_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-    delProp(`decline_msg_${rowNum}`);
-    return;
-  }
 }
+
 
 // ─── Обработка текстовых сообщений (check-in + отзыв) ────────────────────────
 async function handleTextMessage(message) {
