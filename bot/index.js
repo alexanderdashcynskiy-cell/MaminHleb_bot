@@ -8,6 +8,7 @@ const { Pool }  = require('pg');
 const helmet    = require('helmet');
 const rateLimit = require('express-rate-limit');
 const crypto    = require('crypto');
+const { config, validateConfig } = require('./config');
 
 const app = express();
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -18,8 +19,7 @@ app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
 
 // P1 Bot Без #2: CORS с явным allowlist методов и заголовков.
 // Без ALLOWED_ORIGINS в .env разрешает Telegram WebApp origin (t.me / web.telegram.org).
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
-  .split(',').map(s => s.trim()).filter(Boolean);
+const ALLOWED_ORIGINS = config.ALLOWED_ORIGINS;
 const TELEGRAM_ORIGINS = ['https://web.telegram.org', 'https://t.me'];
 
 app.use((req, res, next) => {
@@ -40,12 +40,7 @@ const orderLimiter = rateLimit({ windowMs: 60 * 1000, max: 10,  standardHeaders:
 const stockLimiter = rateLimit({ windowMs: 60 * 1000, max: 30,  standardHeaders: true, legacyHeaders: false });
 const hhLimiter    = rateLimit({ windowMs: 60 * 1000, max: 60,  standardHeaders: true, legacyHeaders: false });
 
-const BOT_TOKEN        = (process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN        || '').trim();
-const ADMIN_ID         = (process.env.ADMIN_ID         || '').trim();
-const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
-const PREORDER_CHAT_ID  = (process.env.PREORDER_CHAT_ID  || '').trim();
-const WEBHOOK_SECRET    = (process.env.WEBHOOK_SECRET    || '').trim();
-const PORT              = process.env.PORT || 3000;
+const { BOT_TOKEN, ADMIN_ID, DELIVERY_CHAT_ID, PREORDER_CHAT_ID, WEBHOOK_SECRET, PORT } = config;
 
 // ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
 const store  = new Map();
@@ -55,8 +50,8 @@ setInterval(() => {
   cbSeen.forEach((ts, id) => { if (ts < cutoff) cbSeen.delete(id); });
 }, 60 * 60 * 1000);
 
-const pgPool = process.env.DATABASE_URL
-  ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+const pgPool = config.DATABASE_URL
+  ? new Pool({ connectionString: config.DATABASE_URL, ssl: { rejectUnauthorized: false } })
   : null;
 
 async function initDB() {
@@ -312,25 +307,25 @@ function isHappyHourNow() {
 }
 
 // ─── Обработка заказа ─────────────────────────────────────────────────────────
-async function handleOrder(body) {
-  if (isDuplicateOrder(body)) { console.log('Duplicate order ignored'); return { ok: true, duplicate: true }; }
-  const isPreorder = body.type === 'Предзаказ';
+// Bot Арх #4: чистые помощники вынесены из handleOrder().
+// handleOrder() теперь только оркестрирует БД/состояние/Telegram, а
+// идентификация / ценообразование / формат доставки — отдельные функции без side-effects.
 
-  // P1 #2: Верифицируем Telegram initData; fallback на body.telegramId (для совместимости)
-  let clientId = '0';
+// P1 #2: Верифицируем Telegram initData; fallback на body.telegramId (для совместимости)
+function resolveClientId(body) {
   if (body.initData && BOT_TOKEN) {
     const tgUser = verifyTgInitData(body.initData, BOT_TOKEN);
-    if (tgUser && tgUser.id) {
-      clientId = String(tgUser.id);
-    } else {
-      console.warn('handleOrder: initData verification failed (hash mismatch or missing user)');
-    }
+    if (tgUser && tgUser.id) return String(tgUser.id);
+    console.warn('resolveClientId: initData verification failed (hash mismatch or missing user)');
   } else if (body.telegramId && body.telegramId !== '0') {
-    clientId = String(body.telegramId);
+    return String(body.telegramId);
   }
-  const clientName = body.name || 'Гость';
+  return '0';
+}
 
-  // P0 #5: Серверные цены из CATALOG — клиентский total игнорируется
+// P0 #5: серверные цены из CATALOG; P3 #14: скидка happy hour на стороне сервера.
+// Возвращает { itemsText, total, totalStr, hhActive } без побочных эффектов.
+function priceOrder(body, isPreorder) {
   const catalogPriceMap = {};
   CATALOG.forEach(p => { catalogPriceMap[p.name.toLowerCase()] = p.price; });
 
@@ -347,7 +342,7 @@ async function handleOrder(body) {
         const clientPrice = Number(i.price);
         const price = (serverPrice !== undefined) ? serverPrice
           : (isNaN(clientPrice) || clientPrice <= 0 ? 0 : clientPrice);
-        if (serverPrice === undefined) console.warn(`handleOrder: unknown product "${name}", using client price`);
+        if (serverPrice === undefined) console.warn(`priceOrder: unknown product "${name}", using client price`);
         total += price * qty;
         return [`◆ ${name} x${qty} — ${(price * qty).toFixed(2)} Br`];
       }).join('\n');
@@ -358,24 +353,38 @@ async function handleOrder(body) {
     itemsText = String(body.items || '');
   }
 
-  // P3 #14: применяем скидку happy hour на стороне сервера
   const hhActive = !isPreorder && isHappyHourNow();
   if (hhActive) total = Math.round(total * 0.7 * 100) / 100;
   const totalStr = (hhActive ? `~~${(total / 0.7).toFixed(2)}~~ ` : '') + total.toFixed(2) + ' Br' + (hhActive ? ' 🎉 -30% Счастливый час' : '');
 
-  let deliveryBlock = '';
+  return { itemsText, total, totalStr, hhActive };
+}
+
+// Формат блока доставки/самовывоза/предзаказа. P2 #15: валидируем формат "YYYY-MM-DD в HH:MM".
+function buildDeliveryBlock(body, isPreorder) {
   if (isPreorder && body.time && body.time !== 'undefined') {
-    // P2 #15: валидируем формат "YYYY-MM-DD в HH:MM"
     const pt = parsePreorderTime(body.time);
-    deliveryBlock = `*ПРЕДЗАКАЗ:*\n📅 Дата: ${pt.niceDate}\n🕐 Время: ${pt.rawTime}`;
-  } else if (body.address && body.address !== 'undefined' && body.address !== 'Самовывоз') {
-    const payLabel = body.payment === 'card' ? '💳 Картой' : body.payment === 'cash' ? '💵 Наличными' : '';
-    deliveryBlock = `*АДРЕС ДОСТАВКИ:*\n🚕 ${body.address}${payLabel ? `\n${payLabel}` : ''}`;
-  } else if (body.time && body.time !== 'undefined') {
-    deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74\n🕐 Время: ${body.time}`;
-  } else {
-    deliveryBlock = `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74`;
+    return `*ПРЕДЗАКАЗ:*\n📅 Дата: ${pt.niceDate}\n🕐 Время: ${pt.rawTime}`;
   }
+  if (body.address && body.address !== 'undefined' && body.address !== 'Самовывоз') {
+    const payLabel = body.payment === 'card' ? '💳 Картой' : body.payment === 'cash' ? '💵 Наличными' : '';
+    return `*АДРЕС ДОСТАВКИ:*\n🚕 ${body.address}${payLabel ? `\n${payLabel}` : ''}`;
+  }
+  if (body.time && body.time !== 'undefined') {
+    return `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74\n🕐 Время: ${body.time}`;
+  }
+  return `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74`;
+}
+
+async function handleOrder(body) {
+  if (isDuplicateOrder(body)) { console.log('Duplicate order ignored'); return { ok: true, duplicate: true }; }
+  const isPreorder = body.type === 'Предзаказ';
+
+  const clientId   = resolveClientId(body);
+  const clientName = body.name || 'Гость';
+
+  const { itemsText, total, totalStr } = priceOrder(body, isPreorder);
+  const deliveryBlock = buildDeliveryBlock(body, isPreorder);
 
   const noteStr  = (body.note || '').trim();
   const noteLine = noteStr ? `\n💬 *ПРИМЕЧАНИЕ:* ${noteStr}\n` : '';
@@ -967,17 +976,15 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     uptime: Math.floor(process.uptime()),
-    sheets: !!process.env.GOOGLE_SHEET_ID,
-    telegram: !!process.env.BOT_TOKEN,
+    database: !!pgPool,
+    telegram: !!BOT_TOKEN,
     ts: new Date().toISOString(),
   });
 });
 
 // ─── Установка вебхука ────────────────────────────────────────────────────────
 async function setWebhook() {
-  const RAILWAY_URL = process.env.RAILWAY_PUBLIC_DOMAIN
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-    : process.env.WEBHOOK_BASE_URL;
+  const RAILWAY_URL = config.WEBHOOK_BASE_URL;
 
   if (!RAILWAY_URL) {
     console.log('WEBHOOK_BASE_URL not set, skipping webhook setup');
@@ -1046,6 +1053,8 @@ setInterval(() => {
 }, 60000);
 
 // ─── Запуск ───────────────────────────────────────────────────────────────────
+validateConfig();
+
 app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
   await initDB();
