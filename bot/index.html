@@ -258,6 +258,13 @@
       </div>
      </div>
     </div>
+    <!-- P2 #10: индикатор недоступной/устаревшей сводки остатков -->
+    <div id="stock-degraded-banner" style="display:none; margin:0 16px 12px; padding:10px 12px; border-radius:12px; background:#FDECEA; border:1px solid #F5C6C0;">
+     <div style="display:flex; align-items:center; gap:8px;">
+      <span style="font-size:16px;">⚠️</span>
+      <div style="font-size:12px; color:#8B3A2F; line-height:1.4;">Не удалось загрузить остатки — наличие может быть неточным. Заказ подтвердится после проверки на сервере.</div>
+     </div>
+    </div>
     <!-- Carousel -->
     <div style="margin:0 16px 16px; position:relative; overflow:hidden; border-radius:20px;" id="carousel-container">
      <div id="carousel-track" style="display:flex; transition:transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94);">
@@ -549,6 +556,9 @@
     // ── State ─────────────────────────────────────────────────────────────────────
     var cart = [];
     var stockData = {};
+    var stockLoaded = false;            // P2 #10: успешно ли загружена сводка остатков
+    var stockAttempted = false;         // P2 #10: была ли уже попытка загрузки (для оптимистичного первого рендера)
+    var CART_STORAGE_KEY = 'mh_cart_v1'; // P2 #9: ключ персиста корзины
     var selectedDelivery = 'pickup';
     var selectedPayment  = '';
     var currentProduct   = null;
@@ -605,24 +615,41 @@
     // ── Stock ─────────────────────────────────────────────────────────────────────
     function inStock(name) {
       if (name in stockData) return stockData[name] > 0;
-      return true;
+      // P2 #10: до первой попытки — оптимистично; после неудачной загрузки не выдаём
+      // неизвестные товары за доступные (server повторно валидирует /order)
+      if (!stockAttempted) return true;
+      return stockLoaded;
+    }
+
+    function setStockDegraded(on) {
+      // P2 #10: видимый индикатор устаревших/недоступных остатков (не молчим)
+      var el = document.getElementById('stock-degraded-banner');
+      if (el) el.style.display = on ? 'block' : 'none';
     }
 
     async function fetchStock() {
       try {
         const res  = await fetch(`${API_BASE}/api/stock`);
         const data = await res.json();
+        stockAttempted = true;
         if (data.ok && data.stock) {
           stockData = data.stock;
-          renderProducts(currentCategory);
+          stockLoaded = true;
+          setStockDegraded(false);
         } else {
+          stockLoaded = false;
           console.warn('fetchStock: server returned ok:false or missing stock', data);
           showToast('Не удалось загрузить остатки');
+          setStockDegraded(true);
         }
       } catch(e) {
+        stockAttempted = true;
+        stockLoaded = false;
         console.warn('fetchStock error:', e);
         showToast('Нет связи с сервером');
+        setStockDegraded(true);
       }
+      renderProducts(currentCategory);
     }
 
     // ── Toast ─────────────────────────────────────────────────────────────────────
@@ -652,6 +679,28 @@
       if (navBadge) { navBadge.style.display = count > 0 ? 'flex' : 'none'; navBadge.textContent = count; }
     }
 
+    // P2 #9: персист корзины в localStorage — переживает перезагрузку/краш WebView
+    function saveCart() {
+      try { localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart)); }
+      catch(e) { /* приватный режим / нет квоты — корзина останется только в памяти */ }
+    }
+
+    function loadCart() {
+      try {
+        var raw = localStorage.getItem(CART_STORAGE_KEY);
+        if (!raw) return;
+        var parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return;
+        cart = parsed.filter(function(i) {
+          return i && typeof i.product_name === 'string'
+            && typeof i.price === 'number' && i.price >= 0
+            && typeof i.quantity === 'number' && i.quantity > 0;
+        }).map(function(i) {
+          return { product_name: i.product_name, price: i.price, quantity: Math.floor(i.quantity) };
+        });
+      } catch(e) { cart = []; }
+    }
+
     function addToCart(name, price) {
       var existing = cart.find(function(i) { return i.product_name === name; });
       if (existing) {
@@ -659,6 +708,7 @@
       } else {
         cart.push({ product_name: name, price: price, quantity: 1 });
       }
+      saveCart();
       updateCartBadge();
       showToast(name + ' добавлен в корзину');
     }
@@ -666,6 +716,7 @@
     function removeFromCart(name) {
       var idx = cart.findIndex(function(i) { return i.product_name === name; });
       if (idx >= 0) cart.splice(idx, 1);
+      saveCart();
       updateCartBadge();
       updateCartUI();
     }
@@ -675,11 +726,12 @@
       if (!item) return;
       item.quantity = Math.max(0, item.quantity + delta);
       if (item.quantity === 0) removeFromCart(name);
-      else { updateCartBadge(); updateCartUI(); }
+      else { saveCart(); updateCartBadge(); updateCartUI(); }
     }
 
     function clearCart() {
       cart = [];
+      saveCart();
       updateCartBadge();
       updateCartUI();
     }
@@ -1076,10 +1128,13 @@
     }
 
     // ── Preorder ──────────────────────────────────────────────────────────────────
+    // P2 #8: preorderCart — это read-only производная от персистентной корзины (cart).
+    // Повторный вход на экран лишь пере-выводит её из cart (источник истины в localStorage),
+    // поэтому случайное переключение экранов больше не уничтожает выбранные позиции.
     var preorderCart = [];
 
     function updatePreorderItems() {
-      preorderCart = cart.slice();
+      preorderCart = cart.slice(); // идемпотентно: cart переживает навигацию и перезагрузку
       var container = document.getElementById('preorder-items');
       var totalEl   = document.getElementById('preorder-total-display');
       if (!container) return;
@@ -1186,6 +1241,8 @@
         const greetingName = document.getElementById('user-greeting-name');
         if (greetingName) greetingName.textContent = telegramName;
         }
+      loadCart();          // P2 #9: восстановить корзину из localStorage
+      updateCartBadge();
       selectCategory('all');
       renderBestsellers();
       syncHappyHour().then(updateHappyHourBanner);
