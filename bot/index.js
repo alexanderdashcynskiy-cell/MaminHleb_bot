@@ -526,6 +526,33 @@ async function handleCallback(cb) {
     return;
   }
 
+  // ── Оценка звёздами от CRM (star_X_orderNumber) ───────────────────────────
+  if (action === 'star') {
+    const stars       = parseInt(parts[1]);
+    const orderNumber = parts[2];
+    if (!isNaN(stars) && stars >= 1 && stars <= 5 && orderNumber) {
+      await tg('answerCallbackQuery', {
+        callback_query_id: String(cb.id),
+        text: '⭐'.repeat(stars) + ` (${stars}/5)`,
+        show_alert: false
+      });
+      const [, reviewRes] = await tgAll([
+        ['deleteMessage', { chat_id: String(cb.from.id), message_id: cb.message.message_id }],
+        ['sendMessage', {
+          chat_id:    String(cb.from.id),
+          text:       `💬 *Оставьте ваш отзыв*\n\nВы оценили: ${'⭐'.repeat(stars)} (${stars}/5)\n\n_Напишите комментарий или_ /skip`,
+          parse_mode: 'Markdown'
+        }]
+      ]);
+      setProp(`pending_${cb.from.id}`, JSON.stringify({
+        stars,
+        orderNumber,
+        reviewReqMsgId: reviewRes?.ok ? reviewRes.result.message_id : null
+      }));
+    }
+    return;
+  }
+
   const rowNum      = parseInt(parts[1]);
   const clientId    = parts[2];
   const orderNum    = getProp(`order_num_${rowNum}`) || String(rowNum);
@@ -726,12 +753,12 @@ async function handleTextMessage(message) {
 
   if (!isSkip && pgPool) {
     try {
-      const rowNum = data.rowNum;
+      const orderNum = data.orderNumber || data.rowNum;
       await pgPool.query(
         `UPDATE "Order" SET review=$1, rating=$2 WHERE "orderNumber"=$3`,
-        [msgText, data.stars || null, String(rowNum)]
+        [msgText, data.stars || null, String(orderNum)]
       );
-      console.log(`Review saved for order ${rowNum}`);
+      console.log(`Review saved for order ${orderNum}`);
     } catch(e) {
       console.error('review DB save:', e.message);
     }
