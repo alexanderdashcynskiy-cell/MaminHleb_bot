@@ -1,24 +1,13 @@
 'use strict';
 require('dotenv').config();
 
-const express  = require('express');
-const fetch    = require('node-fetch');
-const path     = require('path');
-const { Pool } = require('pg');
-
-const app = express();
-app.use(express.json({ limit: '10mb' }));
-app.use(express.text({ type: 'text/plain', limit: '10mb' }));
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
-app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
-
-// CORS — Mini App шлёт запросы из браузера
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
+const express   = require('express');
+const fetch     = require('node-fetch');
+const path      = require('path');
+const crypto    = require('crypto');
+const helmet    = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { Pool }  = require('pg');
 
 const BOT_TOKEN        = (process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN        || '').trim();
 const ADMIN_ID         = (process.env.ADMIN_ID         || '').trim();
@@ -26,6 +15,75 @@ const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
 const PREORDER_CHAT_ID = (process.env.PREORDER_CHAT_ID || '').trim();
 const WEBHOOK_SECRET   = (process.env.WEBHOOK_SECRET   || '').trim();
 const PORT             = process.env.PORT || 3000;
+
+// ─── Allowed origins ──────────────────────────────────────────────────────────
+// Telegram WebApp шлёт запросы с https://web.telegram.org и поддоменов.
+// ALLOWED_ORIGINS — переменная среды, список через запятую.
+const ALLOWED_ORIGINS_RAW = (process.env.ALLOWED_ORIGINS || '').trim();
+const ALLOWED_ORIGINS = ALLOWED_ORIGINS_RAW
+  ? ALLOWED_ORIGINS_RAW.split(',').map(s => s.trim()).filter(Boolean)
+  : [];
+
+const app = express();
+
+// ─── Security headers (helmet) ────────────────────────────────────────────────
+app.use(helmet({
+  // Mini App рендерится внутри iframe Telegram — разрешаем от telegram.org
+  frameguard: false,
+  contentSecurityPolicy: false, // CSP добавим отдельно через мета-тег в HTML
+  crossOriginEmbedderPolicy: false,
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.text({ type: 'text/plain', limit: '10mb' }));
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
+app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
+
+// ─── CORS — только разрешённые origins ───────────────────────────────────────
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  const isTelegram = origin.endsWith('.telegram.org') || origin === 'https://telegram.org';
+  const isAllowed  = ALLOWED_ORIGINS.includes(origin);
+  if (isTelegram || isAllowed || !origin) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+// ─── Telegram initData HMAC-верификация ───────────────────────────────────────
+// Возвращает: 'ok' | 'invalid' | 'absent'
+function checkTelegramInitData(initData) {
+  if (!initData) return 'absent';
+  if (!BOT_TOKEN) return 'ok'; // dev-режим без токена
+  try {
+    const params = new URLSearchParams(initData);
+    const hash = params.get('hash');
+    if (!hash || !/^[0-9a-f]{64}$/.test(hash)) return 'invalid';
+    params.delete('hash');
+    const dataCheckString = Array.from(params.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}=${v}`)
+      .join('\n');
+    const secretKey = crypto
+      .createHmac('sha256', 'WebAppData')
+      .update(BOT_TOKEN)
+      .digest();
+    const computed = crypto
+      .createHmac('sha256', secretKey)
+      .update(dataCheckString)
+      .digest('hex');
+    return crypto.timingSafeEqual(
+      Buffer.from(hash,     'hex'),
+      Buffer.from(computed, 'hex')
+    ) ? 'ok' : 'invalid';
+  } catch(e) {
+    console.error('checkTelegramInitData error:', e.message);
+    return 'invalid';
+  }
+}
 
 // ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
 const store  = new Map();
@@ -198,17 +256,25 @@ function getNextOrderNum() {
 // ─── Telegram API ─────────────────────────────────────────────────────────────
 const TG_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
+const TG_TIMEOUT_MS = 15_000; // 15 секунд — стандарт для Telegram API
+
 async function tg(method, payload) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TG_TIMEOUT_MS);
   try {
     const res = await fetch(`${TG_BASE}/${method}`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload)
+      body:    JSON.stringify(payload),
+      signal:  controller.signal,
     });
     return res.json();
   } catch(e) {
-    console.error(`tg(${method}):`, e.message);
+    const label = e.name === 'AbortError' ? `timeout(${TG_TIMEOUT_MS}ms)` : e.message;
+    console.error(`tg(${method}): ${label}`);
     return { ok: false };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -225,6 +291,16 @@ function isDuplicateOrder(body) {
   if (last && now - last < 20000) return true;
   setProp(key, String(now));
   return false;
+}
+
+// ─── Вспомогательная: разбор строки "YYYY-MM-DD в HH:MM" ─────────────────────
+function parsePreorderTime(timeStr) {
+  if (!timeStr) return { niceDate: '—', time: '—' };
+  const m = /^(\d{4}-\d{2}-\d{2}) в (\d{2}:\d{2})$/.exec(timeStr.trim());
+  if (!m) return { niceDate: timeStr.trim(), time: '—' };
+  const [, rawDate, rawTime] = m;
+  const [y, mo, d] = rawDate.split('-');
+  return { niceDate: `${d}.${mo}.${y}`, time: rawTime };
 }
 
 // ─── Обработка заказа ─────────────────────────────────────────────────────────
@@ -266,10 +342,8 @@ async function handleOrder(body) {
 
   let deliveryBlock = '';
   if (isPreorder && body.time && body.time !== 'undefined') {
-    const [rawDate, rawTime] = body.time.split(' в ');
-    const dp = (rawDate || '').split('-');
-    const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
-    deliveryBlock = `*ПРЕДЗАКАЗ:*\n📅 Дата: ${niceDate}\n🕐 Время: ${rawTime || ''}`;
+    const { niceDate, time: rawTime } = parsePreorderTime(body.time);
+    deliveryBlock = `*ПРЕДЗАКАЗ:*\n📅 Дата: ${niceDate}\n🕐 Время: ${rawTime}`;
   } else if (body.address && body.address !== 'undefined' && body.address !== 'Самовывоз') {
     const payLabel = body.payment === 'card' ? '💳 Картой' : body.payment === 'cash' ? '💵 Наличными' : '';
     deliveryBlock = `*АДРЕС ДОСТАВКИ:*\n🚕 ${body.address}${payLabel ? `\n${payLabel}` : ''}`;
@@ -350,14 +424,12 @@ async function handleOrder(body) {
   }
 
   if (isPreorder && PREORDER_CHAT_ID) {
-    const [rawDate, rawTime] = (body.time || '').split(' в ');
-    const dp = (rawDate || '').split('-');
-    const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
+    const { niceDate, time: rawTime } = parsePreorderTime(body.time || '');
     const preorderText =
       `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n🟡 Статус: Новый\n\n` +
       `👤 ${clientName}\n` +
       `📞 ${body.phone || '—'}\n` +
-      `📅 ${niceDate}  🕐 ${rawTime || '—'}\n\n` +
+      `📅 ${niceDate}  🕐 ${rawTime}\n\n` +
       `*Состав:*\n${itemsText}\n\n` +
       `💰 ${totalStr}`;
     calls.push(['sendMessage', {
@@ -443,19 +515,6 @@ function ratingKeyboard(rowNum) {
   return [RATING_KEYBOARD[0].map(b => ({ ...b, callback_data: b.callback_data.replace('ROW', rowNum) }))];
 }
 
-// ─── Ежедневный check-in администратора ──────────────────────────────────────
-async function sendAdminCheckin() {
-  const r = await tg('sendMessage', {
-    chat_id:    ADMIN_ID,
-    text:       `☀️ Доброе утро!\n\nКто сегодня работает администратором?\nВведите ваше имя:`,
-    parse_mode: 'Markdown'
-  });
-  if (r.ok) {
-    setProp(`pending_checkin_${ADMIN_ID}`, JSON.stringify({ promptMsgId: r.result.message_id }));
-    setProp('checkin_msg', JSON.stringify({ chatId: ADMIN_ID, msgId: r.result.message_id }));
-  }
-}
-
 // ─── Обработка кнопок ─────────────────────────────────────────────────────────
 async function handleCallback(cb) {
   if (cbSeen.has(cb.id)) {
@@ -470,23 +529,6 @@ async function handleCallback(cb) {
 
   if (action !== 'rate') {
     await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
-  }
-
-  // ── Check-in администратора ───────────────────────────────────────────────
-  if (action === 'checkin') {
-    if (String(cb.from.id) !== ADMIN_ID) return;
-    const r = await tg('sendMessage', {
-      chat_id:    ADMIN_ID,
-      text:       '✏️ Введите ваше имя:',
-      parse_mode: 'Markdown'
-    });
-    setProp(`pending_checkin_${ADMIN_ID}`, JSON.stringify({ promptMsgId: r?.ok ? r.result.message_id : null }));
-    const cm = getProp('checkin_msg');
-    if (cm) {
-      const { chatId, msgId } = JSON.parse(cm);
-      await tg('editMessageReplyMarkup', { chat_id: chatId, message_id: msgId, reply_markup: { inline_keyboard: [] } });
-    }
-    return;
   }
 
   // ── Оценка звёздами ───────────────────────────────────────────────────────
@@ -545,57 +587,48 @@ async function handleCallback(cb) {
       { text: '❌ Отменить', callback_data: `cancel_${rowNum}_${clientId}` }
     ]], adminBody);
 
-    const acceptText = orderType === 'preorder'
-      ? `☀️ *Доброе утро!*\n\nВаш заказ №${orderNum} принят! Мы уже готовим его для вас. 🍞`
-      : `✅ *Ваш заказ №${orderNum} принят!*\n\n🍞 Мы уже приступаем к приготовлению. Сообщим о готовности!`;
+    const acceptText = `Здравствуйте 👋, ваш заказ "№${orderNum}" принят, мы уже его готовим`;
     const r = await notifyClient(clientId, acceptText);
     if (r?.ok) setProp(`accept_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-    return;
-  }
-
-  // ── 2. В работе ───────────────────────────────────────────────────────────
-  if (action === 'working') {
-    await deleteStoredMsg(`accept_msg_${rowNum}`);
-
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Статус: 👨‍🍳 В работе', [[
-      { text: '🍞 Готово', callback_data: `ready_${rowNum}_${clientId}` }
-    ]], adminBody);
-
-    const r = await notifyClient(clientId,
-      `👨‍🍳 *Заказ №${orderNum} готовится!*\n\nМы уже работаем над вашим заказом. Скоро сообщим о готовности.`);
-    if (r?.ok) setProp(`working_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     return;
   }
 
   // ── 3. Готов ──────────────────────────────────────────────────────────────
   if (action === 'ready') {
     await deleteStoredMsg(`accept_msg_${rowNum}`);
-    await deleteStoredMsg(`working_msg_${rowNum}`);
 
-    const isDeliveryOrder = orderType === 'delivery';
-
-    if (isDeliveryOrder) {
+    if (orderType === 'delivery') {
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [[
-        { text: '🚗 Отправить доставку', callback_data: `courier_${rowNum}_${clientId}` }
+        { text: '🚚 Отправить в доставку', callback_data: `dispatch_${rowNum}_${clientId}` }
       ]], adminBody);
+      const r = await notifyClient(clientId, `Ваш заказ №${orderNum} готов, готовим его к отправке`);
+      if (r?.ok) setProp(`ready_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     } else {
-      await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
-      const readyText = orderType === 'preorder'
-        ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
-        : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\n⭐ *Оцените качество обслуживания:*`;
-      const r = await notifyClient(clientId, readyText, ratingKeyboard(rowNum));
-      if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
+      await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [[
+        { text: '✅ Выдан', callback_data: `done_${rowNum}_${clientId}` }
+      ]], adminBody);
+      const r = await notifyClient(clientId, `Ваш заказ №${orderNum} готов, ждём вас по адресу 📍 ул. Ленина 74`);
+      if (r?.ok) setProp(`ready_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     }
+    return;
+  }
+
+  // ── 3b. Отправить в доставку ──────────────────────────────────────────────
+  if (action === 'dispatch') {
+    if (orderType !== 'delivery') return;
+    await deleteStoredMsg(`ready_msg_${rowNum}`);
+    await editAdminMsg(adminChatId, adminMsgId, adminBase, '🚚 Передаётся курьеру', [[
+      { text: '🚗 Передать курьеру', callback_data: `courier_${rowNum}_${clientId}` }
+    ]], adminBody);
+    const r = await notifyClient(clientId, `🚚 Заказ №${orderNum} готов! Передаём курьеру — скоро будет у вас`);
+    if (r?.ok) setProp(`dispatch_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     return;
   }
 
   // ── 4a. Передан курьеру (только доставка) ────────────────────────────────
   if (action === 'courier') {
-    if (orderType !== 'delivery') {
-      console.warn(`courier action for non-delivery order ${rowNum}, orderType=${orderType} — skipped`);
-      return;
-    }
-    await deleteStoredMsg(`ready_msg_${rowNum}`);
+    if (orderType !== 'delivery') return;
+    await deleteStoredMsg(`dispatch_msg_${rowNum}`);
 
     await editAdminMsg(adminChatId, adminMsgId, adminBase, '🚗 В доставке', [], adminBody);
 
@@ -627,29 +660,33 @@ async function handleCallback(cb) {
     }
 
     await notifyClient(clientId,
-      `🚗 *Заказ №${orderNum} отправлен!*\n\n⏱ Ориентировочное время доставки: *30–45 минут* в зависимости от загруженности.\nПо приезде заказа, курьер с вами свяжется!\n\nС уважением команда «Мамин Хлеб»\nЕсли возникли вопросы звоните по номеру:\n☎️ +375(29)722-20-22`);
+      `🚗 Заказ №${orderNum} отправлен! Ориентировочное время: 30–45 мин. Курьер свяжется с вами!`);
     return;
   }
 
-  // ── 4b. Доставлен ─────────────────────────────────────────────────────────
+  // ── 4b. Выдан (самовывоз) / Доставлен (доставка) ─────────────────────────
   if (action === 'done') {
     await deleteStoredMsg(`ready_msg_${rowNum}`);
 
-    const deliveryMsgRaw = getProp(`delivery_msg_${rowNum}`);
-    if (deliveryMsgRaw) {
-      const dm = JSON.parse(deliveryMsgRaw);
-      await tg('editMessageReplyMarkup', { chat_id: dm.chatId, message_id: dm.msgId, reply_markup: { inline_keyboard: [] } });
-      delProp(`delivery_msg_${rowNum}`);
+    if (orderType === 'delivery') {
+      const deliveryMsgRaw = getProp(`delivery_msg_${rowNum}`);
+      if (deliveryMsgRaw) {
+        const dm = JSON.parse(deliveryMsgRaw);
+        await tg('editMessageReplyMarkup', { chat_id: dm.chatId, message_id: dm.msgId, reply_markup: { inline_keyboard: [] } });
+        delProp(`delivery_msg_${rowNum}`);
+      }
+      const adminMsgRaw = getProp(`admin_msg_${rowNum}`);
+      const storedAdmin = adminMsgRaw ? JSON.parse(adminMsgRaw) : null;
+      await editAdminMsg(
+        storedAdmin ? storedAdmin.chatId : adminChatId,
+        storedAdmin ? storedAdmin.msgId  : adminMsgId,
+        adminBase, '✅ Доставлен', [], adminBody);
+    } else {
+      await editAdminMsg(adminChatId, adminMsgId, adminBase, '✅ Выдан', [], adminBody);
     }
 
-    const adminMsgRaw = getProp(`admin_msg_${rowNum}`);
-    const storedAdmin = adminMsgRaw ? JSON.parse(adminMsgRaw) : null;
-    const targetChatId = storedAdmin ? storedAdmin.chatId : adminChatId;
-    const targetMsgId  = storedAdmin ? storedAdmin.msgId  : adminMsgId;
-    await editAdminMsg(targetChatId, targetMsgId, adminBase, '✅ Доставлен', [], adminBody);
-
     const r = await notifyClient(clientId,
-      `🎉 *Ваш заказ №${orderNum} доставлен!*\n\nСпасибо, что выбрали нас! 🍞\n\n⭐ *Оцените качество обслуживания:*`,
+      `🎉 Ваш заказ №${orderNum} уже у вас! Спасибо, что выбрали нас! 🙏\n\n⭐ *Оцените качество обслуживания:*`,
       ratingKeyboard(rowNum));
     if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     return;
@@ -658,13 +695,10 @@ async function handleCallback(cb) {
   // ── 5. Отклонить / Отменить ───────────────────────────────────────────────
   if (action === 'decline' || action === 'cancel') {
     const label = action === 'cancel' ? 'Отменён' : 'Отклонён';
-    const clientText = action === 'cancel'
-      ? `🚫 *Ваш заказ №${orderNum} отменён.*\n\nПриносим извинения. Обратитесь к нам напрямую.`
-      : `❌ *Ваш заказ №${orderNum} отклонён.*\n\nПриносим извинения. Свяжитесь с нами.`;
+    const clientText = `❌ Ваш заказ №${orderNum} отклонён. Приносим извинения. Оформите свой заказ по новой`;
 
     await Promise.all([
       deleteStoredMsg(`accept_msg_${rowNum}`),
-      deleteStoredMsg(`working_msg_${rowNum}`),
       deleteStoredMsg(`ready_msg_${rowNum}`)
     ]);
 
@@ -687,7 +721,7 @@ async function handleCallback(cb) {
     ]], adminBody);
 
     const r = await notifyClient(clientId,
-      `🔄 *Ваш заказ №${orderNum} снова в обработке.*\n\nСкоро свяжемся с вами!`);
+      `🔄 Ваш заказ №${orderNum} снова в обработке. Скоро свяжемся с вами!`);
     if (r?.ok) setProp(`restore_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     delProp(`decline_msg_${rowNum}`);
     return;
@@ -702,20 +736,6 @@ async function handleTextMessage(message) {
   const msgKey = `msg_${message.message_id}`;
   if (getProp(msgKey)) return;
   setProp(msgKey, '1');
-
-  // ── Check-in администратора ───────────────────────────────────────────────
-  const checkinRaw = senderId === ADMIN_ID ? getProp(`pending_checkin_${ADMIN_ID}`) : null;
-  if (checkinRaw) {
-    const cd = JSON.parse(checkinRaw);
-    if (cd.promptMsgId) await tg('deleteMessage', { chat_id: senderId, message_id: cd.promptMsgId });
-    await tg('sendMessage', {
-      chat_id:    senderId,
-      text:       `✅ Записано! Сегодня работает: *${msgText}*`,
-      parse_mode: 'Markdown'
-    });
-    delProp(`pending_checkin_${senderId}`);
-    return;
-  }
 
   // ── Отзыв после оценки ────────────────────────────────────────────────────
   const pendingRaw = getProp(`pending_${senderId}`);
@@ -742,13 +762,22 @@ async function handleTextMessage(message) {
     { chat_id: senderId, message_id: data.reviewReqMsgId }]);
   calls.push(['sendMessage', {
     chat_id:    senderId,
-    text:       isSkip ? '🙏 *Спасибо за оценку!* Рады видеть вас снова 🍞' : '🙏 *Спасибо за отзыв!*',
+    text:       isSkip ? '🌿 *Спасибо за оценку!* Рады видеть вас снова 🐿' : '🌿 *Спасибо за отзыв!*',
     parse_mode: 'Markdown'
   }]);
 
   await tgAll(calls);
   delProp(`pending_${senderId}`);
 }
+
+// ─── Rate limiting ────────────────────────────────────────────────────────────
+const orderLimiter = rateLimit({
+  windowMs: 60 * 1000,     // 1 минута
+  max: 10,                  // ≤ 10 заказов с одного IP за минуту
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'too_many_requests' },
+});
 
 // ─── Маршруты ─────────────────────────────────────────────────────────────────
 
@@ -769,25 +798,63 @@ app.post('/webhook', (req, res) => {
   }
 });
 
-app.post('/order', (req, res) => {
-  res.json({ ok: true });
+app.post('/order', orderLimiter, (req, res) => {
   let body = req.body;
-  console.log('/order received, content-type:', req.headers['content-type'], 'body type:', typeof body);
   if (typeof body === 'string') {
-    try { body = JSON.parse(body); } catch(e) { console.error('/order JSON parse failed:', e.message); return; }
+    try { body = JSON.parse(body); } catch(e) {
+      console.error('/order JSON parse failed:', e.message);
+      return res.status(400).json({ ok: false, error: 'bad_json' });
+    }
   }
-  if (!body || (!body.phone && !body.items)) { console.log('/order skipped — no phone/items'); return; }
-  console.log('/order processing, type:', body.type, 'name:', body.name, 'phone:', body.phone);
+  if (!body || (!body.phone && !body.items)) {
+    console.log('/order skipped — no phone/items');
+    return res.json({ ok: false });
+  }
+
+  const initStatus = checkTelegramInitData(body.tgInitData || '');
+  if (initStatus === 'invalid') {
+    console.warn('/order: HMAC verification failed — rejected');
+    return res.status(403).json({ ok: false, error: 'unauthorized' });
+  }
+  if (initStatus === 'absent') {
+    console.warn('/order: tgInitData absent — soft-allow (log only)');
+  }
+
+  res.json({ ok: true });
+  console.log('/order processing, type:', body.type);
   handleOrder(body).catch(e => console.error('order err:', e));
 });
 
 
-app.get('/api/stock', (req, res) => {
-  res.json({ ok: true, stock: {}, catalog: [], flags: {} });
+app.get('/api/stock', async (req, res) => {
+  if (!pgPool) {
+    return res.json({ ok: true, stock: {}, catalog: [], flags: {} });
+  }
+  try {
+    const { rows } = await pgPool.query('SELECT name, stock, price FROM "Product"');
+    const stock = {};
+    rows.forEach(r => { stock[r.name.trim().toLowerCase()] = r.stock; });
+    res.json({ ok: true, stock, catalog: [], flags: {} });
+  } catch(e) {
+    console.error('/api/stock DB error:', e.message);
+    res.json({ ok: false });
+  }
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/health', (req, res) => res.send('MaminHleb bot is running ✓'));
+app.get('/health', async (req, res) => {
+  const checks = { uptime: Math.floor(process.uptime()) + 's', db: 'skip', tg: !!BOT_TOKEN };
+  if (pgPool) {
+    try {
+      await pgPool.query('SELECT 1');
+      checks.db = 'ok';
+    } catch(e) {
+      checks.db = 'error';
+    }
+  }
+  const allOk = checks.db !== 'error';
+  res.status(allOk ? 200 : 503).json({ ok: allOk, ...checks });
+});
 
 // ─── Установка вебхука ────────────────────────────────────────────────────────
 async function setWebhook() {
@@ -802,7 +869,7 @@ async function setWebhook() {
 
   const res = await tg('setWebhook', {
     url:                  `${RAILWAY_URL}/webhook`,
-    drop_pending_updates: true,
+    drop_pending_updates: false,
     max_connections:      40
   });
   console.log('setWebhook:', JSON.stringify(res));
@@ -812,17 +879,6 @@ function mskDateKey() {
   const msk = new Date(Date.now() + 3 * 3600 * 1000);
   return `${msk.getUTCFullYear()}-${String(msk.getUTCMonth()+1).padStart(2,'0')}-${String(msk.getUTCDate()).padStart(2,'0')}`;
 }
-
-// ─── Check-in в 06:00 Минск каждый день ──────────────────────────────────────
-setInterval(() => {
-  const msk = new Date(Date.now() + 3 * 3600 * 1000);
-  const h   = msk.getUTCHours();
-  const dateKey = mskDateKey();
-  if (h >= 6 && h < 9 && getProp('checkin_sent_date') !== dateKey) {
-    setProp('checkin_sent_date', dateKey);
-    sendAdminCheckin().catch(e => console.error('checkin err:', e));
-  }
-}, 60000);
 
 // ─── Happy Hour уведомления ───────────────────────────────────────────────────
 async function sendHappyHourNotifications() {
@@ -834,15 +890,23 @@ async function sendHappyHourNotifications() {
     `🌆 *Добрый вечер!*\n\n` +
     `Настало время счастливого часа — скидка *30%* на всю оставшуюся продукцию для самовывоза.\n\n` +
     `Успейте забрать! 🥐`;
+  const blocked = new Set();
   const BATCH = 25;
   for (let i = 0; i < clients.length; i += BATCH) {
     await Promise.all(
       clients.slice(i, i + BATCH).map(cid =>
         tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' })
+          .then(r => { if (r && r.ok === false && (r.error_code === 403 || r.error_code === 400)) blocked.add(String(cid)); })
           .catch(e => console.error(`happyHour ${cid}:`, e.message))
       )
     );
     if (i + BATCH < clients.length) await new Promise(r => setTimeout(r, 1100));
+  }
+  // Удаляем клиентов, заблокировавших бота, чтобы список не рос бесконечно
+  if (blocked.size) {
+    const remaining = clients.filter(cid => !blocked.has(String(cid)));
+    setProp('known_clients', JSON.stringify(remaining));
+    console.log(`happyHour: removed ${blocked.size} blocked clients (${remaining.length} remain)`);
   }
 }
 
