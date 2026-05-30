@@ -11,6 +11,7 @@ const crypto    = require('crypto');
 const { config, validateConfig } = require('./config');
 
 const app = express();
+app.set('trust proxy', 1); // Railway reverse proxy adds X-Forwarded-For
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.text({ type: 'text/plain', limit: '1mb' }));
@@ -532,11 +533,11 @@ async function handleCallback(cb) {
     return;
   }
 
-  // ── Оценка звёздами ───────────────────────────────────────────────────────
-  if (action === 'rate') {
-    const stars     = parseInt(parts[1]);
-    const ratingRow = parseInt(parts[2]);
-    const starStr   = '⭐'.repeat(stars) + ` (${stars}/5)`;
+  // ── Оценка звёздами (rate_N_rowNum — от бота, star_N_orderNum — от CRM) ────
+  if (action === 'rate' || action === 'star') {
+    const stars    = parseInt(parts[1]);
+    const refValue = parts[2]; // rowNum (rate) или orderNumber (star)
+    const starStr  = '⭐'.repeat(stars) + ` (${stars}/5)`;
 
     await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: starStr, show_alert: false });
 
@@ -545,8 +546,10 @@ async function handleCallback(cb) {
       try {
         const ep = JSON.parse(existingRaw);
         if (ep.reviewReqMsgId) {
-          setProp(`pending_${cb.from.id}`,
-            JSON.stringify({ stars, rowNum: ratingRow, reviewReqMsgId: ep.reviewReqMsgId }));
+          const update = action === 'star'
+            ? { stars, orderNumber: refValue, reviewReqMsgId: ep.reviewReqMsgId }
+            : { stars, rowNum: parseInt(refValue), reviewReqMsgId: ep.reviewReqMsgId };
+          setProp(`pending_${cb.from.id}`, JSON.stringify(update));
           return;
         }
       } catch(e) {}
@@ -561,11 +564,10 @@ async function handleCallback(cb) {
       }]
     ]);
 
-    setProp(`pending_${cb.from.id}`, JSON.stringify({
-      stars,
-      rowNum:         ratingRow,
-      reviewReqMsgId: reviewRes?.ok ? reviewRes.result.message_id : null
-    }));
+    const pendingData = action === 'star'
+      ? { stars, orderNumber: refValue, reviewReqMsgId: reviewRes?.ok ? reviewRes.result.message_id : null }
+      : { stars, rowNum: parseInt(refValue), reviewReqMsgId: reviewRes?.ok ? reviewRes.result.message_id : null };
+    setProp(`pending_${cb.from.id}`, JSON.stringify(pendingData));
     return;
   }
 }
@@ -646,7 +648,7 @@ app.post('/webhook', (req, res) => {
   }
 });
 
-const VALID_ORDER_TYPES = new Set(['Предзаказ', 'Доставка', 'Самовывоз', '']);
+const VALID_ORDER_TYPES = new Set(['Заказ', 'Предзаказ', 'Доставка', 'Самовывоз', '']);
 const PHONE_RE = /^\+?[\d\s\-()]{7,20}$/;
 
 app.post('/order', orderLimiter, async (req, res) => {
