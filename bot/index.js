@@ -394,6 +394,7 @@ async function handleOrder(body) {
   setProp(`admin_base_${orderNum}`,   adminHeader);
   setProp(`admin_body_${orderNum}`,   adminBody);
   setProp(`client_name_${orderNum}`,  clientName);
+  setProp(`client_id_${orderNum}`,    clientId);
   setProp(`order_num_${orderNum}`,    String(orderNum));
   setProp(`order_phone_${orderNum}`,  body.phone   || '—');
   setProp(`order_address_${orderNum}`,body.address || 'Самовывоз');
@@ -840,6 +841,56 @@ app.post('/order', orderLimiter, (req, res) => {
   res.json({ ok: true });
   console.log('/order processing, type:', body.type);
   handleOrder(body).catch(e => console.error('order err:', e));
+});
+
+// Вызывается дашбордом когда заказ выдан/доставлен — отправляет клиенту запрос оценки
+app.post('/api/order/done', async (req, res) => {
+  const secret = process.env.ADMIN_SECRET;
+  if (secret) {
+    const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
+    if (provided !== secret) {
+      console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
+      return res.status(403).json({ ok: false, error: 'unauthorized' });
+    }
+  }
+
+  const orderNum = String((req.body || {}).orderNumber || '');
+  if (!orderNum) return res.status(400).json({ ok: false, error: 'orderNumber required' });
+
+  // clientId ищем сначала в props, потом в БД (на случай рестарта сервера)
+  let clientId = getProp(`client_id_${orderNum}`);
+  if ((!clientId || clientId === '0') && pgPool) {
+    try {
+      const { rows } = await pgPool.query(
+        `SELECT "telegramId" FROM "Order" WHERE "orderNumber" = $1 LIMIT 1`,
+        [orderNum]
+      );
+      if (rows.length) clientId = rows[0].telegramId;
+    } catch(e) {
+      console.error('/api/order/done DB lookup:', e.message);
+    }
+  }
+
+  res.json({ ok: true });
+
+  if (!clientId || clientId === '0') {
+    console.log(`/api/order/done: orderNumber=${orderNum} — clientId не найден, рейтинг пропущен`);
+    return;
+  }
+
+  try {
+    const ratingResult = await tg('sendMessage', {
+      chat_id:      String(clientId),
+      text:         `🎉 Ваш заказ №${orderNum} уже у вас!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
+      reply_markup: { inline_keyboard: ratingKeyboard(orderNum) }
+    });
+    console.log(`/api/order/done: rating →`, JSON.stringify(ratingResult).slice(0, 200));
+    if (ratingResult?.ok) {
+      setProp(`done_msg_${orderNum}`, JSON.stringify({ chatId: String(clientId), msgId: ratingResult.result.message_id }));
+    }
+  } catch(e) {
+    console.error('/api/order/done: rating error:', e.message);
+  }
 });
 
 
