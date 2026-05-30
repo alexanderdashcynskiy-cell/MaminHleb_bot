@@ -587,9 +587,7 @@ async function handleCallback(cb) {
       { text: '❌ Отменить', callback_data: `cancel_${rowNum}_${clientId}` }
     ]], adminBody);
 
-    const acceptText = orderType === 'preorder'
-      ? `☀️ *Доброе утро!*\n\nВаш заказ №${orderNum} принят! Мы уже готовим его для вас. 🍞`
-      : `✅ *Ваш заказ №${orderNum} принят!*\n\n🍞 Мы уже приступаем к приготовлению. Сообщим о готовности!`;
+    const acceptText = `Здравствуйте 👋, ваш заказ "№${orderNum}" принят, мы уже его готовим`;
     const r = await notifyClient(clientId, acceptText);
     if (r?.ok) setProp(`accept_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     return;
@@ -614,30 +612,38 @@ async function handleCallback(cb) {
     await deleteStoredMsg(`accept_msg_${rowNum}`);
     await deleteStoredMsg(`working_msg_${rowNum}`);
 
-    const isDeliveryOrder = orderType === 'delivery';
-
-    if (isDeliveryOrder) {
+    if (orderType === 'delivery') {
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [[
-        { text: '🚗 Отправить доставку', callback_data: `courier_${rowNum}_${clientId}` }
+        { text: '🚚 Отправить в доставку', callback_data: `dispatch_${rowNum}_${clientId}` }
       ]], adminBody);
+      const r = await notifyClient(clientId, `Ваш заказ №${orderNum} готов, готовим его к отправке`);
+      if (r?.ok) setProp(`ready_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     } else {
-      await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [], adminBody);
-      const readyText = orderType === 'preorder'
-        ? `🍞 *Ваш предзаказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\nСпасибо, что выбрали нас! Желаем вам хорошего и продуктивного дня ☀️\n\n⭐ *Оцените качество обслуживания:*`
-        : `🍞 *Ваш заказ №${orderNum} готов!*\n\n📍 Ждём вас по адресу: г. Витебск, ул. Ленина 74\n\n⭐ *Оцените качество обслуживания:*`;
-      const r = await notifyClient(clientId, readyText, ratingKeyboard(rowNum));
-      if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
+      await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [[
+        { text: '✅ Выдан', callback_data: `done_${rowNum}_${clientId}` }
+      ]], adminBody);
+      const r = await notifyClient(clientId, `Ваш заказ №${orderNum} готов, ждём вас по адресу 📍 ул. Ленина 74`);
+      if (r?.ok) setProp(`ready_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     }
+    return;
+  }
+
+  // ── 3b. Отправить в доставку ──────────────────────────────────────────────
+  if (action === 'dispatch') {
+    if (orderType !== 'delivery') return;
+    await deleteStoredMsg(`ready_msg_${rowNum}`);
+    await editAdminMsg(adminChatId, adminMsgId, adminBase, '🚚 Передаётся курьеру', [[
+      { text: '🚗 Передать курьеру', callback_data: `courier_${rowNum}_${clientId}` }
+    ]], adminBody);
+    const r = await notifyClient(clientId, `🚚 Заказ №${orderNum} готов! Передаём курьеру — скоро будет у вас`);
+    if (r?.ok) setProp(`dispatch_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     return;
   }
 
   // ── 4a. Передан курьеру (только доставка) ────────────────────────────────
   if (action === 'courier') {
-    if (orderType !== 'delivery') {
-      console.warn(`courier action for non-delivery order ${rowNum}, orderType=${orderType} — skipped`);
-      return;
-    }
-    await deleteStoredMsg(`ready_msg_${rowNum}`);
+    if (orderType !== 'delivery') return;
+    await deleteStoredMsg(`dispatch_msg_${rowNum}`);
 
     await editAdminMsg(adminChatId, adminMsgId, adminBase, '🚗 В доставке', [], adminBody);
 
@@ -669,29 +675,33 @@ async function handleCallback(cb) {
     }
 
     await notifyClient(clientId,
-      `🚗 *Заказ №${orderNum} отправлен!*\n\n⏱ Ориентировочное время доставки: *30–45 минут* в зависимости от загруженности.\nПо приезде заказа, курьер с вами свяжется!\n\nС уважением команда «Мамин Хлеб»\nЕсли возникли вопросы звоните по номеру:\n☎️ +375(29)722-20-22`);
+      `🚗 Заказ №${orderNum} отправлен! Ориентировочное время: 30–45 мин. Курьер свяжется с вами!`);
     return;
   }
 
-  // ── 4b. Доставлен ─────────────────────────────────────────────────────────
+  // ── 4b. Выдан (самовывоз) / Доставлен (доставка) ─────────────────────────
   if (action === 'done') {
     await deleteStoredMsg(`ready_msg_${rowNum}`);
 
-    const deliveryMsgRaw = getProp(`delivery_msg_${rowNum}`);
-    if (deliveryMsgRaw) {
-      const dm = JSON.parse(deliveryMsgRaw);
-      await tg('editMessageReplyMarkup', { chat_id: dm.chatId, message_id: dm.msgId, reply_markup: { inline_keyboard: [] } });
-      delProp(`delivery_msg_${rowNum}`);
+    if (orderType === 'delivery') {
+      const deliveryMsgRaw = getProp(`delivery_msg_${rowNum}`);
+      if (deliveryMsgRaw) {
+        const dm = JSON.parse(deliveryMsgRaw);
+        await tg('editMessageReplyMarkup', { chat_id: dm.chatId, message_id: dm.msgId, reply_markup: { inline_keyboard: [] } });
+        delProp(`delivery_msg_${rowNum}`);
+      }
+      const adminMsgRaw = getProp(`admin_msg_${rowNum}`);
+      const storedAdmin = adminMsgRaw ? JSON.parse(adminMsgRaw) : null;
+      await editAdminMsg(
+        storedAdmin ? storedAdmin.chatId : adminChatId,
+        storedAdmin ? storedAdmin.msgId  : adminMsgId,
+        adminBase, '✅ Доставлен', [], adminBody);
+    } else {
+      await editAdminMsg(adminChatId, adminMsgId, adminBase, '✅ Выдан', [], adminBody);
     }
 
-    const adminMsgRaw = getProp(`admin_msg_${rowNum}`);
-    const storedAdmin = adminMsgRaw ? JSON.parse(adminMsgRaw) : null;
-    const targetChatId = storedAdmin ? storedAdmin.chatId : adminChatId;
-    const targetMsgId  = storedAdmin ? storedAdmin.msgId  : adminMsgId;
-    await editAdminMsg(targetChatId, targetMsgId, adminBase, '✅ Доставлен', [], adminBody);
-
     const r = await notifyClient(clientId,
-      `🎉 *Ваш заказ №${orderNum} доставлен!*\n\nСпасибо, что выбрали нас! 🍞\n\n⭐ *Оцените качество обслуживания:*`,
+      `🎉 Ваш заказ №${orderNum} уже у вас! Спасибо, что выбрали нас! 🙏\n\n⭐ *Оцените качество обслуживания:*`,
       ratingKeyboard(rowNum));
     if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     return;
@@ -700,9 +710,7 @@ async function handleCallback(cb) {
   // ── 5. Отклонить / Отменить ───────────────────────────────────────────────
   if (action === 'decline' || action === 'cancel') {
     const label = action === 'cancel' ? 'Отменён' : 'Отклонён';
-    const clientText = action === 'cancel'
-      ? `🚫 *Ваш заказ №${orderNum} отменён.*\n\nПриносим извинения. Обратитесь к нам напрямую.`
-      : `❌ *Ваш заказ №${orderNum} отклонён.*\n\nПриносим извинения. Свяжитесь с нами.`;
+    const clientText = `❌ Ваш заказ №${orderNum} отклонён. Приносим извинения. Оформите свой заказ по новой`;
 
     await Promise.all([
       deleteStoredMsg(`accept_msg_${rowNum}`),
@@ -729,7 +737,7 @@ async function handleCallback(cb) {
     ]], adminBody);
 
     const r = await notifyClient(clientId,
-      `🔄 *Ваш заказ №${orderNum} снова в обработке.*\n\nСкоро свяжемся с вами!`);
+      `🔄 Ваш заказ №${orderNum} снова в обработке. Скоро свяжемся с вами!`);
     if (r?.ok) setProp(`restore_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     delProp(`decline_msg_${rowNum}`);
     return;
@@ -770,7 +778,7 @@ async function handleTextMessage(message) {
     { chat_id: senderId, message_id: data.reviewReqMsgId }]);
   calls.push(['sendMessage', {
     chat_id:    senderId,
-    text:       isSkip ? '🙏 *Спасибо за оценку!* Рады видеть вас снова 🍞' : '🙏 *Спасибо за отзыв!*',
+    text:       isSkip ? '🌿 *Спасибо за оценку!* Рады видеть вас снова 🐿' : '🌿 *Спасибо за отзыв!*',
     parse_mode: 'Markdown'
   }]);
 
