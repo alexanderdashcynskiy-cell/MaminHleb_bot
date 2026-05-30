@@ -927,6 +927,7 @@ async function setWebhook() {
     url:                  `${RAILWAY_URL}/webhook`,
     drop_pending_updates: false,
     max_connections:      40,
+    allowed_updates:      ['message', 'edited_message', 'callback_query'],
     ...(WEBHOOK_SECRET ? { secret_token: WEBHOOK_SECRET } : {})
   });
   console.log('setWebhook:', JSON.stringify(res));
