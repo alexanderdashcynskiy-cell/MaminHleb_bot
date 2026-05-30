@@ -593,24 +593,9 @@ async function handleCallback(cb) {
     return;
   }
 
-  // ── 2. В работе ───────────────────────────────────────────────────────────
-  if (action === 'working') {
-    await deleteStoredMsg(`accept_msg_${rowNum}`);
-
-    await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Статус: 👨‍🍳 В работе', [[
-      { text: '🍞 Готово', callback_data: `ready_${rowNum}_${clientId}` }
-    ]], adminBody);
-
-    const r = await notifyClient(clientId,
-      `👨‍🍳 *Заказ №${orderNum} готовится!*\n\nМы уже работаем над вашим заказом. Скоро сообщим о готовности.`);
-    if (r?.ok) setProp(`working_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
-    return;
-  }
-
   // ── 3. Готов ──────────────────────────────────────────────────────────────
   if (action === 'ready') {
     await deleteStoredMsg(`accept_msg_${rowNum}`);
-    await deleteStoredMsg(`working_msg_${rowNum}`);
 
     if (orderType === 'delivery') {
       await editAdminMsg(adminChatId, adminMsgId, adminBase, 'Готов ✅', [[
@@ -714,7 +699,6 @@ async function handleCallback(cb) {
 
     await Promise.all([
       deleteStoredMsg(`accept_msg_${rowNum}`),
-      deleteStoredMsg(`working_msg_${rowNum}`),
       deleteStoredMsg(`ready_msg_${rowNum}`)
     ]);
 
