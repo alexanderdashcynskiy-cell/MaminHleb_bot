@@ -4,6 +4,7 @@ require('dotenv').config();
 const express  = require('express');
 const fetch    = require('node-fetch');
 const path     = require('path');
+const crypto   = require('crypto');
 const { Pool } = require('pg');
 
 const app = express();
@@ -26,6 +27,38 @@ const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
 const PREORDER_CHAT_ID = (process.env.PREORDER_CHAT_ID || '').trim();
 const WEBHOOK_SECRET   = (process.env.WEBHOOK_SECRET   || '').trim();
 const PORT             = process.env.PORT || 3000;
+
+// ─── Telegram initData HMAC-верификация ───────────────────────────────────────
+// Возвращает: 'ok' | 'invalid' | 'absent'
+function checkTelegramInitData(initData) {
+  if (!initData) return 'absent';
+  if (!BOT_TOKEN) return 'ok'; // dev-режим без токена
+  try {
+    const params = new URLSearchParams(initData);
+    const hash = params.get('hash');
+    if (!hash || !/^[0-9a-f]{64}$/.test(hash)) return 'invalid';
+    params.delete('hash');
+    const dataCheckString = Array.from(params.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}=${v}`)
+      .join('\n');
+    const secretKey = crypto
+      .createHmac('sha256', 'WebAppData')
+      .update(BOT_TOKEN)
+      .digest();
+    const computed = crypto
+      .createHmac('sha256', secretKey)
+      .update(dataCheckString)
+      .digest('hex');
+    return crypto.timingSafeEqual(
+      Buffer.from(hash,     'hex'),
+      Buffer.from(computed, 'hex')
+    ) ? 'ok' : 'invalid';
+  } catch(e) {
+    console.error('checkTelegramInitData error:', e.message);
+    return 'invalid';
+  }
+}
 
 // ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
 const store  = new Map();
@@ -770,14 +803,29 @@ app.post('/webhook', (req, res) => {
 });
 
 app.post('/order', (req, res) => {
-  res.json({ ok: true });
   let body = req.body;
-  console.log('/order received, content-type:', req.headers['content-type'], 'body type:', typeof body);
   if (typeof body === 'string') {
-    try { body = JSON.parse(body); } catch(e) { console.error('/order JSON parse failed:', e.message); return; }
+    try { body = JSON.parse(body); } catch(e) {
+      console.error('/order JSON parse failed:', e.message);
+      return res.status(400).json({ ok: false, error: 'bad_json' });
+    }
   }
-  if (!body || (!body.phone && !body.items)) { console.log('/order skipped — no phone/items'); return; }
-  console.log('/order processing, type:', body.type, 'name:', body.name, 'phone:', body.phone);
+  if (!body || (!body.phone && !body.items)) {
+    console.log('/order skipped — no phone/items');
+    return res.json({ ok: false });
+  }
+
+  const initStatus = checkTelegramInitData(body.tgInitData || '');
+  if (initStatus === 'invalid') {
+    console.warn('/order: HMAC verification failed — rejected');
+    return res.status(403).json({ ok: false, error: 'unauthorized' });
+  }
+  if (initStatus === 'absent') {
+    console.warn('/order: tgInitData absent — soft-allow (log only)');
+  }
+
+  res.json({ ok: true });
+  console.log('/order processing, type:', body.type);
   handleOrder(body).catch(e => console.error('order err:', e));
 });
 
