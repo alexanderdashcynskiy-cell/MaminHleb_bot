@@ -763,7 +763,8 @@ async function setWebhook() {
   const webhookPayload = {
     url:                  `${RAILWAY_URL}/webhook`,
     drop_pending_updates: false,
-    max_connections:      40
+    max_connections:      40,
+    allowed_updates:      ['message', 'edited_message', 'callback_query']
   };
   if (WEBHOOK_SECRET) webhookPayload.secret_token = WEBHOOK_SECRET;
   const res = await tg('setWebhook', webhookPayload);
