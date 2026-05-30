@@ -1589,6 +1589,13 @@
       setupKeyboardDismiss();
       setupButtonPressAnim();
       fetchStock(); // загружаем остатки — перерисовывает карточки когда придёт ответ
+      // Подтягиваем расписание happy hour с бэка (единый источник). При смене
+      // состояния — перерисовываем баннер и карточки с актуальными ценами.
+      fetchConfig().then(() => {
+        _lastHappyHourActive = getHappyHour().active;
+        updateHappyHourBanner();
+        renderProducts(); renderBestsellers();
+      });
     }
 
     let _productDetailSource = 'main';
@@ -2775,28 +2782,52 @@
 
     // ── Happy Hour ─────────────────────────────────────────────────────────────
     // Пн–Пт 19:00–20:00 | Сб–Вс 17:00–18:00 — скидка 30% на всю выпечку
-    const HAPPY_HOUR_DISCOUNT = 0.30;
+    // Дефолты-фоллбэки. Реальные значения приходят из GET /api/config (fetchConfig).
+    // Единственный источник расписания — const HAPPY_HOUR на бэкенде (bot/index.js).
+    let _hhDiscount = 0.30;
+    let HAPPY_HOUR_SCHEDULE = {
+      weekday: { start: 19, end: 20 }, // Пн–Пт
+      weekend: { start: 17, end: 18 }, // Сб–Вс
+    };
     const BAKERY_CATEGORIES = ['bread','pies','pastries','pizza','cakes','desserts','all'];
 
+    async function fetchConfig() {
+      try {
+        const res = await fetch(`${API_BASE}/api/config`);
+        if (!res.ok) return;
+        const json = await res.json();
+        const hh = json && json.ok && json.happyHour;
+        if (!hh) return;
+        if (hh.weekday && hh.weekend &&
+            Number.isFinite(hh.weekday.start) && Number.isFinite(hh.weekday.end) &&
+            Number.isFinite(hh.weekend.start) && Number.isFinite(hh.weekend.end)) {
+          HAPPY_HOUR_SCHEDULE = { weekday: hh.weekday, weekend: hh.weekend };
+        }
+        if (typeof hh.discount === 'number' && hh.discount >= 0 && hh.discount < 1) {
+          _hhDiscount = hh.discount;
+        }
+      } catch(e) {
+        console.log('fetchConfig failed (offline?):', e.message);
+      }
+    }
+
     function getHappyHour() {
-      const now = new Date();
       // Минск = UTC+3 постоянно (без перехода на летнее время)
-      const msk = new Date(now.getTime() + 3 * 3600 * 1000);
+      const msk = new Date(Date.now() + 3 * 3600 * 1000);
       const day = msk.getUTCDay();        // 0=Sun,1=Mon…6=Sat
       const h   = msk.getUTCHours();
       const m   = msk.getUTCMinutes();
-      const weekday = day >= 1 && day <= 5;
-      const weekend = day === 0 || day === 6;
-      const active  = (weekday && h >= 19 && h < 20) || (weekend && h >= 17 && h < 18);
-      const endH    = weekday ? 20 : 18;
-      const minLeft = active ? (endH * 60) - (h * 60 + m) : 0;
+      const isWeekend = day === 0 || day === 6;
+      const win = isWeekend ? HAPPY_HOUR_SCHEDULE.weekend : HAPPY_HOUR_SCHEDULE.weekday;
+      const active  = h >= win.start && h < win.end;
+      const minLeft = active ? (win.end * 60) - (h * 60 + m) : 0;
       return { active, minLeft };
     }
 
     function happyPrice(product) {
       const hh = getHappyHour();
       if (hh.active && BAKERY_CATEGORIES.includes(product.category) && product.category !== 'buns') {
-        return +(product.price * (1 - HAPPY_HOUR_DISCOUNT)).toFixed(2);
+        return +(product.price * (1 - _hhDiscount)).toFixed(2);
       }
       return product.price;
     }

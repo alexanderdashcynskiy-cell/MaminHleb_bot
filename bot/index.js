@@ -841,6 +841,11 @@ app.get('/api/stock', async (req, res) => {
   }
 });
 
+// Конфиг для фронта — единый источник расписания happy hour (см. const HAPPY_HOUR)
+app.get('/api/config', (req, res) => {
+  res.json({ ok: true, happyHour: HAPPY_HOUR });
+});
+
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/health', async (req, res) => {
   const checks = { uptime: Math.floor(process.uptime()) + 's', db: 'skip', tg: !!BOT_TOKEN };
@@ -880,6 +885,21 @@ function mskDateKey() {
   return `${msk.getUTCFullYear()}-${String(msk.getUTCMonth()+1).padStart(2,'0')}-${String(msk.getUTCDate()).padStart(2,'0')}`;
 }
 
+// ─── Happy Hour: единый источник расписания ──────────────────────────────────
+// Часы по Минску (UTC+3). start включительно, end исключительно.
+// Это единственное место, где задаётся расписание — фронт читает его
+// через GET /api/config, чтобы баннер и рассылка не расходились.
+const HAPPY_HOUR = {
+  discount: 0.30,
+  weekday: { start: 19, end: 20 }, // Пн–Пт
+  weekend: { start: 17, end: 18 }, // Сб–Вс
+};
+
+function happyHourWindow(day) {
+  const isWeekend = day === 0 || day === 6;
+  return isWeekend ? HAPPY_HOUR.weekend : HAPPY_HOUR.weekday;
+}
+
 // ─── Happy Hour уведомления ───────────────────────────────────────────────────
 async function sendHappyHourNotifications() {
   let clients = [];
@@ -914,10 +934,9 @@ setInterval(() => {
   const msk = new Date(Date.now() + 3 * 3600 * 1000);
   const day = msk.getUTCDay();
   const h   = msk.getUTCHours();
-  const dateKey   = mskDateKey();
-  const isWeekday = day >= 1 && day <= 5;
-  const isWeekend = day === 0 || day === 6;
-  if (((isWeekday && h === 19) || (isWeekend && h === 17)) && getProp('happy_hour_sent_date') !== dateKey) {
+  const dateKey = mskDateKey();
+  const win = happyHourWindow(day);
+  if (h === win.start && getProp('happy_hour_sent_date') !== dateKey) {
     setProp('happy_hour_sent_date', dateKey);
     sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
   }
