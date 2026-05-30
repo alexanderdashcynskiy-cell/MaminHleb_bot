@@ -1956,7 +1956,7 @@
         const pill = btn.querySelector('.cat-pill');
         const label = btn.querySelector('.cat-label');
         const iconWrap = btn.querySelector('.cat-icon-wrap');
-        const isActive = btn.getAttribute('onclick') === `selectCategory('${category}')`;
+        const isActive = btn.dataset.arg === category;
         if (!pill) return;
         pill.classList.toggle('active', isActive);
         pill.classList.toggle('bg-caramel', isActive);
@@ -2009,9 +2009,9 @@
       const available = inStock(p.name);
       const stockKey = (p.name || '').trim().toLowerCase();
       const stockQty = (stockKey in stockData) ? stockData[stockKey] : undefined;
-      const stockBadge = (stockQty !== undefined && stockQty > 0)
-        ? `<p style="font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:${stockQty <= 3 ? '#e06520' : '#6aaa6a'};">${stockQty <= 3 ? `⚠ Осталось: ${stockQty} шт.` : `В наличии: ${stockQty} шт.`}</p>`
-        : '';
+      const stockBadge = (stockQty !== undefined && stockQty > 0 && stockQty < 10)
+        ? `<p data-stockbadge="${p.id}" style="font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;">⚠ Осталось: ${stockQty} шт.</p>`
+        : `<p data-stockbadge="${p.id}" style="display:none;font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;"></p>`;
       const imgHTML = productImages[p.id]
         ? `<img src="${productImages[p.id]}" class="w-full h-full" style="object-fit:cover;object-position:center 40%;" alt="${p.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige\\'>${p.image}</div>'">`
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
@@ -2092,11 +2092,17 @@
       var isCompact = compact === true || compact === '1';
       var sz = isCompact ? 26 : isBs ? 27 : 32;
       var fsz = isCompact ? 14 : isBs ? 15 : 18;
+      var product = productsById.get(pid);
+      var stockKey = product ? (product.name || '').trim().toLowerCase() : '';
+      var stockLimit = (stockKey && stockKey in stockData) ? stockData[stockKey] : Infinity;
+      var atLimit = stockLimit !== Infinity && quantity >= stockLimit;
       if (quantity > 0) return `
         <div style="display:flex;align-items:center;gap:${isCompact?4:isBs?3:5}px;background:#f5ead8;border-radius:50px;padding:${isCompact?'4px 5px':isBs?'3px 4px':'5px 7px'};border:1px solid rgba(201,162,39,0.45);box-shadow:0 2px 6px rgba(180,130,60,0.1);">
           <button onclick="updateQuantity('${pid}',-1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:#D4AA70;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;">−</button>
           <span style="min-width:${isCompact?16:isBs?13:20}px;text-align:center;font-weight:800;color:#6B4423;font-size:${isCompact?12:isBs?11:14}px;">${quantity}</span>
-          <button onclick="updateQuantity('${pid}',1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;box-shadow:0 2px 6px rgba(201,162,39,0.35);">+</button>
+          ${atLimit
+            ? `<span style="width:${sz}px;height:${sz}px;border-radius:50%;background:#e8e0d0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;color:#bbb;flex-shrink:0;cursor:not-allowed;">+</span>`
+            : `<button onclick="updateQuantity('${pid}',1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;box-shadow:0 2px 6px rgba(201,162,39,0.35);">+</button>`}
         </div>`;
       var btnSz = isCompact ? 36 : isBs ? 41 : 48;
       var btnFs = isCompact ? 20 : isBs ? 22 : 26;
@@ -2104,9 +2110,26 @@
     }
 
     function updateProductCardButtons(productId) {
+      const product = productsById.get(productId);
       const cartItem = cart.find(i => i.product_id === productId);
       const qty = cartItem ? cartItem.quantity : 0;
+      const available = product ? inStock(product.name) : true;
+
+      if (product) {
+        const stockKey = (product.name || '').trim().toLowerCase();
+        const stockQty = stockKey in stockData ? stockData[stockKey] : undefined;
+        document.querySelectorAll(`[data-stockbadge="${productId}"]`).forEach(el => {
+          if (stockQty !== undefined && stockQty > 0 && stockQty < 10) {
+            el.textContent = `⚠ Осталось: ${stockQty} шт.`;
+            el.style.display = '';
+          } else {
+            el.style.display = 'none';
+          }
+        });
+      }
+
       document.querySelectorAll(`.card-btn-zone[data-pid="${productId}"]`).forEach(zone => {
+        if (!available) { zone.innerHTML = ''; return; }
         const compact = zone.dataset.compact;
         zone.innerHTML = compact === '3' ? bsFloatBtnHTML(productId, qty) : cardBtnHTML(productId, qty, compact);
       });
@@ -2125,11 +2148,17 @@
     var _pbGap = 12;
 
     function bsFloatBtnHTML(pid, quantity) {
+      var product = productsById.get(pid);
+      var stockKey = product ? (product.name || '').trim().toLowerCase() : '';
+      var stockLimit = (stockKey && stockKey in stockData) ? stockData[stockKey] : Infinity;
+      var atLimit = stockLimit !== Infinity && quantity >= stockLimit;
       if (quantity > 0) {
         return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
           + '<button onclick="updateQuantity(\'' + pid + '\',-1)" style="width:23px;height:23px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">−</button>'
           + '<span style="min-width:14px;text-align:center;font-weight:800;color:#2d1505;font-size:11px;font-family:\'Montserrat\',sans-serif;">' + quantity + '</span>'
-          + '<button onclick="updateQuantity(\'' + pid + '\',1)" style="width:23px;height:23px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
+          + (atLimit
+            ? '<span style="width:23px;height:23px;border-radius:50%;background:#e8e0d0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#bbb;flex-shrink:0;cursor:not-allowed;">+</span>'
+            : '<button onclick="updateQuantity(\'' + pid + '\',1)" style="width:23px;height:23px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>')
           + '</div>';
       }
       return '<button onclick="addToCartWithCoffeeCheck(\'' + pid + '\')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
@@ -2403,10 +2432,15 @@
 
       const product = productsById.get(productId);
       if (!product) return;
+      const stockKey = (product.name || '').trim().toLowerCase();
+      const stockLimit = (stockKey in stockData) ? stockData[stockKey] : Infinity;
       const existing = cart.find(i => i.product_id === productId && !i.selected_size);
+      const currentQty = existing ? existing.quantity : 0;
+      if (currentQty >= stockLimit) return;
       if (existing) { existing.quantity++; } else {
         cart.push({ product_id: productId, product_name: product.name, price: happyPrice(product), quantity: 1 });
       }
+      if (stockKey in stockData) stockData[stockKey] = Math.max(0, stockData[stockKey] - 1);
       updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId);
     }
 
@@ -2418,12 +2452,17 @@
       if (!product) return;
       const selectedSize = btn.dataset.selectedSize;
       const price = parseFloat(btn.dataset.price);
+      const stockKey = (product.name || '').trim().toLowerCase();
+      const stockLimit = (stockKey in stockData) ? stockData[stockKey] : Infinity;
       const existing = cart.find(i => i.product_id === productId && ((!selectedSize && !i.selected_size) || i.selected_size === selectedSize));
+      const currentQty = existing ? existing.quantity : 0;
+      if (currentQty >= stockLimit) return;
       if (existing) { existing.quantity++; } else {
         const item = { product_id: productId, product_name: product.name, price, quantity: 1 };
         if (selectedSize) item.selected_size = selectedSize;
         cart.push(item);
       }
+      if (stockKey in stockData) stockData[stockKey] = Math.max(0, stockData[stockKey] - 1);
       updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId); updateDetailQtyControls();
     }
 
@@ -2452,7 +2491,14 @@
       const selectedSize = btn.dataset.selectedSize;
       const idx = cart.findIndex(i => i.product_id === productId && ((!selectedSize && !i.selected_size) || i.selected_size === selectedSize));
       if (idx === -1) return;
+      const product = productsById.get(productId);
+      const stockKey = product ? (product.name || '').trim().toLowerCase() : '';
+      if (delta > 0) {
+        const stockLimit = (stockKey in stockData) ? stockData[stockKey] : Infinity;
+        if (cart[idx].quantity >= stockLimit) return;
+      }
       cart[idx].quantity += delta;
+      if (stockKey in stockData) stockData[stockKey] = Math.max(0, stockData[stockKey] - delta);
       if (cart[idx].quantity <= 0) cart.splice(idx, 1);
       updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId); updateDetailQtyControls();
     }
@@ -2464,7 +2510,14 @@
 
       const item = cart.find(i => i.product_id === productId && ((!selectedSize && !i.selected_size) || i.selected_size === selectedSize));
       if (!item) return;
+      const product = productsById.get(productId);
+      const stockKey = product ? (product.name || '').trim().toLowerCase() : '';
+      if (delta > 0) {
+        const stockLimit = (stockKey in stockData) ? stockData[stockKey] : Infinity;
+        if (item.quantity >= stockLimit) return;
+      }
       item.quantity += delta;
+      if (stockKey in stockData) stockData[stockKey] = Math.max(0, stockData[stockKey] - delta);
       if (item.quantity <= 0) cart = cart.filter(i => i !== item);
       updateCartUI(); updateFloatingCart(); updateProductCardButtons(productId);
     }
