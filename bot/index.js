@@ -894,7 +894,19 @@ app.get('/api/stock', async (req, res) => {
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/health', (req, res) => res.send('MaminHleb bot is running ✓'));
+app.get('/health', async (req, res) => {
+  const checks = { uptime: Math.floor(process.uptime()) + 's', db: 'skip', tg: !!BOT_TOKEN };
+  if (pgPool) {
+    try {
+      await pgPool.query('SELECT 1');
+      checks.db = 'ok';
+    } catch(e) {
+      checks.db = 'error';
+    }
+  }
+  const allOk = checks.db !== 'error';
+  res.status(allOk ? 200 : 503).json({ ok: allOk, ...checks });
+});
 
 // ─── Установка вебхука ────────────────────────────────────────────────────────
 async function setWebhook() {

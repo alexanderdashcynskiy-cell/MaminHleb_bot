@@ -795,7 +795,6 @@
       </div>
      </div>
      <h3 class="font-montserrat font-bold text-coffee mb-4">ПРИГЛАШЁННЫЕ ДРУЗЬЯ</h3>
-     <!-- FIX #2: added missing id="referral-badge-dot" badge элемент в header при необходимости; здесь просто контейнер списка -->
      <div id="referrals-list" class="space-y-3">
       <div class="text-center py-8 text-caramel/60"><p class="text-lg mb-2">😊</p><p class="text-sm">Ещё нет приглашённых друзей</p><p class="text-xs mt-1">Начните делиться кодом!</p></div>
      </div>
@@ -1501,7 +1500,6 @@
     }
     let cart = (function() { try { return JSON.parse(localStorage.getItem('mh_cart') || '[]'); } catch(e) { return []; } })();
     let currentCategory = 'all';
-    // FIX #1: correct slide count = 3
     const TOTAL_SLIDES = 3;
     let currentSlide = 0;
     let carouselAutoplay;
@@ -1831,7 +1829,6 @@
     }
 
     // ── Carousel ───────────────────────────────────────────────────────────────
-    // FIX #1: использует TOTAL_SLIDES = 3 вместо 2
     var _carouselTouchX = 0;
     function carouselTouchStart(e) { _carouselTouchX = e.touches[0].clientX; }
     function carouselTouchEnd(e) {
@@ -1868,6 +1865,7 @@
       });
     }
     function startCarousel() {
+      clearInterval(carouselAutoplay);
       updateCarousel();
       carouselAutoplay = setInterval(nextSlide, 5000);
     }
@@ -2367,7 +2365,6 @@
       }
     }
 
-    // FIX #6: event передаётся явно
     function selectDetailSize(size, event) {
       document.querySelectorAll('.detail-size-btn').forEach(btn => {
         btn.style.background = 'transparent';
@@ -3861,7 +3858,6 @@
         showToast(`Код: ${code}`, '📋');
       }
     }
-    // FIX #2: убраны обращения к несуществующим DOM-элементам
     function updateCoffeeBalance() {
       const el = document.getElementById('coffee-balance');
       if (el) el.textContent = coffeeBalance;
