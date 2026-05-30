@@ -416,59 +416,15 @@ async function handleOrder(body) {
     }
   }
 
-  const calls = [];
+  // Уведомление клиенту о принятии заказа
   if (clientId !== '0') {
-    calls.push(['sendMessage', {
+    const r = await tg('sendMessage', {
       chat_id:    clientId,
       text:       `Здравствуйте 👋, ваш заказ №${orderNum} оформлен! Ожидайте подтверждения.`,
       parse_mode: 'Markdown'
-    }]);
-  }
-
-  if (isPreorder && PREORDER_CHAT_ID) {
-    const { niceDate, time: rawTime } = parsePreorderTime(body.time || '');
-    const preorderText =
-      `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n🟡 Статус: Новый\n\n` +
-      `👤 ${clientName}\n` +
-      `📞 ${body.phone || '—'}\n` +
-      `📅 ${niceDate}  🕐 ${rawTime}\n\n` +
-      `*Состав:*\n${itemsText}\n\n` +
-      `💰 ${totalStr}`;
-    calls.push(['sendMessage', {
-      chat_id:      PREORDER_CHAT_ID,
-      text:         preorderText,
-      parse_mode:   'Markdown',
-      reply_markup: { inline_keyboard: [[
-        { text: '✅ Принять заказ', callback_data: `accept_${orderNum}_${clientId}` },
-        { text: '❌ Отклонить',     callback_data: `decline_${orderNum}_${clientId}` }
-      ]]}
-    }]);
-  } else {
-    calls.push(['sendMessage', {
-      chat_id:      ADMIN_ID,
-      text:         `${adminHeader}\n🟡 Статус: Новый${adminBody}`,
-      parse_mode:   'Markdown',
-      reply_markup: { inline_keyboard: [[
-        { text: '✅ Принять заказ', callback_data: `accept_${orderNum}_${clientId}` },
-        { text: '❌ Отклонить',     callback_data: `decline_${orderNum}_${clientId}` }
-      ]]}
-    }]);
-  }
-
-  const responses = await tgAll(calls);
-  let offset = 0;
-
-  if (clientId !== '0') {
-    const r = responses[0];
-    if (r.ok) setProp(`receipt_${orderNum}`,
+    });
+    if (r?.ok) setProp(`receipt_${orderNum}`,
       JSON.stringify({ chatId: clientId, msgId: r.result.message_id }));
-    offset = 1;
-  }
-
-  const adminR = responses[offset];
-  if (adminR?.ok) {
-    const chatId = (isPreorder && PREORDER_CHAT_ID) ? PREORDER_CHAT_ID : ADMIN_ID;
-    setProp(`admin_msg_${orderNum}`, JSON.stringify({ chatId, msgId: adminR.result.message_id }));
   }
 }
 
