@@ -407,7 +407,9 @@ async function handleOrder(body) {
   // P2 #16: подтверждаем запись заказа в БД ДО генерации чека/админ-сообщений.
   // Если запись не удалась — не выдаём номер заказа, который не существует в CRM
   // (предотвращает фантомные заказы и рассинхрон callback-ов статусов).
-  const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId, itemsText);
+  // itemsText используется только в Telegram-сообщениях; в БД хранится исходный JSON
+  // чтобы CRM мог парсить структурированные данные (название, кол-во, цена)
+  const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId);
   if (!saved) {
     console.error(`handleOrder: order #${orderNum} NOT persisted — aborting receipt/admin notifications`);
     return { ok: false, error: 'save_failed' };
