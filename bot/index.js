@@ -293,6 +293,16 @@ function isDuplicateOrder(body) {
   return false;
 }
 
+// ─── Вспомогательная: разбор строки "YYYY-MM-DD в HH:MM" ─────────────────────
+function parsePreorderTime(timeStr) {
+  if (!timeStr) return { niceDate: '—', time: '—' };
+  const m = /^(\d{4}-\d{2}-\d{2}) в (\d{2}:\d{2})$/.exec(timeStr.trim());
+  if (!m) return { niceDate: timeStr.trim(), time: '—' };
+  const [, rawDate, rawTime] = m;
+  const [y, mo, d] = rawDate.split('-');
+  return { niceDate: `${d}.${mo}.${y}`, time: rawTime };
+}
+
 // ─── Обработка заказа ─────────────────────────────────────────────────────────
 async function handleOrder(body) {
   if (isDuplicateOrder(body)) { console.log('Duplicate order ignored'); return; }
@@ -332,10 +342,8 @@ async function handleOrder(body) {
 
   let deliveryBlock = '';
   if (isPreorder && body.time && body.time !== 'undefined') {
-    const [rawDate, rawTime] = body.time.split(' в ');
-    const dp = (rawDate || '').split('-');
-    const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
-    deliveryBlock = `*ПРЕДЗАКАЗ:*\n📅 Дата: ${niceDate}\n🕐 Время: ${rawTime || ''}`;
+    const { niceDate, time: rawTime } = parsePreorderTime(body.time);
+    deliveryBlock = `*ПРЕДЗАКАЗ:*\n📅 Дата: ${niceDate}\n🕐 Время: ${rawTime}`;
   } else if (body.address && body.address !== 'undefined' && body.address !== 'Самовывоз') {
     const payLabel = body.payment === 'card' ? '💳 Картой' : body.payment === 'cash' ? '💵 Наличными' : '';
     deliveryBlock = `*АДРЕС ДОСТАВКИ:*\n🚕 ${body.address}${payLabel ? `\n${payLabel}` : ''}`;
@@ -416,14 +424,12 @@ async function handleOrder(body) {
   }
 
   if (isPreorder && PREORDER_CHAT_ID) {
-    const [rawDate, rawTime] = (body.time || '').split(' в ');
-    const dp = (rawDate || '').split('-');
-    const niceDate = dp.length === 3 ? `${dp[2]}.${dp[1]}.${dp[0]}` : rawDate;
+    const { niceDate, time: rawTime } = parsePreorderTime(body.time || '');
     const preorderText =
       `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n🟡 Статус: Новый\n\n` +
       `👤 ${clientName}\n` +
       `📞 ${body.phone || '—'}\n` +
-      `📅 ${niceDate}  🕐 ${rawTime || '—'}\n\n` +
+      `📅 ${niceDate}  🕐 ${rawTime}\n\n` +
       `*Состав:*\n${itemsText}\n\n` +
       `💰 ${totalStr}`;
     calls.push(['sendMessage', {
@@ -872,8 +878,19 @@ app.post('/order', orderLimiter, (req, res) => {
 });
 
 
-app.get('/api/stock', (req, res) => {
-  res.json({ ok: true, stock: {}, catalog: [], flags: {} });
+app.get('/api/stock', async (req, res) => {
+  if (!pgPool) {
+    return res.json({ ok: true, stock: {}, catalog: [], flags: {} });
+  }
+  try {
+    const { rows } = await pgPool.query('SELECT name, stock, price FROM "Product"');
+    const stock = {};
+    rows.forEach(r => { stock[r.name.trim().toLowerCase()] = r.stock; });
+    res.json({ ok: true, stock, catalog: [], flags: {} });
+  } catch(e) {
+    console.error('/api/stock DB error:', e.message);
+    res.json({ ok: false });
+  }
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));

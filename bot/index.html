@@ -3735,9 +3735,10 @@
       if (!name || !phone) { resetBtn(); showToast('Пожалуйста, укажите имя и телефон', '⚠️'); return; }
       if (!validatePhone(phone)) { resetBtn(); showToast('Укажите реальный номер: +375 (25/29/33/44) XXX-XX-XX', '⚠️'); return; }
       btn.disabled = true; btn.textContent = 'Обработка...';
-      const cartSnapshot = JSON.parse(JSON.stringify(preorderCart));
-      const total = cartSnapshot.reduce((s, i) => s + i.price * i.quantity, 0);
       try {
+        let cartSnapshot;
+        try { cartSnapshot = JSON.parse(JSON.stringify(preorderCart)); } catch(e) { cartSnapshot = preorderCart.slice(); }
+        const total = cartSnapshot.reduce((s, i) => s + i.price * i.quantity, 0);
         const orderId = 'PRE' + Date.now();
         const ok = await sendOrderToServer({
             orderNumber: orderId,
