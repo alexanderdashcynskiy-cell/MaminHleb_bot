@@ -802,7 +802,7 @@ async function setWebhook() {
 
   const res = await tg('setWebhook', {
     url:                  `${RAILWAY_URL}/webhook`,
-    drop_pending_updates: true,
+    drop_pending_updates: false,
     max_connections:      40
   });
   console.log('setWebhook:', JSON.stringify(res));
