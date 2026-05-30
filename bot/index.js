@@ -185,10 +185,10 @@ async function syncCatalogToWarehouse() {
 }
 
 // P2 #16: возвращает true/false — вызывающий код подтверждает запись перед выдачей чека
-async function saveOrderToDB(body, isPreorder, total, orderNum, clientId) {
+async function saveOrderToDB(body, isPreorder, total, orderNum, clientId, itemsText) {
   if (!pgPool) return true; // БД не настроена (dev): не блокируем заказ, считаем «нечего терять»
   try {
-    const items = typeof body.items === 'string' ? body.items : JSON.stringify(body.items || []);
+    const content = itemsText || (typeof body.items === 'string' ? body.items : JSON.stringify(body.items || []));
     console.log('saveOrderToDB → Order', { orderNum, total, isPreorder });
     await pgPool.query(
       `INSERT INTO "Order" ("orderNumber","customerName","phone","content","amount","status","address","isPreorder","telegramId")
@@ -197,7 +197,7 @@ async function saveOrderToDB(body, isPreorder, total, orderNum, clientId) {
         String(orderNum),
         body.name    || 'Гость',
         body.phone   || null,
-        items,
+        content,
         parseFloat(total) || 0,
         'Новый',
         // P2 #6: встраиваем время самовывоза в поле address чтобы CRM мог показать pickupTime
@@ -406,7 +406,7 @@ async function handleOrder(body) {
   // P2 #16: подтверждаем запись заказа в БД ДО генерации чека/админ-сообщений.
   // Если запись не удалась — не выдаём номер заказа, который не существует в CRM
   // (предотвращает фантомные заказы и рассинхрон callback-ов статусов).
-  const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId);
+  const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId, itemsText);
   if (!saved) {
     console.error(`handleOrder: order #${orderNum} NOT persisted — aborting receipt/admin notifications`);
     return { ok: false, error: 'save_failed' };
@@ -603,12 +603,12 @@ async function handleTextMessage(message) {
 
   if (!isSkip && pgPool) {
     try {
-      const rowNum = data.rowNum;
+      const orderNum = data.orderNumber || data.rowNum;
       await pgPool.query(
         `UPDATE "Order" SET review=$1, rating=$2 WHERE "orderNumber"=$3`,
-        [msgText, data.stars || null, String(rowNum)]
+        [msgText, data.stars || null, String(orderNum)]
       );
-      console.log(`Review saved for order ${rowNum}`);
+      console.log(`Review saved for order ${orderNum}`);
     } catch(e) {
       console.error('review DB save:', e.message);
     }
