@@ -39,6 +39,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.text({ type: 'text/plain', limit: '10mb' }));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
+app.use('/css',    express.static(path.join(__dirname, 'public/css'), { maxAge: '7d' }));
 
 // ─── CORS — только разрешённые origins ───────────────────────────────────────
 app.use((req, res, next) => {
