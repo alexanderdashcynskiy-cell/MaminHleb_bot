@@ -394,6 +394,7 @@ async function handleOrder(body) {
   setProp(`admin_base_${orderNum}`,   adminHeader);
   setProp(`admin_body_${orderNum}`,   adminBody);
   setProp(`client_name_${orderNum}`,  clientName);
+  setProp(`client_id_${orderNum}`,    clientId);
   setProp(`order_num_${orderNum}`,    String(orderNum));
   setProp(`order_phone_${orderNum}`,  body.phone   || '—');
   setProp(`order_address_${orderNum}`,body.address || 'Самовывоз');
@@ -415,59 +416,15 @@ async function handleOrder(body) {
     }
   }
 
-  const calls = [];
+  // Уведомление клиенту о принятии заказа
   if (clientId !== '0') {
-    calls.push(['sendMessage', {
+    const r = await tg('sendMessage', {
       chat_id:    clientId,
       text:       `Здравствуйте 👋, ваш заказ №${orderNum} оформлен! Ожидайте подтверждения.`,
       parse_mode: 'Markdown'
-    }]);
-  }
-
-  if (isPreorder && PREORDER_CHAT_ID) {
-    const { niceDate, time: rawTime } = parsePreorderTime(body.time || '');
-    const preorderText =
-      `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n🟡 Статус: Новый\n\n` +
-      `👤 ${clientName}\n` +
-      `📞 ${body.phone || '—'}\n` +
-      `📅 ${niceDate}  🕐 ${rawTime}\n\n` +
-      `*Состав:*\n${itemsText}\n\n` +
-      `💰 ${totalStr}`;
-    calls.push(['sendMessage', {
-      chat_id:      PREORDER_CHAT_ID,
-      text:         preorderText,
-      parse_mode:   'Markdown',
-      reply_markup: { inline_keyboard: [[
-        { text: '✅ Принять заказ', callback_data: `accept_${orderNum}_${clientId}` },
-        { text: '❌ Отклонить',     callback_data: `decline_${orderNum}_${clientId}` }
-      ]]}
-    }]);
-  } else {
-    calls.push(['sendMessage', {
-      chat_id:      ADMIN_ID,
-      text:         `${adminHeader}\n🟡 Статус: Новый${adminBody}`,
-      parse_mode:   'Markdown',
-      reply_markup: { inline_keyboard: [[
-        { text: '✅ Принять заказ', callback_data: `accept_${orderNum}_${clientId}` },
-        { text: '❌ Отклонить',     callback_data: `decline_${orderNum}_${clientId}` }
-      ]]}
-    }]);
-  }
-
-  const responses = await tgAll(calls);
-  let offset = 0;
-
-  if (clientId !== '0') {
-    const r = responses[0];
-    if (r.ok) setProp(`receipt_${orderNum}`,
+    });
+    if (r?.ok) setProp(`receipt_${orderNum}`,
       JSON.stringify({ chatId: clientId, msgId: r.result.message_id }));
-    offset = 1;
-  }
-
-  const adminR = responses[offset];
-  if (adminR?.ok) {
-    const chatId = (isPreorder && PREORDER_CHAT_ID) ? PREORDER_CHAT_ID : ADMIN_ID;
-    setProp(`admin_msg_${orderNum}`, JSON.stringify({ chatId, msgId: adminR.result.message_id }));
   }
 }
 
@@ -840,6 +797,56 @@ app.post('/order', orderLimiter, (req, res) => {
   res.json({ ok: true });
   console.log('/order processing, type:', body.type);
   handleOrder(body).catch(e => console.error('order err:', e));
+});
+
+// Вызывается дашбордом когда заказ выдан/доставлен — отправляет клиенту запрос оценки
+app.post('/api/order/done', async (req, res) => {
+  const secret = process.env.ADMIN_SECRET;
+  if (secret) {
+    const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
+    if (provided !== secret) {
+      console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
+      return res.status(403).json({ ok: false, error: 'unauthorized' });
+    }
+  }
+
+  const orderNum = String((req.body || {}).orderNumber || '');
+  if (!orderNum) return res.status(400).json({ ok: false, error: 'orderNumber required' });
+
+  // clientId ищем сначала в props, потом в БД (на случай рестарта сервера)
+  let clientId = getProp(`client_id_${orderNum}`);
+  if ((!clientId || clientId === '0') && pgPool) {
+    try {
+      const { rows } = await pgPool.query(
+        `SELECT "telegramId" FROM "Order" WHERE "orderNumber" = $1 LIMIT 1`,
+        [orderNum]
+      );
+      if (rows.length) clientId = rows[0].telegramId;
+    } catch(e) {
+      console.error('/api/order/done DB lookup:', e.message);
+    }
+  }
+
+  res.json({ ok: true });
+
+  if (!clientId || clientId === '0') {
+    console.log(`/api/order/done: orderNumber=${orderNum} — clientId не найден, рейтинг пропущен`);
+    return;
+  }
+
+  try {
+    const ratingResult = await tg('sendMessage', {
+      chat_id:      String(clientId),
+      text:         `🎉 Ваш заказ №${orderNum} уже у вас!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
+      reply_markup: { inline_keyboard: ratingKeyboard(orderNum) }
+    });
+    console.log(`/api/order/done: rating →`, JSON.stringify(ratingResult).slice(0, 200));
+    if (ratingResult?.ok) {
+      setProp(`done_msg_${orderNum}`, JSON.stringify({ chatId: String(clientId), msgId: ratingResult.result.message_id }));
+    }
+  } catch(e) {
+    console.error('/api/order/done: rating error:', e.message);
+  }
 });
 
 
