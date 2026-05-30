@@ -393,58 +393,21 @@ async function handleOrder(body) {
   if (isDuplicateOrder(body)) { console.log('Duplicate order ignored'); return { ok: true, duplicate: true }; }
   const isPreorder = body.type === 'Предзаказ';
 
-  const clientId   = resolveClientId(body);
-  const clientName = body.name || 'Гость';
+  const clientId = resolveClientId(body);
+  const { total } = priceOrder(body, isPreorder);
+  const orderNum  = getNextOrderNum();
 
-  const { itemsText, total, totalStr } = priceOrder(body, isPreorder);
-  const deliveryBlock = buildDeliveryBlock(body, isPreorder);
-
-  const noteStr  = (body.note || '').trim();
-  const noteLine = noteStr ? `\n💬 *ПРИМЕЧАНИЕ:* ${noteStr}\n` : '';
-
-  const orderNum = getNextOrderNum();
-
-  // P2 #16: подтверждаем запись заказа в БД ДО генерации чека/админ-сообщений.
-  // Если запись не удалась — не выдаём номер заказа, который не существует в CRM
-  // (предотвращает фантомные заказы и рассинхрон callback-ов статусов).
-  // itemsText используется только в Telegram-сообщениях; в БД хранится исходный JSON
-  // чтобы CRM мог парсить структурированные данные (название, кол-во, цена)
   const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId);
   if (!saved) {
-    console.error(`handleOrder: order #${orderNum} NOT persisted — aborting receipt/admin notifications`);
+    console.error(`handleOrder: order #${orderNum} NOT persisted — aborting`);
     return { ok: false, error: 'save_failed' };
   }
 
-  const receiptBase =
-    `🧾 *${isPreorder ? 'ВАШ ПРЕДЗАКАЗ' : 'ВАШ ЗАКАЗ'} №${orderNum}*\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `👤 ${clientName}\n` +
-    `📞 ${body.phone || '—'}\n` +
-    `${deliveryBlock}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🧺 *Состав:*\n${itemsText}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `💰 *Итого:* ${totalStr}\n` +
-    noteLine;
-
-  const isDeliveryAddr = body.address && body.address !== 'Самовывоз' && body.address !== 'undefined';
-  const orderType = isPreorder ? 'preorder'
-    : (body.deliveryMethod === 'delivery' || isDeliveryAddr) ? 'delivery' : 'pickup';
-  console.log(`Order ${orderNum} type=${orderType}`);
-
-  const orderTypeLabel = isPreorder ? 'ПРЕДЗАКАЗ' : orderType === 'delivery' ? 'ДОСТАВКА' : 'НОВЫЙ ЗАКАЗ';
-  const adminText =
-    `🥐 *${orderTypeLabel} — №${orderNum}*\n🟡 Новый заказ\n` +
-    `\n👤 ${clientName}\n` +
-    `📞 ${body.phone || '—'}\n` +
-    `\n${deliveryBlock}\n` +
-    `\n*Состав:*\n${itemsText}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `💰 *Итого:* ${totalStr}` +
-    noteLine;
-
-  // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
+    // Сохраняем clientId для /api/order/done (рейтинг при выдаче заказа)
+    setProp(`client_id_${orderNum}`, clientId);
+
+    // Запомнить для happy hour уведомлений
     const clientsRaw = getProp('known_clients') || '[]';
     let clients = [];
     try { clients = JSON.parse(clientsRaw); } catch(e) {}
@@ -452,28 +415,16 @@ async function handleOrder(body) {
       clients.push(clientId);
       setProp('known_clients', JSON.stringify(clients));
     }
+
+    // Простое подтверждение клиенту; заказами управляет CRM-дашборд
+    const r = await tg('sendMessage', {
+      chat_id:    clientId,
+      text:       `Здравствуйте 👋, ваш заказ №${orderNum} оформлен! Ожидайте подтверждения.`,
+      parse_mode: 'Markdown'
+    });
+    if (r?.ok) setProp(`receipt_${orderNum}`, JSON.stringify({ chatId: clientId, msgId: r.result.message_id }));
   }
 
-  const calls = [];
-  if (clientId !== '0') {
-    calls.push(['sendMessage', { chat_id: clientId, text: receiptBase, parse_mode: 'Markdown' }]);
-  }
-
-  if (isPreorder && PREORDER_CHAT_ID) {
-    const pt = parsePreorderTime(body.time);
-    const preorderText =
-      `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n🟡 Новый\n\n` +
-      `👤 ${clientName}\n` +
-      `📞 ${body.phone || '—'}\n` +
-      `📅 ${pt.niceDate}  🕐 ${pt.rawTime}\n\n` +
-      `*Состав:*\n${itemsText}\n\n` +
-      `💰 ${totalStr}`;
-    calls.push(['sendMessage', { chat_id: PREORDER_CHAT_ID, text: preorderText, parse_mode: 'Markdown' }]);
-  } else {
-    calls.push(['sendMessage', { chat_id: ADMIN_ID, text: adminText, parse_mode: 'Markdown' }]);
-  }
-
-  await tgAll(calls);
   return { ok: true, orderNum };
 }
 
@@ -695,6 +646,53 @@ app.post('/order', orderLimiter, async (req, res) => {
   }
 });
 
+
+// Вызывается дашбордом когда заказ выдан/доставлен — отправляет клиенту запрос оценки
+app.post('/api/order/done', async (req, res) => {
+  const secret = config.ADMIN_SECRET;
+  if (secret) {
+    const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
+    if (provided !== secret) {
+      console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
+      return res.status(403).json({ ok: false, error: 'unauthorized' });
+    }
+  }
+
+  const orderNum = String((req.body || {}).orderNumber || '');
+  if (!orderNum) return res.status(400).json({ ok: false, error: 'orderNumber required' });
+
+  // clientId ищем сначала в props, потом в БД (на случай рестарта сервера)
+  let clientId = getProp(`client_id_${orderNum}`);
+  if ((!clientId || clientId === '0') && pgPool) {
+    try {
+      const { rows } = await pgPool.query(
+        `SELECT "telegramId" FROM "Order" WHERE "orderNumber" = $1 LIMIT 1`,
+        [orderNum]
+      );
+      if (rows.length) clientId = rows[0].telegramId;
+    } catch(e) {
+      console.error('/api/order/done DB lookup:', e.message);
+    }
+  }
+
+  res.json({ ok: true });
+
+  if (!clientId || clientId === '0') {
+    console.log(`/api/order/done: orderNumber=${orderNum} — clientId не найден, рейтинг пропущен`);
+    return;
+  }
+
+  console.log(`/api/order/done: clientId=${clientId} orderNum=${orderNum}`);
+  const ratingResult = await tg('sendMessage', {
+    chat_id:      String(clientId),
+    text:         `🎉 Ваш заказ №${orderNum} уже у вас!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
+    reply_markup: { inline_keyboard: ratingKeyboard(orderNum) }
+  });
+  console.log(`/api/order/done: rating send →`, JSON.stringify(ratingResult).slice(0, 200));
+  if (ratingResult?.ok) {
+    setProp(`done_msg_${orderNum}`, JSON.stringify({ chatId: String(clientId), msgId: ratingResult.result.message_id }));
+  }
+});
 
 app.get('/api/stock', stockLimiter, async (req, res) => {
   if (!pgPool) {
