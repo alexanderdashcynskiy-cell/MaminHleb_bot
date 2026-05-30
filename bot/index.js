@@ -39,7 +39,6 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.text({ type: 'text/plain', limit: '10mb' }));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
-app.use('/css',    express.static(path.join(__dirname, 'public/css'), { maxAge: '7d' }));
 
 // ─── CORS — только разрешённые origins ───────────────────────────────────────
 app.use((req, res, next) => {
@@ -690,12 +689,20 @@ async function handleCallback(cb) {
       await editAdminMsg(adminChatId, adminMsgId, adminBase, '✅ Выдан', [], adminBody);
     }
 
-    console.log(`done: sending rating to clientId=${clientId} rowNum=${rowNum}`);
-    const r = await notifyClient(clientId,
-      `🎉 Ваш заказ №${orderNum} уже у вас! Спасибо, что выбрали нас! 🙏\n\n⭐ *Оцените качество обслуживания:*`,
-      ratingKeyboard(rowNum));
-    console.log(`done: notifyClient result ok=${r?.ok} err=${r?.description || ''}`);
-    if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
+    console.log(`done: clientId=${clientId} rowNum=${rowNum} orderNum=${orderNum}`);
+    if (!clientId || clientId === '0') {
+      console.warn('done: clientId is 0 or empty — rating message skipped');
+    } else {
+      const ratingResult = await tg('sendMessage', {
+        chat_id:      String(clientId),
+        text:         `🎉 Ваш заказ №${orderNum} уже у вас!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
+        reply_markup: { inline_keyboard: ratingKeyboard(rowNum) }
+      });
+      console.log(`done: rating send →`, JSON.stringify(ratingResult).slice(0, 200));
+      if (ratingResult?.ok) {
+        setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: ratingResult.result.message_id }));
+      }
+    }
     return;
   }
 
