@@ -898,15 +898,23 @@ async function sendHappyHourNotifications() {
     `🌆 *Добрый вечер!*\n\n` +
     `Настало время счастливого часа — скидка *30%* на всю оставшуюся продукцию для самовывоза.\n\n` +
     `Успейте забрать! 🥐`;
+  const blocked = new Set();
   const BATCH = 25;
   for (let i = 0; i < clients.length; i += BATCH) {
     await Promise.all(
       clients.slice(i, i + BATCH).map(cid =>
         tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' })
+          .then(r => { if (r && r.ok === false && (r.error_code === 403 || r.error_code === 400)) blocked.add(String(cid)); })
           .catch(e => console.error(`happyHour ${cid}:`, e.message))
       )
     );
     if (i + BATCH < clients.length) await new Promise(r => setTimeout(r, 1100));
+  }
+  // Удаляем клиентов, заблокировавших бота, чтобы список не рос бесконечно
+  if (blocked.size) {
+    const remaining = clients.filter(cid => !blocked.has(String(cid)));
+    setProp('known_clients', JSON.stringify(remaining));
+    console.log(`happyHour: removed ${blocked.size} blocked clients (${remaining.length} remain)`);
   }
 }
 
