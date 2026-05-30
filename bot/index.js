@@ -24,14 +24,18 @@ const BOT_TOKEN        = (process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKE
 const ADMIN_ID         = (process.env.ADMIN_ID         || '').trim();
 const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
 const PREORDER_CHAT_ID = (process.env.PREORDER_CHAT_ID || '').trim();
+const WEBHOOK_SECRET   = (process.env.WEBHOOK_SECRET   || '').trim();
 const PORT             = process.env.PORT || 3000;
 
 // ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
 const store  = new Map();
 const cbSeen = new Set();
 
+const pgSsl = process.env.DATABASE_URL
+  ? (process.env.DATABASE_SSL === 'verify' ? true : { rejectUnauthorized: false })
+  : false;
 const pgPool = process.env.DATABASE_URL
-  ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: pgSsl, max: 5, idleTimeoutMillis: 30000 })
   : null;
 
 async function initDB() {
@@ -141,7 +145,7 @@ async function saveOrderToDB(body, isPreorder, total, orderNum) {
   if (!pgPool) return;
   try {
     const items = typeof body.items === 'string' ? body.items : JSON.stringify(body.items || []);
-    console.log('saveOrderToDB → Order', { name: body.name, phone: body.phone, total, isPreorder });
+    console.log('saveOrderToDB → Order', { orderNum, total, isPreorder });
     await pgPool.query(
       `INSERT INTO "Order" ("orderNumber","customerName","phone","content","amount","status","address","isPreorder","telegramId")
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
@@ -230,15 +234,27 @@ async function handleOrder(body) {
   const clientId   = String(body.telegramId || '0');
   const clientName = body.name || 'Гость';
 
+  const catalogPriceMap = Object.fromEntries(CATALOG.map(p => [p.name.toLowerCase(), p.price]));
+
   let itemsText = '';
   let total = 0;
   try {
     const parsed = typeof body.items === 'string' ? JSON.parse(body.items) : body.items;
     if (Array.isArray(parsed)) {
-      itemsText = parsed.map(i => {
-        total += i.price * i.quantity;
-        return `◆ ${i.product_name} x${i.quantity} — ${(i.price * i.quantity).toFixed(2)} Br`;
-      }).join('\n');
+      const lines = [];
+      for (const i of parsed) {
+        const name = String(i.product_name || i.name || '').trim();
+        const qty  = Math.floor(Number(i.quantity));
+        if (!name || !Number.isFinite(qty) || qty <= 0) continue;
+        const serverPrice = catalogPriceMap[name.toLowerCase()];
+        if (serverPrice === undefined) {
+          console.warn(`handleOrder: unknown product "${name}" — rejected (not in CATALOG)`);
+          continue;
+        }
+        total += serverPrice * qty;
+        lines.push(`◆ ${name} x${qty} — ${(serverPrice * qty).toFixed(2)} Br`);
+      }
+      itemsText = lines.join('\n');
     } else {
       itemsText = String(body.items || '');
     }
@@ -246,7 +262,7 @@ async function handleOrder(body) {
     itemsText = String(body.items || '');
   }
 
-  const totalStr = (total > 0 ? total : Number(body.total || 0)).toFixed(2) + ' Br';
+  const totalStr = total > 0 ? `${total.toFixed(2)} Br` : '0.00 Br';
 
   let deliveryBlock = '';
   if (isPreorder && body.time && body.time !== 'undefined') {
@@ -737,6 +753,12 @@ async function handleTextMessage(message) {
 // ─── Маршруты ─────────────────────────────────────────────────────────────────
 
 app.post('/webhook', (req, res) => {
+  if (!WEBHOOK_SECRET) {
+    console.warn('[webhook] WEBHOOK_SECRET не задан — webhook открыт для любых запросов');
+  } else {
+    const token = req.headers['x-telegram-bot-api-secret-token'];
+    if (token !== WEBHOOK_SECRET) return res.sendStatus(403);
+  }
   res.sendStatus(200);
   const body = req.body;
   if (!body) return;
