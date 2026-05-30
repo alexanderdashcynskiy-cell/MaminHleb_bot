@@ -1,0 +1,19 @@
+{
+  "name": "maminhleb-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for MaminHleb bakery",
+  "scripts": {
+    "start": "node bot/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "dotenv": "16.6.1",
+    "express": "4.22.2",
+    "express-rate-limit": "8.5.2",
+    "helmet": "8.2.0",
+    "node-fetch": "2.7.0",
+    "pg": "8.21.0"
+  }
+}
