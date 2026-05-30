@@ -12,22 +12,25 @@ const { config, validateConfig } = require('./config');
 
 const app = express();
 app.set('trust proxy', 1); // Railway reverse proxy adds X-Forwarded-For
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(express.json({ limit: '1mb' }));
-app.use(express.text({ type: 'text/plain', limit: '1mb' }));
+app.use(helmet({
+  contentSecurityPolicy:    false, // задаём через мета-тег в HTML
+  frameguard:               false, // Mini App встраивается в Telegram WebView
+  crossOriginEmbedderPolicy: false, // нужно для Telegram WebApp embedding
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.text({ type: 'text/plain', limit: '10mb' }));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
 
-// P1 Bot Без #2: CORS с явным allowlist методов и заголовков.
-// Без ALLOWED_ORIGINS в .env разрешает Telegram WebApp origin (t.me / web.telegram.org).
 const ALLOWED_ORIGINS = config.ALLOWED_ORIGINS;
-const TELEGRAM_ORIGINS = ['https://web.telegram.org', 'https://t.me'];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
+  // Разрешаем любой поддомен telegram.org (web.telegram.org, k.telegram.org и др.)
+  const isTelegram = origin.endsWith('.telegram.org') || origin === 'https://telegram.org';
   const allowed = ALLOWED_ORIGINS.length
     ? ALLOWED_ORIGINS.includes(origin)
-    : TELEGRAM_ORIGINS.includes(origin) || !origin; // без origin — same-origin или non-browser
+    : isTelegram || !origin;
   if (allowed) {
     res.header('Access-Control-Allow-Origin',   origin || '*');
     res.header('Access-Control-Allow-Methods',  'GET, POST, OPTIONS');
@@ -325,11 +328,14 @@ function isHappyHourNow() {
 
 // P1 #2: Верифицируем Telegram initData; fallback на body.telegramId (для совместимости)
 function resolveClientId(body) {
-  if (body.initData && BOT_TOKEN) {
-    const tgUser = verifyTgInitData(body.initData, BOT_TOKEN);
+  // Mini App шлёт поле tgInitData; поддерживаем также initData для совместимости
+  const rawInitData = body.tgInitData || body.initData;
+  if (rawInitData && BOT_TOKEN) {
+    const tgUser = verifyTgInitData(rawInitData, BOT_TOKEN);
     if (tgUser && tgUser.id) return String(tgUser.id);
     console.warn('resolveClientId: initData verification failed (hash mismatch or missing user)');
-  } else if (body.telegramId && body.telegramId !== '0') {
+  }
+  if (body.telegramId && body.telegramId !== '0') {
     return String(body.telegramId);
   }
   return '0';
