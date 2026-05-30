@@ -800,7 +800,10 @@ app.post('/webhook', (req, res) => {
     console.warn('[webhook] WEBHOOK_SECRET не задан — webhook открыт для любых запросов');
   } else {
     const token = req.headers['x-telegram-bot-api-secret-token'];
-    if (token !== WEBHOOK_SECRET) return res.sendStatus(403);
+    if (token !== WEBHOOK_SECRET) {
+      console.warn('[webhook] 403 — неверный secret token, обновите setWebhook');
+      return res.sendStatus(403);
+    }
   }
   res.sendStatus(200);
   const body = req.body;
@@ -889,7 +892,8 @@ async function setWebhook() {
   const res = await tg('setWebhook', {
     url:                  `${RAILWAY_URL}/webhook`,
     drop_pending_updates: false,
-    max_connections:      40
+    max_connections:      40,
+    ...(WEBHOOK_SECRET ? { secret_token: WEBHOOK_SECRET } : {})
   });
   console.log('setWebhook:', JSON.stringify(res));
 }
