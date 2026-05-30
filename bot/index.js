@@ -25,6 +25,7 @@ const ALLOWED_ORIGINS = ALLOWED_ORIGINS_RAW
   : [];
 
 const app = express();
+app.set('trust proxy', 1); // Railway reverse proxy
 
 // ─── Security headers (helmet) ────────────────────────────────────────────────
 app.use(helmet({
