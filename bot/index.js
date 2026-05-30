@@ -486,6 +486,33 @@ async function handleCallback(cb) {
     return;
   }
 
+  // ── Курьер подтверждает доставку ("✅ Доставлен" в чате доставки) ─────────
+  if (action === 'delivered') {
+    const dbId = parseInt(parts[1]);
+    await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '✅ Статус обновлён', show_alert: false });
+    // Убираем кнопку чтобы не нажимали повторно
+    await tg('editMessageReplyMarkup', { chat_id: cb.message.chat.id, message_id: cb.message.message_id, reply_markup: { inline_keyboard: [] } });
+
+    if (!pgPool || !dbId) return;
+    try {
+      const { rows } = await pgPool.query(
+        `UPDATE "Order" SET status=$1 WHERE id=$2 RETURNING "orderNumber","telegramId"`,
+        ['Доставлен', dbId]
+      );
+      if (!rows.length) { console.warn(`delivered: order id=${dbId} not found`); return; }
+      const { orderNumber, telegramId } = rows[0];
+      console.log(`delivered: order #${orderNumber} → Доставлен, clientId=${telegramId}`);
+      if (telegramId && telegramId !== '0') {
+        await tg('sendMessage', {
+          chat_id:      String(telegramId),
+          text:         `🎉 Ваш заказ №${orderNumber} доставлен!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
+          reply_markup: { inline_keyboard: ratingKeyboard(orderNumber) }
+        });
+      }
+    } catch(e) { console.error('delivered callback DB error:', e.message); }
+    return;
+  }
+
   // ── Оценка звёздами (rate_N_rowNum — от бота, star_N_orderNum — от CRM) ────
   if (action === 'rate' || action === 'star') {
     const stars    = parseInt(parts[1]);
