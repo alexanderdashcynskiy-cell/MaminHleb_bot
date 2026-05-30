@@ -418,7 +418,7 @@ async function handleOrder(body) {
   if (clientId !== '0') {
     calls.push(['sendMessage', {
       chat_id:    clientId,
-      text:       receiptBase,
+      text:       `Здравствуйте 👋, ваш заказ №${orderNum} оформлен! Ожидайте подтверждения.`,
       parse_mode: 'Markdown'
     }]);
   }
@@ -587,7 +587,10 @@ async function handleCallback(cb) {
       { text: '❌ Отменить', callback_data: `cancel_${rowNum}_${clientId}` }
     ]], adminBody);
 
-    const acceptText = `Здравствуйте 👋, ваш заказ "№${orderNum}" принят, мы уже его готовим`;
+    const receiptText = getProp(`receipt_base_${rowNum}`) || '';
+    if (receiptText) await notifyClient(clientId, receiptText);
+
+    const acceptText = `✅ Ваш заказ №${orderNum} принят, мы уже его готовим!`;
     const r = await notifyClient(clientId, acceptText);
     if (r?.ok) setProp(`accept_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     return;
@@ -685,9 +688,11 @@ async function handleCallback(cb) {
       await editAdminMsg(adminChatId, adminMsgId, adminBase, '✅ Выдан', [], adminBody);
     }
 
+    console.log(`done: sending rating to clientId=${clientId} rowNum=${rowNum}`);
     const r = await notifyClient(clientId,
       `🎉 Ваш заказ №${orderNum} уже у вас! Спасибо, что выбрали нас! 🙏\n\n⭐ *Оцените качество обслуживания:*`,
       ratingKeyboard(rowNum));
+    console.log(`done: notifyClient result ok=${r?.ok} err=${r?.description || ''}`);
     if (r?.ok) setProp(`done_msg_${rowNum}`, JSON.stringify({ chatId: String(clientId), msgId: r.result.message_id }));
     return;
   }
