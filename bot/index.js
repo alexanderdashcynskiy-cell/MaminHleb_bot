@@ -49,8 +49,11 @@ setInterval(() => {
   cbSeen.forEach((ts, id) => { if (ts < cutoff) cbSeen.delete(id); });
 }, 60 * 60 * 1000);
 
+const pgSsl = config.DATABASE_URL
+  ? (config.DATABASE_SSL === 'verify' ? true : { rejectUnauthorized: false })
+  : false;
 const pgPool = config.DATABASE_URL
-  ? new Pool({ connectionString: config.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  ? new Pool({ connectionString: config.DATABASE_URL, ssl: pgSsl, max: 5, idleTimeoutMillis: 30000 })
   : null;
 
 // Bot Арх #3: storage adapter — pluggable key-value store; swap backend by replacing this object
@@ -186,7 +189,7 @@ async function saveOrderToDB(body, isPreorder, total, orderNum, clientId) {
   if (!pgPool) return true; // БД не настроена (dev): не блокируем заказ, считаем «нечего терять»
   try {
     const items = typeof body.items === 'string' ? body.items : JSON.stringify(body.items || []);
-    console.log('saveOrderToDB → Order', { name: body.name, phone: body.phone, total, isPreorder });
+    console.log('saveOrderToDB → Order', { orderNum, total, isPreorder });
     await pgPool.query(
       `INSERT INTO "Order" ("orderNumber","customerName","phone","content","amount","status","address","isPreorder","telegramId")
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
@@ -347,10 +350,11 @@ function priceOrder(body, isPreorder) {
         const qty  = Math.floor(Number(i.quantity));
         if (!name || !Number.isFinite(qty) || qty <= 0) return [];
         const serverPrice = catalogPriceMap[name.toLowerCase()];
-        const clientPrice = Number(i.price);
-        const price = (serverPrice !== undefined) ? serverPrice
-          : (isNaN(clientPrice) || clientPrice <= 0 ? 0 : clientPrice);
-        if (serverPrice === undefined) console.warn(`priceOrder: unknown product "${name}", using client price`);
+        if (serverPrice === undefined) {
+          console.warn(`priceOrder: unknown product "${name}" — rejected (not in CATALOG)`);
+          return [];
+        }
+        const price = serverPrice;
         total += price * qty;
         return [`◆ ${name} x${qty} — ${(price * qty).toFixed(2)} Br`];
       }).join('\n');
@@ -626,7 +630,9 @@ async function handleTextMessage(message) {
 // ─── Маршруты ─────────────────────────────────────────────────────────────────
 
 app.post('/webhook', (req, res) => {
-  if (WEBHOOK_SECRET) {
+  if (!WEBHOOK_SECRET) {
+    console.warn('[webhook] WEBHOOK_SECRET не задан — webhook открыт для любых запросов');
+  } else {
     const token = req.headers['x-telegram-bot-api-secret-token'];
     if (token !== WEBHOOK_SECRET) return res.sendStatus(403);
   }

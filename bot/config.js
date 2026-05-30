@@ -23,6 +23,10 @@ const config = {
 
   // Хранилище
   DATABASE_URL:     (process.env.DATABASE_URL || '').trim(),
+  // На Railway PostgreSQL использует самоподписанный сертификат внутри платформы.
+  // По умолчанию rejectUnauthorized: false — нужно для Railway.
+  // Для собственного PostgreSQL с доверенным CA установи DATABASE_SSL=verify
+  DATABASE_SSL:     (process.env.DATABASE_SSL || 'no-verify').trim(),
 
   // Webhook (deploy-specific)
   WEBHOOK_BASE_URL: (process.env.RAILWAY_PUBLIC_DOMAIN
