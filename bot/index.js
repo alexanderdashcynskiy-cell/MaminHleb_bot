@@ -515,19 +515,6 @@ function ratingKeyboard(rowNum) {
   return [RATING_KEYBOARD[0].map(b => ({ ...b, callback_data: b.callback_data.replace('ROW', rowNum) }))];
 }
 
-// ─── Ежедневный check-in администратора ──────────────────────────────────────
-async function sendAdminCheckin() {
-  const r = await tg('sendMessage', {
-    chat_id:    ADMIN_ID,
-    text:       `☀️ Доброе утро!\n\nКто сегодня работает администратором?\nВведите ваше имя:`,
-    parse_mode: 'Markdown'
-  });
-  if (r.ok) {
-    setProp(`pending_checkin_${ADMIN_ID}`, JSON.stringify({ promptMsgId: r.result.message_id }));
-    setProp('checkin_msg', JSON.stringify({ chatId: ADMIN_ID, msgId: r.result.message_id }));
-  }
-}
-
 // ─── Обработка кнопок ─────────────────────────────────────────────────────────
 async function handleCallback(cb) {
   if (cbSeen.has(cb.id)) {
@@ -542,23 +529,6 @@ async function handleCallback(cb) {
 
   if (action !== 'rate') {
     await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
-  }
-
-  // ── Check-in администратора ───────────────────────────────────────────────
-  if (action === 'checkin') {
-    if (String(cb.from.id) !== ADMIN_ID) return;
-    const r = await tg('sendMessage', {
-      chat_id:    ADMIN_ID,
-      text:       '✏️ Введите ваше имя:',
-      parse_mode: 'Markdown'
-    });
-    setProp(`pending_checkin_${ADMIN_ID}`, JSON.stringify({ promptMsgId: r?.ok ? r.result.message_id : null }));
-    const cm = getProp('checkin_msg');
-    if (cm) {
-      const { chatId, msgId } = JSON.parse(cm);
-      await tg('editMessageReplyMarkup', { chat_id: chatId, message_id: msgId, reply_markup: { inline_keyboard: [] } });
-    }
-    return;
   }
 
   // ── Оценка звёздами ───────────────────────────────────────────────────────
@@ -775,20 +745,6 @@ async function handleTextMessage(message) {
   if (getProp(msgKey)) return;
   setProp(msgKey, '1');
 
-  // ── Check-in администратора ───────────────────────────────────────────────
-  const checkinRaw = senderId === ADMIN_ID ? getProp(`pending_checkin_${ADMIN_ID}`) : null;
-  if (checkinRaw) {
-    const cd = JSON.parse(checkinRaw);
-    if (cd.promptMsgId) await tg('deleteMessage', { chat_id: senderId, message_id: cd.promptMsgId });
-    await tg('sendMessage', {
-      chat_id:    senderId,
-      text:       `✅ Записано! Сегодня работает: *${msgText}*`,
-      parse_mode: 'Markdown'
-    });
-    delProp(`pending_checkin_${senderId}`);
-    return;
-  }
-
   // ── Отзыв после оценки ────────────────────────────────────────────────────
   const pendingRaw = getProp(`pending_${senderId}`);
   if (!pendingRaw) return;
@@ -931,17 +887,6 @@ function mskDateKey() {
   const msk = new Date(Date.now() + 3 * 3600 * 1000);
   return `${msk.getUTCFullYear()}-${String(msk.getUTCMonth()+1).padStart(2,'0')}-${String(msk.getUTCDate()).padStart(2,'0')}`;
 }
-
-// ─── Check-in в 06:00 Минск каждый день ──────────────────────────────────────
-setInterval(() => {
-  const msk = new Date(Date.now() + 3 * 3600 * 1000);
-  const h   = msk.getUTCHours();
-  const dateKey = mskDateKey();
-  if (h >= 6 && h < 9 && getProp('checkin_sent_date') !== dateKey) {
-    setProp('checkin_sent_date', dateKey);
-    sendAdminCheckin().catch(e => console.error('checkin err:', e));
-  }
-}, 60000);
 
 // ─── Happy Hour уведомления ───────────────────────────────────────────────────
 async function sendHappyHourNotifications() {
