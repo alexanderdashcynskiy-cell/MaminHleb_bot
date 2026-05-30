@@ -1374,10 +1374,12 @@
     // ── Telegram init ──────────────────────────────────────────────────────────
     let telegramId = null;
     let telegramName = "";
+    window._tgInitData = "";
     if (window.Telegram && Telegram.WebApp) {
       const tg = Telegram.WebApp;
       tg.ready();
       tg.expand();
+      window._tgInitData = tg.initData || "";
       const user = tg.initDataUnsafe?.user;
       telegramId = user?.id || null;
       telegramName = user?.first_name || "";
@@ -3891,7 +3893,7 @@
     // ── API ────────────────────────────────────────────────────────────────────
     async function sendOrderToServer(order) {
         try {
-            await fetch('/order', {
+            const res = await fetch('/order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -3899,6 +3901,7 @@
                     name: order.name,
                     phone: order.phone,
                     telegramId: String(telegramId || "0"),
+                    tgInitData: window._tgInitData || "",
                     deliveryMethod: order.deliveryMethod || "pickup",
                     address: order.address || "Самовывоз",
                     time: order.time || "Как можно быстрее",
@@ -3908,10 +3911,13 @@
                     note: order.note || ""
                 })
             });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             showToast('Заказ успешно отправлен! ✓', '✅');
+            return true;
         } catch (error) {
-            console.error('Ошибка:', error);
-            showToast('Ошибка связи. Но заказ может быть принят!', '⚠️');
+            console.error('Ошибка отправки заказа:', error);
+            showToast('Ошибка связи. Заказ не принят, попробуйте ещё раз.', '⚠️');
+            return false;
         }
     }
     // ── Start ──────────────────────────────────────────────────────────────────
