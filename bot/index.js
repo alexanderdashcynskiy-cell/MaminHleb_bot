@@ -1,25 +1,13 @@
 'use strict';
 require('dotenv').config();
 
-const express  = require('express');
-const fetch    = require('node-fetch');
-const path     = require('path');
-const crypto   = require('crypto');
-const { Pool } = require('pg');
-
-const app = express();
-app.use(express.json({ limit: '10mb' }));
-app.use(express.text({ type: 'text/plain', limit: '10mb' }));
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
-app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
-
-// CORS — Mini App шлёт запросы из браузера
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
+const express   = require('express');
+const fetch     = require('node-fetch');
+const path      = require('path');
+const crypto    = require('crypto');
+const helmet    = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { Pool }  = require('pg');
 
 const BOT_TOKEN        = (process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN        || '').trim();
 const ADMIN_ID         = (process.env.ADMIN_ID         || '').trim();
@@ -27,6 +15,43 @@ const DELIVERY_CHAT_ID = (process.env.DELIVERY_CHAT_ID || '').trim();
 const PREORDER_CHAT_ID = (process.env.PREORDER_CHAT_ID || '').trim();
 const WEBHOOK_SECRET   = (process.env.WEBHOOK_SECRET   || '').trim();
 const PORT             = process.env.PORT || 3000;
+
+// ─── Allowed origins ──────────────────────────────────────────────────────────
+// Telegram WebApp шлёт запросы с https://web.telegram.org и поддоменов.
+// ALLOWED_ORIGINS — переменная среды, список через запятую.
+const ALLOWED_ORIGINS_RAW = (process.env.ALLOWED_ORIGINS || '').trim();
+const ALLOWED_ORIGINS = ALLOWED_ORIGINS_RAW
+  ? ALLOWED_ORIGINS_RAW.split(',').map(s => s.trim()).filter(Boolean)
+  : [];
+
+const app = express();
+
+// ─── Security headers (helmet) ────────────────────────────────────────────────
+app.use(helmet({
+  // Mini App рендерится внутри iframe Telegram — разрешаем от telegram.org
+  frameguard: false,
+  contentSecurityPolicy: false, // CSP добавим отдельно через мета-тег в HTML
+  crossOriginEmbedderPolicy: false,
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.text({ type: 'text/plain', limit: '10mb' }));
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
+app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
+
+// ─── CORS — только разрешённые origins ───────────────────────────────────────
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  const isTelegram = origin.endsWith('.telegram.org') || origin === 'https://telegram.org';
+  const isAllowed  = ALLOWED_ORIGINS.includes(origin);
+  if (isTelegram || isAllowed || !origin) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 // ─── Telegram initData HMAC-верификация ───────────────────────────────────────
 // Возвращает: 'ok' | 'invalid' | 'absent'
@@ -231,17 +256,25 @@ function getNextOrderNum() {
 // ─── Telegram API ─────────────────────────────────────────────────────────────
 const TG_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
+const TG_TIMEOUT_MS = 15_000; // 15 секунд — стандарт для Telegram API
+
 async function tg(method, payload) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TG_TIMEOUT_MS);
   try {
     const res = await fetch(`${TG_BASE}/${method}`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload)
+      body:    JSON.stringify(payload),
+      signal:  controller.signal,
     });
     return res.json();
   } catch(e) {
-    console.error(`tg(${method}):`, e.message);
+    const label = e.name === 'AbortError' ? `timeout(${TG_TIMEOUT_MS}ms)` : e.message;
+    console.error(`tg(${method}): ${label}`);
     return { ok: false };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -783,6 +816,15 @@ async function handleTextMessage(message) {
   delProp(`pending_${senderId}`);
 }
 
+// ─── Rate limiting ────────────────────────────────────────────────────────────
+const orderLimiter = rateLimit({
+  windowMs: 60 * 1000,     // 1 минута
+  max: 10,                  // ≤ 10 заказов с одного IP за минуту
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'too_many_requests' },
+});
+
 // ─── Маршруты ─────────────────────────────────────────────────────────────────
 
 app.post('/webhook', (req, res) => {
@@ -802,7 +844,7 @@ app.post('/webhook', (req, res) => {
   }
 });
 
-app.post('/order', (req, res) => {
+app.post('/order', orderLimiter, (req, res) => {
   let body = req.body;
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch(e) {
