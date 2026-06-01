@@ -727,6 +727,26 @@ app.post('/api/order/done', async (req, res) => {
   }
 });
 
+app.get('/api/orders/history', stockLimiter, async (req, res) => {
+  const telegramId = String(req.query.telegramId || '');
+  if (!telegramId || telegramId === '0') return res.json({ ok: true, orders: [] });
+  if (!pgPool) return res.json({ ok: true, orders: [], source: 'no_db' });
+  try {
+    const { rows } = await pgPool.query(
+      `SELECT "orderNumber","customerName","phone","content","amount","status","address","isPreorder","telegramId","createdAt"
+       FROM "Order"
+       WHERE "telegramId" = $1
+       ORDER BY "id" DESC
+       LIMIT 10`,
+      [telegramId]
+    );
+    res.json({ ok: true, orders: rows });
+  } catch(e) {
+    console.error('/api/orders/history error:', e.message);
+    res.json({ ok: true, orders: [] });
+  }
+});
+
 app.get('/api/stock', stockLimiter, async (req, res) => {
   if (!pgPool) {
     return res.json({ ok: false, error: 'db_unavailable', stock: {}, catalog: [], flags: {} });
