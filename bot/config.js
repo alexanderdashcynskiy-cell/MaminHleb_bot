@@ -28,6 +28,9 @@ const config = {
   // Для собственного PostgreSQL с доверенным CA установи DATABASE_SSL=verify
   DATABASE_SSL:     (process.env.DATABASE_SSL || 'no-verify').trim(),
 
+  // Безопасность внутренних API
+  ADMIN_SECRET:     (process.env.ADMIN_SECRET || '').trim(),
+
   // Webhook (deploy-specific)
   WEBHOOK_BASE_URL: (process.env.RAILWAY_PUBLIC_DOMAIN
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`

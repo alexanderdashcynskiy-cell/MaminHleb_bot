@@ -11,22 +11,26 @@ const crypto    = require('crypto');
 const { config, validateConfig } = require('./config');
 
 const app = express();
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(express.json({ limit: '1mb' }));
-app.use(express.text({ type: 'text/plain', limit: '1mb' }));
+app.set('trust proxy', 1); // Railway reverse proxy adds X-Forwarded-For
+app.use(helmet({
+  contentSecurityPolicy:    false, // задаём через мета-тег в HTML
+  frameguard:               false, // Mini App встраивается в Telegram WebView
+  crossOriginEmbedderPolicy: false, // нужно для Telegram WebApp embedding
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.text({ type: 'text/plain', limit: '10mb' }));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
 
-// P1 Bot Без #2: CORS с явным allowlist методов и заголовков.
-// Без ALLOWED_ORIGINS в .env разрешает Telegram WebApp origin (t.me / web.telegram.org).
 const ALLOWED_ORIGINS = config.ALLOWED_ORIGINS;
-const TELEGRAM_ORIGINS = ['https://web.telegram.org', 'https://t.me'];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
+  // Разрешаем любой поддомен telegram.org (web.telegram.org, k.telegram.org и др.)
+  const isTelegram = origin.endsWith('.telegram.org') || origin === 'https://telegram.org';
   const allowed = ALLOWED_ORIGINS.length
     ? ALLOWED_ORIGINS.includes(origin)
-    : TELEGRAM_ORIGINS.includes(origin) || !origin; // без origin — same-origin или non-browser
+    : isTelegram || !origin;
   if (allowed) {
     res.header('Access-Control-Allow-Origin',   origin || '*');
     res.header('Access-Control-Allow-Methods',  'GET, POST, OPTIONS');
@@ -185,10 +189,10 @@ async function syncCatalogToWarehouse() {
 }
 
 // P2 #16: возвращает true/false — вызывающий код подтверждает запись перед выдачей чека
-async function saveOrderToDB(body, isPreorder, total, orderNum, clientId) {
+async function saveOrderToDB(body, isPreorder, total, orderNum, clientId, itemsText) {
   if (!pgPool) return true; // БД не настроена (dev): не блокируем заказ, считаем «нечего терять»
   try {
-    const items = typeof body.items === 'string' ? body.items : JSON.stringify(body.items || []);
+    const content = itemsText || (typeof body.items === 'string' ? body.items : JSON.stringify(body.items || []));
     console.log('saveOrderToDB → Order', { orderNum, total, isPreorder });
     await pgPool.query(
       `INSERT INTO "Order" ("orderNumber","customerName","phone","content","amount","status","address","isPreorder","telegramId")
@@ -197,7 +201,7 @@ async function saveOrderToDB(body, isPreorder, total, orderNum, clientId) {
         String(orderNum),
         body.name    || 'Гость',
         body.phone   || null,
-        items,
+        content,
         parseFloat(total) || 0,
         'Новый',
         // P2 #6: встраиваем время самовывоза в поле address чтобы CRM мог показать pickupTime
@@ -324,11 +328,14 @@ function isHappyHourNow() {
 
 // P1 #2: Верифицируем Telegram initData; fallback на body.telegramId (для совместимости)
 function resolveClientId(body) {
-  if (body.initData && BOT_TOKEN) {
-    const tgUser = verifyTgInitData(body.initData, BOT_TOKEN);
+  // Mini App шлёт поле tgInitData; поддерживаем также initData для совместимости
+  const rawInitData = body.tgInitData || body.initData;
+  if (rawInitData && BOT_TOKEN) {
+    const tgUser = verifyTgInitData(rawInitData, BOT_TOKEN);
     if (tgUser && tgUser.id) return String(tgUser.id);
     console.warn('resolveClientId: initData verification failed (hash mismatch or missing user)');
-  } else if (body.telegramId && body.telegramId !== '0') {
+  }
+  if (body.telegramId && body.telegramId !== '0') {
     return String(body.telegramId);
   }
   return '0';
@@ -392,56 +399,21 @@ async function handleOrder(body) {
   if (isDuplicateOrder(body)) { console.log('Duplicate order ignored'); return { ok: true, duplicate: true }; }
   const isPreorder = body.type === 'Предзаказ';
 
-  const clientId   = resolveClientId(body);
-  const clientName = body.name || 'Гость';
+  const clientId = resolveClientId(body);
+  const { total } = priceOrder(body, isPreorder);
+  const orderNum  = getNextOrderNum();
 
-  const { itemsText, total, totalStr } = priceOrder(body, isPreorder);
-  const deliveryBlock = buildDeliveryBlock(body, isPreorder);
-
-  const noteStr  = (body.note || '').trim();
-  const noteLine = noteStr ? `\n💬 *ПРИМЕЧАНИЕ:* ${noteStr}\n` : '';
-
-  const orderNum = getNextOrderNum();
-
-  // P2 #16: подтверждаем запись заказа в БД ДО генерации чека/админ-сообщений.
-  // Если запись не удалась — не выдаём номер заказа, который не существует в CRM
-  // (предотвращает фантомные заказы и рассинхрон callback-ов статусов).
   const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId);
   if (!saved) {
-    console.error(`handleOrder: order #${orderNum} NOT persisted — aborting receipt/admin notifications`);
+    console.error(`handleOrder: order #${orderNum} NOT persisted — aborting`);
     return { ok: false, error: 'save_failed' };
   }
 
-  const receiptBase =
-    `🧾 *${isPreorder ? 'ВАШ ПРЕДЗАКАЗ' : 'ВАШ ЗАКАЗ'} №${orderNum}*\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `👤 ${clientName}\n` +
-    `📞 ${body.phone || '—'}\n` +
-    `${deliveryBlock}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🧺 *Состав:*\n${itemsText}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `💰 *Итого:* ${totalStr}\n` +
-    noteLine;
-
-  const isDeliveryAddr = body.address && body.address !== 'Самовывоз' && body.address !== 'undefined';
-  const orderType = isPreorder ? 'preorder'
-    : (body.deliveryMethod === 'delivery' || isDeliveryAddr) ? 'delivery' : 'pickup';
-  console.log(`Order ${orderNum} type=${orderType}`);
-
-  const orderTypeLabel = isPreorder ? 'ПРЕДЗАКАЗ' : orderType === 'delivery' ? 'ДОСТАВКА' : 'НОВЫЙ ЗАКАЗ';
-  const adminText =
-    `🥐 *${orderTypeLabel} — №${orderNum}*\n🟡 Новый заказ\n` +
-    `\n👤 ${clientName}\n` +
-    `📞 ${body.phone || '—'}\n` +
-    `\n${deliveryBlock}\n` +
-    `\n*Состав:*\n${itemsText}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `💰 *Итого:* ${totalStr}` +
-    noteLine;
-
-  // Запомнить клиента для happy hour уведомлений
   if (clientId !== '0') {
+    // Сохраняем clientId для /api/order/done (рейтинг при выдаче заказа)
+    setProp(`client_id_${orderNum}`, clientId);
+
+    // Запомнить для happy hour уведомлений
     const clientsRaw = getProp('known_clients') || '[]';
     let clients = [];
     try { clients = JSON.parse(clientsRaw); } catch(e) {}
@@ -449,29 +421,16 @@ async function handleOrder(body) {
       clients.push(clientId);
       setProp('known_clients', JSON.stringify(clients));
     }
+
+    // Простое подтверждение клиенту; заказами управляет CRM-дашборд
+    const r = await tg('sendMessage', {
+      chat_id:    clientId,
+      text:       `Здравствуйте 👋, ваш заказ №${orderNum} оформлен! Ожидайте подтверждения.`,
+      parse_mode: 'Markdown'
+    });
+    if (r?.ok) setProp(`receipt_${orderNum}`, JSON.stringify({ chatId: clientId, msgId: r.result.message_id }));
   }
 
-  // Сохраняем clientId для последующей отправки рейтинга через /api/order/done
-  if (clientId !== '0') setProp(`client_id_${orderNum}`, clientId);
-
-  const calls = [];
-  if (clientId !== '0') {
-    calls.push(['sendMessage', { chat_id: clientId, text: receiptBase, parse_mode: 'Markdown' }]);
-  }
-
-  if (isPreorder && PREORDER_CHAT_ID) {
-    const pt = parsePreorderTime(body.time);
-    const preorderText =
-      `📌 *ПРЕДЗАКАЗ — №${orderNum}*\n🟡 Новый\n\n` +
-      `👤 ${clientName}\n` +
-      `📞 ${body.phone || '—'}\n` +
-      `📅 ${pt.niceDate}  🕐 ${pt.rawTime}\n\n` +
-      `*Состав:*\n${itemsText}\n\n` +
-      `💰 ${totalStr}`;
-    calls.push(['sendMessage', { chat_id: PREORDER_CHAT_ID, text: preorderText, parse_mode: 'Markdown' }]);
-  }
-
-  await tgAll(calls);
   return { ok: true, orderNum };
 }
 
@@ -533,11 +492,38 @@ async function handleCallback(cb) {
     return;
   }
 
-  // ── Оценка звёздами ───────────────────────────────────────────────────────
-  if (action === 'rate') {
-    const stars     = parseInt(parts[1]);
-    const ratingRow = parseInt(parts[2]);
-    const starStr   = '⭐'.repeat(stars) + ` (${stars}/5)`;
+  // ── Курьер подтверждает доставку ("✅ Доставлен" в чате доставки) ─────────
+  if (action === 'delivered') {
+    const dbId = parseInt(parts[1]);
+    await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '✅ Статус обновлён', show_alert: false });
+    // Убираем кнопку чтобы не нажимали повторно
+    await tg('editMessageReplyMarkup', { chat_id: cb.message.chat.id, message_id: cb.message.message_id, reply_markup: { inline_keyboard: [] } });
+
+    if (!pgPool || !dbId) return;
+    try {
+      const { rows } = await pgPool.query(
+        `UPDATE "Order" SET status=$1 WHERE id=$2 RETURNING "orderNumber","telegramId"`,
+        ['Доставлен', dbId]
+      );
+      if (!rows.length) { console.warn(`delivered: order id=${dbId} not found`); return; }
+      const { orderNumber, telegramId } = rows[0];
+      console.log(`delivered: order #${orderNumber} → Доставлен, clientId=${telegramId}`);
+      if (telegramId && telegramId !== '0') {
+        await tg('sendMessage', {
+          chat_id:      String(telegramId),
+          text:         `🎉 Ваш заказ №${orderNumber} доставлен!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
+          reply_markup: { inline_keyboard: ratingKeyboard(orderNumber) }
+        });
+      }
+    } catch(e) { console.error('delivered callback DB error:', e.message); }
+    return;
+  }
+
+  // ── Оценка звёздами (rate_N_rowNum — от бота, star_N_orderNum — от CRM) ────
+  if (action === 'rate' || action === 'star') {
+    const stars    = parseInt(parts[1]);
+    const refValue = parts[2]; // rowNum (rate) или orderNumber (star)
+    const starStr  = '⭐'.repeat(stars) + ` (${stars}/5)`;
 
     await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: starStr, show_alert: false });
 
@@ -546,8 +532,10 @@ async function handleCallback(cb) {
       try {
         const ep = JSON.parse(existingRaw);
         if (ep.reviewReqMsgId) {
-          setProp(`pending_${cb.from.id}`,
-            JSON.stringify({ stars, rowNum: ratingRow, reviewReqMsgId: ep.reviewReqMsgId }));
+          const update = action === 'star'
+            ? { stars, orderNumber: refValue, reviewReqMsgId: ep.reviewReqMsgId }
+            : { stars, rowNum: parseInt(refValue), reviewReqMsgId: ep.reviewReqMsgId };
+          setProp(`pending_${cb.from.id}`, JSON.stringify(update));
           return;
         }
       } catch(e) {}
@@ -562,11 +550,10 @@ async function handleCallback(cb) {
       }]
     ]);
 
-    setProp(`pending_${cb.from.id}`, JSON.stringify({
-      stars,
-      rowNum:         ratingRow,
-      reviewReqMsgId: reviewRes?.ok ? reviewRes.result.message_id : null
-    }));
+    const pendingData = action === 'star'
+      ? { stars, orderNumber: refValue, reviewReqMsgId: reviewRes?.ok ? reviewRes.result.message_id : null }
+      : { stars, rowNum: parseInt(refValue), reviewReqMsgId: reviewRes?.ok ? reviewRes.result.message_id : null };
+    setProp(`pending_${cb.from.id}`, JSON.stringify(pendingData));
     return;
   }
 }
@@ -604,12 +591,12 @@ async function handleTextMessage(message) {
 
   if (!isSkip && pgPool) {
     try {
-      const rowNum = data.rowNum;
+      const orderNum = data.orderNumber || data.rowNum;
       await pgPool.query(
         `UPDATE "Order" SET review=$1, rating=$2 WHERE "orderNumber"=$3`,
-        [msgText, data.stars || null, String(rowNum)]
+        [msgText, data.stars || null, String(orderNum)]
       );
-      console.log(`Review saved for order ${rowNum}`);
+      console.log(`Review saved for order ${orderNum}`);
     } catch(e) {
       console.error('review DB save:', e.message);
     }
@@ -647,7 +634,7 @@ app.post('/webhook', (req, res) => {
   }
 });
 
-const VALID_ORDER_TYPES = new Set(['Предзаказ', 'Доставка', 'Самовывоз', '']);
+const VALID_ORDER_TYPES = new Set(['Заказ', 'Предзаказ', 'Доставка', 'Самовывоз', '']);
 const PHONE_RE = /^\+?[\d\s\-()]{7,20}$/;
 
 app.post('/order', orderLimiter, async (req, res) => {
@@ -692,6 +679,53 @@ app.post('/order', orderLimiter, async (req, res) => {
   }
 });
 
+
+// Вызывается дашбордом когда заказ выдан/доставлен — отправляет клиенту запрос оценки
+app.post('/api/order/done', async (req, res) => {
+  const secret = config.ADMIN_SECRET;
+  if (secret) {
+    const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
+    if (provided !== secret) {
+      console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
+      return res.status(403).json({ ok: false, error: 'unauthorized' });
+    }
+  }
+
+  const orderNum = String((req.body || {}).orderNumber || '');
+  if (!orderNum) return res.status(400).json({ ok: false, error: 'orderNumber required' });
+
+  // clientId ищем сначала в props, потом в БД (на случай рестарта сервера)
+  let clientId = getProp(`client_id_${orderNum}`);
+  if ((!clientId || clientId === '0') && pgPool) {
+    try {
+      const { rows } = await pgPool.query(
+        `SELECT "telegramId" FROM "Order" WHERE "orderNumber" = $1 LIMIT 1`,
+        [orderNum]
+      );
+      if (rows.length) clientId = rows[0].telegramId;
+    } catch(e) {
+      console.error('/api/order/done DB lookup:', e.message);
+    }
+  }
+
+  res.json({ ok: true });
+
+  if (!clientId || clientId === '0') {
+    console.log(`/api/order/done: orderNumber=${orderNum} — clientId не найден, рейтинг пропущен`);
+    return;
+  }
+
+  console.log(`/api/order/done: clientId=${clientId} orderNum=${orderNum}`);
+  const ratingResult = await tg('sendMessage', {
+    chat_id:      String(clientId),
+    text:         `🎉 Ваш заказ №${orderNum} уже у вас!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
+    reply_markup: { inline_keyboard: ratingKeyboard(orderNum) }
+  });
+  console.log(`/api/order/done: rating send →`, JSON.stringify(ratingResult).slice(0, 200));
+  if (ratingResult?.ok) {
+    setProp(`done_msg_${orderNum}`, JSON.stringify({ chatId: String(clientId), msgId: ratingResult.result.message_id }));
+  }
+});
 
 app.get('/api/stock', stockLimiter, async (req, res) => {
   if (!pgPool) {
@@ -740,44 +774,6 @@ app.post('/api/admin/checkin', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
-});
-
-app.post('/api/order/done', async (req, res) => {
-  const secret = process.env.ADMIN_SECRET;
-  if (secret) {
-    const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
-    if (provided !== secret) {
-      console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
-      return res.status(403).json({ ok: false, error: 'unauthorized' });
-    }
-  }
-  const orderNum = String((req.body || {}).orderNumber || '');
-  if (!orderNum) return res.status(400).json({ ok: false, error: 'orderNumber required' });
-
-  let clientId = getProp(`client_id_${orderNum}`);
-  if ((!clientId || clientId === '0') && pgPool) {
-    try {
-      const { rows } = await pgPool.query(
-        `SELECT "telegramId" FROM "Order" WHERE "orderNumber" = $1 LIMIT 1`,
-        [orderNum]
-      );
-      if (rows.length) clientId = String(rows[0].telegramId);
-    } catch(e) { console.error('/api/order/done DB lookup:', e.message); }
-  }
-
-  res.json({ ok: true });
-
-  if (!clientId || clientId === '0') return;
-  try {
-    const ratingResult = await tg('sendMessage', {
-      chat_id: clientId,
-      text: `🎉 Ваш заказ №${orderNum} уже у вас!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
-      reply_markup: { inline_keyboard: ratingKeyboard(orderNum) }
-    });
-    if (ratingResult?.ok) {
-      setProp(`done_msg_${orderNum}`, JSON.stringify({ chatId: clientId, msgId: ratingResult.result.message_id }));
-    }
-  } catch(e) { console.error('/api/order/done: rating error:', e.message); }
 });
 
 app.get('/health', (req, res) => {
