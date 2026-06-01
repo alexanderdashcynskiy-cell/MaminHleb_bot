@@ -450,6 +450,15 @@
       <p style="font-size:0.875rem;margin-top:0.5rem;color:rgba(107,68,35,0.4);">Добавьте вкусняшки!</p>
      </div>
 
+     <!-- История заказов button -->
+     <div id="order-history-btn-wrap" style="padding:0 4px 8px;">
+      <button type="button" data-action="showOrderHistory" style="width:100%;padding:14px 20px;background:#fff;border:1.5px solid rgba(201,162,39,0.35);border-radius:16px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(45,21,5,0.06);">
+       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><path d="M3 12h9"/></svg>
+       <span style="font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;color:#3d1f0a;flex:1;text-align:left;">История заказов</span>
+       <svg width="12" height="12" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+      </button>
+     </div>
+
      <!-- Premium recommendations panel -->
      <div id="cart-suggestions-section" style="display:none;margin-top:24px;">
       <div style="background:#FDF8F2;border-radius:28px 28px 0 0;padding:18px 0 0;box-shadow:0 -6px 28px rgba(180,140,80,0.10);">
@@ -1251,6 +1260,18 @@
    </div>
   </div>
 
+  <!-- Order history overlay -->
+  <div id="order-history-overlay" style="display:none;position:fixed;inset:0;background:rgba(45,21,5,0.55);z-index:150;align-items:flex-end;justify-content:center;padding:0;" data-action="closeOrderHistory">
+   <div style="width:100%;max-width:480px;background:#FFF8F0;border-radius:28px 28px 0 0;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 40px rgba(45,21,5,0.18);" data-action="stopPropagation">
+    <div style="padding-top:12px;display:flex;justify-content:center;flex-shrink:0;"><div style="width:42px;height:4px;background:rgba(45,21,5,0.15);border-radius:2px;"></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px;flex-shrink:0;">
+     <span style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#2d1505;">История заказов</span>
+     <button type="button" data-action="closeOrderHistory" style="width:36px;height:36px;border-radius:50%;background:#EDE0C4;border:none;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#6B4423;">✕</button>
+    </div>
+    <div id="order-history-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 24px;"></div>
+   </div>
+  </div>
+
   <!-- Coffee addons modal — global -->
   <div id="coffee-addons-overlay" style="display:none;position:fixed;inset:0;background:rgba(45,21,5,0.55);z-index:200;align-items:flex-end;justify-content:center;padding:0 12px 28px;" data-action="closeCoffeeAddons">
    <div style="width:100%;max-width:480px;background:#FFF8F0;border-radius:28px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 40px rgba(45,21,5,0.18);" data-action="stopPropagation">
@@ -1926,8 +1947,6 @@
             }
           }
           if (screenName === 'preorder') {
-            preorderCart = [];
-            preorderTime = null;
             renderPreorderProducts();
             updatePreorderBottomBar();
             var dateInput = document.getElementById('preorder-date');
@@ -2668,7 +2687,7 @@
       return 'товаров';
     }
 
-    var CS_CARD_W = 150, CS_GAP = 14;
+    var CS_CARD_W = 132, CS_GAP = 8;
     var _csRaf = null, _csScrollStopTimer = null;
     var _csCloneCount = 0, _csTotalReal = 0, _csPickIds = '';
 
@@ -3192,6 +3211,7 @@
             note: note || "",
         });
         if (!ok) { resetBtn(); return; }
+        saveOrderToHistory(cartSnapshot, total, name, phone, deliveryMethod === 'delivery' ? 'delivery' : 'pickup');
         cart = [];
         updateCartUI(); updateFloatingCart(); renderProducts(); renderBestsellers();
         document.getElementById('checkout-name').value='';
@@ -3833,6 +3853,7 @@
             note: note || "",
          });
         if (!ok) { resetBtn(); return; }
+        saveOrderToHistory(cartSnapshot, total, name, phone, 'preorder');
         const savedPreorderTime = preorderTime;
         preorderCart = []; preorderTime = null;
         document.getElementById('preorder-name').value = '';
@@ -3893,6 +3914,56 @@
         btn.classList.add('border-beige');
       });
     }
+    function showOrderHistory() {
+      var overlay = document.getElementById('order-history-overlay');
+      var list = document.getElementById('order-history-list');
+      if (!overlay || !list) return;
+      var history = [];
+      try { history = JSON.parse(localStorage.getItem('mh_order_history') || '[]'); } catch(e) {}
+      if (history.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:40px 16px;"><div style="font-size:2.5rem;margin-bottom:12px;">📦</div><p style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#9a8060;">Заказов пока нет</p></div>';
+      } else {
+        list.innerHTML = history.map(function(order) {
+          var typeLabel = order.type === 'delivery' ? '🚚 Доставка' : order.type === 'preorder' ? '🌅 Предзаказ' : '📍 Самовывоз';
+          var itemsText = order.items.slice(0, 3).map(function(i) { return escHtml(i.product_name) + (i.quantity > 1 ? ' ×' + i.quantity : ''); }).join(', ');
+          if (order.items.length > 3) itemsText += ' и ещё ' + (order.items.length - 3);
+          return '<div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 10px rgba(45,21,5,0.06);">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+            + '<span style="font-family:\'Montserrat\',sans-serif;font-size:11px;font-weight:700;color:#9a8060;letter-spacing:0.04em;">' + escHtml(order.date) + ' · ' + typeLabel + '</span>'
+            + '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;font-weight:800;color:#C9A227;">' + order.total.toFixed(2) + BYN + '</span>'
+            + '</div>'
+            + '<p style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#3d1f0a;margin:0 0 10px;line-height:1.4;">' + itemsText + '</p>'
+            + '<button type="button" onclick="repeatOrder(' + order.id + ')" style="width:100%;padding:10px;background:linear-gradient(90deg,#C9A227,#E8B430);color:#fff;font-family:\'Montserrat\',sans-serif;font-size:13px;font-weight:700;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Повторить заказ</button>'
+            + '</div>';
+        }).join('');
+      }
+      overlay.style.display = 'flex';
+    }
+    function closeOrderHistory() {
+      var overlay = document.getElementById('order-history-overlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+    function repeatOrder(historyId) {
+      var history = [];
+      try { history = JSON.parse(localStorage.getItem('mh_order_history') || '[]'); } catch(e) {}
+      var order = history.find(function(o) { return o.id === historyId; });
+      if (!order || !order.items) return;
+      order.items.forEach(function(item) {
+        var product = productsById.get(item.product_id);
+        if (!product) return;
+        var existing = cart.find(function(i) { return i.product_id === item.product_id && (!item.selected_size ? !i.selected_size : i.selected_size === item.selected_size); });
+        if (existing) { existing.quantity += item.quantity; } else {
+          var ci = { product_id: item.product_id, product_name: item.product_name, price: item.price, quantity: item.quantity };
+          if (item.selected_size) ci.selected_size = item.selected_size;
+          cart.push(ci);
+        }
+      });
+      updateCartUI();
+      updateFloatingCart();
+      closeOrderHistory();
+      showScreen('cart');
+    }
+
     function setRating(rating) {
       document.getElementById('review-rating').value = rating;
       document.querySelectorAll('#rating-buttons button').forEach((btn, i) => {
@@ -3974,6 +4045,19 @@
       _toastTimer = setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); _toastTimer = null; }, 2500);
     }
 
+    // ── Order history ──────────────────────────────────────────────────────────
+    function saveOrderToHistory(items, total, name, phone, type) {
+      if (!items || items.length === 0) return;
+      try {
+        var history = JSON.parse(localStorage.getItem('mh_order_history') || '[]');
+        var now = new Date();
+        var dateStr = now.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
+        history.unshift({ id: Date.now(), date: dateStr, items: items.map(function(i) { return { product_id: i.product_id, product_name: i.product_name, price: i.price, quantity: i.quantity, selected_size: i.selected_size || null }; }), total: total, name: name, phone: phone, type: type });
+        if (history.length > 10) history = history.slice(0, 10);
+        localStorage.setItem('mh_order_history', JSON.stringify(history));
+      } catch(e) {}
+    }
+
     // ── API ────────────────────────────────────────────────────────────────────
     async function sendOrderToServer(order) {
         try {
@@ -4039,6 +4123,8 @@
         confirmCoffeeAddon:     function ()      { confirmCoffeeAddon(); },
         closeReviewForm:        function ()      { closeReviewForm(); },
         setRating:              function (el)    { setRating(+el.dataset.arg); },
+        showOrderHistory:       function ()      { showOrderHistory(); },
+        closeOrderHistory:      function ()      { closeOrderHistory(); },
       };
       document.addEventListener('click', function (e) {
         var el = e.target.closest('[data-action]');
