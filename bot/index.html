@@ -418,14 +418,14 @@
       </div>
      </div>
      <!-- Pickup address card -->
-     <div id="cart-pickup-info" style="background:#fff;border-radius:16px;padding:15px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-      <div style="display:flex;align-items:center;gap:10px;">
-       <div style="width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,#C9A227,#E8B430);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s-8-7.5-8-13a8 8 0 1116 0c0 5.5-8 13-8 13z"/><circle cx="12" cy="9" r="2.5" fill="#fff" stroke="none"/></svg>
+     <div id="cart-pickup-info" style="background:#fff;border-radius:14px;padding:10px 13px;display:none;align-items:center;justify-content:space-between;gap:8px;box-shadow:0 1px 8px rgba(0,0,0,0.05);">
+      <div style="display:flex;align-items:center;gap:8px;">
+       <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#C9A227,#E8B430);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s-8-7.5-8-13a8 8 0 1116 0c0 5.5-8 13-8 13z"/><circle cx="12" cy="9" r="2.5" fill="#fff" stroke="none"/></svg>
        </div>
-       <span style="font-size:14px;color:#2d1505;font-weight:600;font-family:'Montserrat',sans-serif;">г. Витебск, ул. Ленина 74</span>
+       <span style="font-size:13px;color:#2d1505;font-weight:600;font-family:'Montserrat',sans-serif;">г. Витебск, ул. Ленина 74</span>
       </div>
-      <svg width="13" height="13" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+      <svg width="11" height="11" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
      </div>
     </div>
 
@@ -1299,15 +1299,15 @@
   <!-- Order history overlay -->
   <div id="order-history-overlay" style="display:none;position:fixed;inset:0;background:#FDFAF6;z-index:150;flex-direction:column;overflow:hidden;">
    <!-- Header -->
-   <div style="background:#fff;padding:18px 20px 14px;flex-shrink:0;box-shadow:0 1px 0 rgba(0,0,0,0.06);">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;">
-     <div>
-      <div style="font-size:26px;font-weight:800;color:#2d1505;font-family:'Montserrat',sans-serif;line-height:1.1;">Мои заказы</div>
-      <div id="order-history-today-date" style="font-size:14px;color:#9a8060;margin-top:4px;font-family:'Montserrat',sans-serif;"></div>
-     </div>
-     <button type="button" data-action="closeOrderHistory" style="width:44px;height:44px;border-radius:50%;background:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:-2px;box-shadow:0 1px 8px rgba(0,0,0,0.10);">
-      <svg width="5" height="20" viewBox="0 0 5 22" fill="#2d1505" style="pointer-events:none;"><circle cx="2.5" cy="2.5" r="2.5"/><circle cx="2.5" cy="11" r="2.5"/><circle cx="2.5" cy="19.5" r="2.5"/></svg>
+   <div style="background:#fff;padding:max(env(safe-area-inset-top,16px),16px) 20px 14px;flex-shrink:0;box-shadow:0 1px 0 rgba(0,0,0,0.06);">
+    <div style="display:flex;align-items:center;gap:12px;">
+     <button type="button" data-action="closeOrderHistory" style="width:40px;height:40px;border-radius:12px;background:#FDFAF6;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
+      <svg width="20" height="20" fill="none" stroke="#2d1505" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
      </button>
+     <div>
+      <div style="font-size:24px;font-weight:800;color:#2d1505;font-family:'Montserrat',sans-serif;line-height:1.1;">Мои заказы</div>
+      <div id="order-history-today-date" style="font-size:13px;color:#9a8060;margin-top:3px;font-family:'Montserrat',sans-serif;"></div>
+     </div>
     </div>
    </div>
    <div id="order-history-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 32px;"></div>
