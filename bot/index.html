@@ -386,9 +386,9 @@
   </div><!-- /screen-main -->
 
    <!-- Cart Screen -->
-   <div id="screen-cart" style="display:none;flex-direction:column;overflow:hidden;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-cart" style="display:none;flex-direction:column;overflow:hidden;background:#FDFAF6;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <!-- Header — compact -->
-    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px;background:#FAF7F2;position:relative;">
+    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px;background:#FDFAF6;position:relative;">
      <button data-action="showScreen" data-arg="main" style="width:42px;height:42px;border-radius:13px;background:rgba(0,0,0,0.06);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
       <svg width="20" height="20" fill="none" stroke="#3d1f0a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
      </button>
@@ -526,7 +526,7 @@
        <div style="width:48px;height:48px;border-radius:14px;background:#EDE0C4;display:flex;align-items:center;justify-content:center;">
         <svg width="22" height="22" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
        </div>
-       <div id="cart-footer-badge" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:99px;background:linear-gradient(135deg,#C9A227,#E8B430);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;padding:0 4px;border:1.5px solid #FFF8F0;"><span id="cart-items-count">0</span></div>
+       <div id="cart-footer-badge" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:99px;background:linear-gradient(135deg,#C9A227,#E8B430);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;padding:0 4px;border:1.5px solid #FDFAF6;"><span id="cart-items-count">0</span></div>
       </div>
       <!-- Count text + delivery -->
       <div style="min-width:0;">
@@ -541,7 +541,10 @@
       </div>
       <!-- Checkout button -->
       <div style="flex:1;display:flex;min-width:0;">
-       <button id="cart-checkout-btn" ontouchend="event.preventDefault();startCheckout();" data-action="startCheckout" style="width:100%;background:linear-gradient(90deg,#C9A227,#E8B430);border-radius:50px;padding:15px 10px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-size:14px;font-weight:700;color:#fff;letter-spacing:0.01em;box-shadow:0 3px 12px rgba(201,162,39,0.38);white-space:nowrap;text-align:center;">Оформить заказ →</button>
+       <button id="cart-checkout-btn" ontouchend="event.preventDefault();startCheckout();" data-action="startCheckout" style="width:100%;background:linear-gradient(90deg,#C9A227,#E8B430);border-radius:18px;padding:12px 8px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 12px rgba(201,162,39,0.38);text-align:center;">
+        <div style="font-size:14px;font-weight:700;color:#fff;line-height:1.2;pointer-events:none;">Оформить заказ →</div>
+        <div id="cart-checkout-btn-sub" style="font-size:10px;color:rgba(255,255,255,0.8);margin-top:2px;pointer-events:none;">Самовывоз</div>
+       </button>
       </div>
      </div>
      <span id="cart-subtotal-display" style="display:none;"></span>
@@ -550,7 +553,7 @@
    </div>
 
    <!-- Checkout Screen -->
-   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#FDFAF6;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <div style="flex:1;overflow-y:auto;min-height:0;overscroll-behavior:none;">
 
      <!-- Header: title centered, illustration absolute top-right -->
@@ -740,11 +743,9 @@
 
       <!-- Подтвердить заказ -->
       <button type="submit" id="submit-checkout-btn"
-       style="width:100%;position:relative;overflow:hidden;background:#C9A227;border:none;border-radius:50px;padding:0 20px;height:64px;font-size:18px;font-weight:800;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 18px rgba(180,140,30,0.38);letter-spacing:0.02em;display:flex;align-items:center;justify-content:center;">
-       <div style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;background:rgba(45,21,5,0.32);display:flex;align-items:center;justify-content:center;pointer-events:none;">
-        <svg width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><polyline points="9 11 12 14 16 9"/></svg>
-       </div>
-       <span style="font-weight:800;">Подтвердить заказ</span>
+       style="width:100%;background:linear-gradient(90deg,#C9A227,#E8B430);border:none;border-radius:18px;padding:16px 20px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 18px rgba(180,140,30,0.38);text-align:center;">
+       <div style="font-size:17px;font-weight:700;color:#fff;line-height:1.2;pointer-events:none;">Подтвердить заказ →</div>
+       <div id="checkout-submit-sub" style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;pointer-events:none;">Самовывоз</div>
       </button>
 
       <!-- Trust badges -->
@@ -774,7 +775,7 @@
    </div>
 
    <!-- Referral Screen -->
-   <div id="screen-referral" style="display:none;overflow:auto;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-referral" style="display:none;overflow:auto;background:#FDFAF6;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3">
      <button data-action="showScreen" data-arg="main" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Реферальная программа</h2>
@@ -809,7 +810,7 @@
    </div>
 
    <!-- Locations Screen -->
-   <div id="screen-locations" style="display:none;overflow:auto;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-locations" style="display:none;overflow:auto;background:#FDFAF6;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3">
      <button data-action="showScreen" data-arg="main" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Выбрать локацию</h2>
@@ -1048,11 +1049,11 @@
   </div>
 
   <!-- Preorder Screen -->
-  <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+  <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FDFAF6;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
    <!-- Scroll area -->
    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overflow-x:clip;">
     <!-- Hero Header -->
-    <div style="background:#FAF7F2;padding:max(env(safe-area-inset-top,16px),16px) 16px 0;position:relative;">
+    <div style="background:#FDFAF6;padding:max(env(safe-area-inset-top,16px),16px) 16px 0;position:relative;">
      <!-- Card -->
      <div style="background:#FEF3E8;border-radius:24px;position:relative;overflow:hidden;min-height:160px;padding:18px 20px 22px;margin-bottom:12px;">
       <!-- Left: text content -->
@@ -1172,7 +1173,7 @@
    </div>
 
    <!-- Form overlay — full screen -->
-   <div id="preorder-form-overlay" style="display:none;position:absolute;inset:0;background:#FAF7F2;z-index:20;flex-direction:column;overflow:hidden;">
+   <div id="preorder-form-overlay" style="display:none;position:absolute;inset:0;background:#FDFAF6;z-index:20;flex-direction:column;overflow:hidden;">
     <!-- Scrollable content -->
     <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:max(env(safe-area-inset-top,20px),20px) 16px 140px;">
 
@@ -1296,7 +1297,7 @@
   </div>
 
   <!-- Order history overlay -->
-  <div id="order-history-overlay" style="display:none;position:fixed;inset:0;background:#FAF7F2;z-index:150;flex-direction:column;overflow:hidden;">
+  <div id="order-history-overlay" style="display:none;position:fixed;inset:0;background:#FDFAF6;z-index:150;flex-direction:column;overflow:hidden;">
    <!-- Header -->
    <div style="background:#fff;padding:18px 20px 14px;flex-shrink:0;box-shadow:0 1px 0 rgba(0,0,0,0.06);">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;">
@@ -1312,7 +1313,7 @@
    <div id="order-history-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 32px;"></div>
    <!-- Card action sheet -->
    <div id="oh-action-sheet" style="display:none;position:fixed;inset:0;z-index:160;background:rgba(0,0,0,0.35);" onclick="_ohHideMenu()">
-    <div onclick="event.stopPropagation()" style="position:absolute;bottom:0;left:0;right:0;background:#FAF7F2;border-radius:18px 18px 0 0;padding:0 12px max(28px,calc(env(safe-area-inset-bottom,14px)+14px));">
+    <div onclick="event.stopPropagation()" style="position:absolute;bottom:0;left:0;right:0;background:#FDFAF6;border-radius:18px 18px 0 0;padding:0 12px max(28px,calc(env(safe-area-inset-bottom,14px)+14px));">
      <div style="width:40px;height:4px;background:rgba(0,0,0,0.2);border-radius:2px;margin:10px auto 14px;"></div>
      <div style="background:#fff;border-radius:14px;overflow:hidden;margin-bottom:10px;">
       <button type="button" onclick="_ohRepeatFromMenu()" style="width:100%;padding:17px 18px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-align:center;font-family:'Montserrat',sans-serif;font-size:16px;font-weight:600;color:#2d1505;display:block;">Повторить заказ</button>
@@ -1326,7 +1327,7 @@
 
   <!-- Coffee addons modal — global -->
   <div id="coffee-addons-overlay" style="display:none;position:fixed;inset:0;background:rgba(45,21,5,0.55);z-index:200;align-items:flex-end;justify-content:center;padding:0 12px 28px;" data-action="closeCoffeeAddons">
-   <div style="width:100%;max-width:480px;background:#FAF7F2;border-radius:28px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 40px rgba(45,21,5,0.18);" data-action="stopPropagation">
+   <div style="width:100%;max-width:480px;background:#FDFAF6;border-radius:28px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 40px rgba(45,21,5,0.18);" data-action="stopPropagation">
     <!-- Drag handle -->
     <div style="padding-top:12px;display:flex;justify-content:center;flex-shrink:0;">
      <div style="width:42px;height:4px;background:rgba(45,21,5,0.15);border-radius:2px;"></div>
@@ -1392,7 +1393,7 @@
      </div>
     </div>
     <!-- Bottom bar -->
-    <div style="flex-shrink:0;padding:12px 20px;padding-bottom:max(env(safe-area-inset-bottom,18px),18px);display:flex;align-items:center;gap:12px;border-top:1px solid rgba(45,21,5,0.07);background:#FAF7F2;">
+    <div style="flex-shrink:0;padding:12px 20px;padding-bottom:max(env(safe-area-inset-bottom,18px),18px);display:flex;align-items:center;gap:12px;border-top:1px solid rgba(45,21,5,0.07);background:#FDFAF6;">
      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
       <button type="button" data-action="changeCoffeeModalQty" data-arg="-1" style="width:40px;height:40px;border-radius:50%;background:#F0EAE0;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;color:#6B4423;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-weight:700;line-height:1;">−</button>
       <span id="coffee-modal-qty" style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:800;color:#2d1505;min-width:22px;text-align:center;">1</span>
@@ -1427,7 +1428,7 @@
   </div>
 
   <!-- Bestsellers Screen -->
-  <div id="screen-bestsellers" style="display:none;flex-direction:column;overflow:auto;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+  <div id="screen-bestsellers" style="display:none;flex-direction:column;overflow:auto;background:#FDFAF6;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
    <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3 flex-shrink-0">
     <button data-action="showScreen" data-arg="main" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
     <div style="display:flex;align-items:center;gap:6px;">
@@ -2653,6 +2654,8 @@
       if (itemsCount2) itemsCount2.textContent = count;
       if (itemWord) itemWord.textContent = pluralItems(count);
       if (delivType) delivType.textContent = deliveryMethod === 'pickup' ? 'Самовывоз' : 'Доставка';
+      var checkoutBtnSub = document.getElementById('cart-checkout-btn-sub');
+      if (checkoutBtnSub) checkoutBtnSub.textContent = deliveryMethod === 'pickup' ? 'Самовывоз' : 'Доставка';
       if (subtotalDisp) subtotalDisp.innerHTML = subtotal.toFixed(2) + BYN;
       renderCartSuggestions();
       // Show expand button only when more than 2 items; reset to collapsed
@@ -2702,20 +2705,21 @@
           + '<div style="width:110px;height:110px;flex-shrink:0;border-radius:14px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;align-self:flex-start;">' + imgHTML + '</div>'
           // Content
           + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;">'
-          // Name + trash button (replacing ···)
+          // Name + three dots
           + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:5px;">'
           + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:600;color:#2d1505;font-size:15px;line-height:1.25;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(item.product_name) + '</div>'
-          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:30px;height:30px;border:none;background:#F5EDE3;border-radius:9px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;">' + trashSvg + '</button>'
+          + '<span style="color:#c0a87a;font-size:16px;letter-spacing:2px;flex-shrink:0;line-height:1;margin-top:2px;cursor:default;">···</span>'
           + '</div>'
           // Weight · tag · rating
           + '<div style="display:flex;align-items:center;gap:3px;margin-bottom:10px;flex-wrap:wrap;">' + secondaryRow + '</div>'
-          // Price + controls (no separate trash — it's at top)
+          // Price + controls
           + '<div style="display:flex;align-items:center;justify-content:space-between;">'
           + '<span style="font-family:\'Montserrat\',sans-serif;font-size:20px;font-weight:800;color:#C9A227;line-height:1;">' + item.price.toFixed(2) + ' ₽</span>'
           + '<div style="display:flex;align-items:center;gap:7px;">'
           + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:31px;height:31px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.14);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:17px;line-height:1;font-weight:400;">−</button>'
           + '<span style="font-weight:700;font-size:15px;color:#2d1505;min-width:18px;text-align:center;">' + item.quantity + '</span>'
           + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:31px;height:31px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;line-height:1;font-weight:600;">+</button>'
+          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:31px;height:31px;border:none;background:#F5EDE3;border-radius:9px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;">' + trashSvg + '</button>'
           + '</div></div>'
           + '</div></div>';
       }).join('');
@@ -3003,7 +3007,11 @@
       const costRow = document.getElementById('cart-delivery-cost-row');
       if (costRow) costRow.style.display = isDelivery ? 'flex' : 'none';
       const delivType = document.getElementById('cart-footer-delivery-type');
-      if (delivType) delivType.textContent = isDelivery ? 'Доставка 🚚' : 'Самовывоз 📍';
+      if (delivType) delivType.textContent = isDelivery ? 'Доставка' : 'Самовывоз';
+      var cSub = document.getElementById('cart-checkout-btn-sub');
+      if (cSub) cSub.textContent = isDelivery ? 'Доставка' : 'Самовывоз';
+      var chSub = document.getElementById('checkout-submit-sub');
+      if (chSub) chSub.textContent = isDelivery ? 'Доставка' : 'Самовывоз';
       updateCartUI();
     }
 
