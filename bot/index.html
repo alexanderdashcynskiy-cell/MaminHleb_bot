@@ -497,13 +497,6 @@
     <!-- Scroll area -->
     <div style="flex:1 1 0%;overflow-y:auto;min-height:0;padding-bottom:140px;">
      <div id="cart-items-full" class="hide-scrollbar" style="display:flex;flex-direction:column;gap:10px;padding:0 clamp(8px,3vw,12px) 0;"></div>
-     <!-- Expand/collapse toggle -->
-     <div id="cart-expand-wrap" style="display:none;padding:4px 16px 0;">
-      <button id="cart-expand-btn" data-action="toggleCartExpand" style="width:100%;background:none;border:none;border-top:1px solid rgba(201,162,39,0.18);padding:7px 0 2px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:5px;color:#B8922A;font-size:12px;font-weight:600;font-family:'Montserrat',sans-serif;letter-spacing:0.01em;">
-       <span id="cart-expand-label">Развернуть полный список</span>
-       <svg id="cart-expand-chevron" width="11" height="11" fill="none" stroke="#B8922A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="transition:transform 0.2s ease;opacity:0.8;"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
-     </div>
      <div id="cart-empty-full" style="display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 0;">
       <span style="font-size:3.75rem;margin-bottom:1rem;">🥐</span>
       <p style="color:#E8B430;font-size:1.125rem;font-weight:600;">Корзина пуста</p>
@@ -1357,7 +1350,7 @@
   </div>
 
   <!-- Order history overlay -->
-  <div id="order-history-overlay" style="display:none;position:fixed;inset:0;background:#FFFEFC;z-index:150;flex-direction:column;overflow:hidden;">
+  <div id="order-history-overlay" style="display:none;position:fixed;inset:0;background:#FFFEFC;z-index:150;flex-direction:column;">
    <!-- Header -->
    <div style="background:#fff;padding:max(env(safe-area-inset-top,16px),16px) 20px 14px;flex-shrink:0;box-shadow:0 1px 0 rgba(0,0,0,0.06);">
     <div style="display:flex;align-items:center;gap:12px;">
@@ -1370,7 +1363,7 @@
      </div>
     </div>
    </div>
-   <div id="order-history-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 32px;"></div>
+   <div id="order-history-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 40px;"></div>
    <!-- Card action sheet -->
    <div id="oh-action-sheet" style="display:none;position:fixed;inset:0;z-index:160;background:rgba(0,0,0,0.35);" onclick="_ohHideMenu()">
     <div onclick="event.stopPropagation()" style="position:absolute;bottom:0;left:0;right:0;background:#FFFEFC;border-radius:18px 18px 0 0;padding:0 12px max(28px,calc(env(safe-area-inset-bottom,14px)+14px));">
@@ -2732,16 +2725,6 @@
       if (checkoutBtnSub) checkoutBtnSub.textContent = deliveryMethod === 'pickup' ? 'Самовывоз' : 'Доставка';
       if (subtotalDisp) subtotalDisp.innerHTML = subtotal.toFixed(2) + BYN;
       renderCartSuggestions();
-      // Show expand button only when more than 2 items; reset to collapsed
-      var expandWrap = document.getElementById('cart-expand-wrap');
-      if (expandWrap) {
-        expandWrap.style.display = cart.length > 2 ? 'block' : 'none';
-        if (cart.length <= 2 && _cartExpanded) {
-          _cartExpanded = false;
-          itemsContainer.style.maxHeight = '235px';
-          itemsContainer.style.overflowY = 'auto';
-        }
-      }
       var trashSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
       itemsContainer.innerHTML = cart.map(function(item) {
         var product = productsById.get(item.product_id);
@@ -2796,18 +2779,6 @@
       }).join('');
     }
 
-    var _cartExpanded = false;
-    function toggleCartExpand() {
-      _cartExpanded = !_cartExpanded;
-      var container = document.getElementById('cart-items-full');
-      var label = document.getElementById('cart-expand-label');
-      var chevron = document.getElementById('cart-expand-chevron');
-      if (!container || !label || !chevron) return;
-      container.style.maxHeight = _cartExpanded ? 'none' : '330px';
-      container.style.overflowY = _cartExpanded ? 'visible' : 'auto';
-      label.textContent = _cartExpanded ? 'Свернуть список' : 'Развернуть полный список';
-      chevron.style.transform = _cartExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
-    }
 
     function pluralItems(n) {
       const mod100 = n % 100, mod10 = n % 10;
@@ -4144,51 +4115,49 @@
         var orderNumDisplay = '#Заказ' + rawId.replace(/\D/g, '') || rawId;
         var menuArg = JSON.stringify(order.id);
         var imagesHtml = items.slice(0, 4).map(function(item) {
-          return '<div style="width:calc((100% - 24px)/4);aspect-ratio:1;border-radius:10px;background:#F5EDE3;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+          return '<div style="width:calc((100% - 18px)/4);aspect-ratio:1;border-radius:12px;background:#F2EDE8;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.06);">'
             + _ohImgHTML(item)
             + '</div>';
         }).join('');
         if (items.length === 0) imagesHtml = '<p style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;margin:0;">—</p>';
-        return '<div style="background:#fff;border-radius:18px;padding:18px 18px 18px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.07);">'
-          // row: order number + three dots
-          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
+        return '<div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,0.07);">'
+          // order number + three dots
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
           +   '<span style="font-family:\'Montserrat\',sans-serif;font-size:22px;font-weight:800;color:#2d1505;line-height:1;">' + escHtml(orderNumDisplay) + '</span>'
-          +   '<button type="button" onclick="_ohShowMenu(' + menuArg + ')" style="width:32px;height:32px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;">'
-          +     '<svg width="4" height="18" viewBox="0 0 4 18" fill="#2d1505" style="pointer-events:none;"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="9" r="2"/><circle cx="2" cy="16" r="2"/></svg>'
+          +   '<button type="button" onclick="_ohShowMenu(' + menuArg + ')" style="width:28px;height:28px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;">'
+          +     '<svg width="4" height="18" viewBox="0 0 4 18" fill="#9a8060" style="pointer-events:none;"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="9" r="2"/><circle cx="2" cy="16" r="2"/></svg>'
           +   '</button>'
           + '</div>'
           // labels row
-          + '<div style="display:flex;margin-bottom:3px;">'
-          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">Итоговая сумма</span></div>'
-          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">Статус заказа</span></div>'
+          + '<div style="display:flex;margin-bottom:4px;">'
+          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:11px;color:#9a8060;font-weight:400;">Итоговая сумма</span></div>'
+          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:11px;color:#9a8060;font-weight:400;">Статус заказа</span></div>'
           + '</div>'
           // values row
-          + '<div style="display:flex;margin-bottom:14px;">'
-          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:17px;font-weight:700;color:#2d1505;">' + totalStr + BYN + '</span></div>'
-          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:17px;font-weight:700;color:' + statusColor + ';">' + escHtml(status) + '</span></div>'
+          + '<div style="display:flex;margin-bottom:16px;">'
+          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:16px;font-weight:700;color:#2d1505;">' + totalStr + BYN + '</span></div>'
+          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:16px;font-weight:700;color:' + statusColor + ';">' + escHtml(status) + '</span></div>'
           + '</div>'
-          // divider
-          + '<div style="height:1px;background:#F2E8DC;margin-bottom:14px;"></div>'
           // delivery/date labels
           + '<div style="display:flex;margin-bottom:4px;">'
-          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">' + escHtml(typeLabel) + '</span></div>'
-          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">Дата заказа</span></div>'
+          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:11px;color:#9a8060;font-weight:400;">' + escHtml(typeLabel) + '</span></div>'
+          +   (order.date ? '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:11px;color:#9a8060;font-weight:400;">Дата заказа</span></div>' : '')
           + '</div>'
           // delivery/date values
-          + '<div style="display:flex;align-items:center;margin-bottom:16px;">'
+          + '<div style="display:flex;align-items:center;margin-bottom:18px;">'
           +   '<div style="flex:1;display:flex;align-items:center;gap:5px;min-width:0;">'
-          +     '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="2.2" stroke-linecap="round" style="flex-shrink:0;"><path d="M12 22s-7-6.5-7-12a7 7 0 1114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>'
+          +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="2.2" stroke-linecap="round" style="flex-shrink:0;"><path d="M12 22s-7-6.5-7-12a7 7 0 1114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>'
           +     '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#2d1505;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(addr) + '</span>'
           +   '</div>'
-          +   '<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;white-space:nowrap;">'
-          +     '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#2d1505;">' + escHtml(order.date || '') + '</span>'
-          +     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'
-          +   '</div>'
+          +   (order.date ? '<div style="flex-shrink:0;display:flex;align-items:center;gap:5px;white-space:nowrap;margin-left:8px;">'
+          +     '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#2d1505;">' + escHtml(order.date) + '</span>'
+          +     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'
+          +   '</div>' : '')
           + '</div>'
           // heading
-          + '<div style="font-family:\'Montserrat\',sans-serif;font-size:16px;font-weight:700;color:#2d1505;margin-bottom:12px;">Состав заказа</div>'
+          + '<div style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:700;color:#2d1505;margin-bottom:12px;">Состав заказа</div>'
           // images
-          + '<div style="display:flex;gap:8px;">' + imagesHtml + '</div>'
+          + '<div style="display:flex;gap:6px;">' + imagesHtml + '</div>'
           + '</div>';
       }).join('');
     }
@@ -4395,7 +4364,6 @@
         showReviewForm:         function ()      { showReviewForm(); },
         clearCart:              function ()      { clearCart(); },
         setCartDelivery:        function (el)    { setCartDelivery(el.dataset.arg); },
-        toggleCartExpand:       function ()      { toggleCartExpand(); },
         startCheckout:          function ()      { startCheckout(); },
         selectPayment:          function (el)    { selectPayment(el.dataset.arg); },
         togglePickupTimePicker: function ()      { togglePickupTimePicker(); },
