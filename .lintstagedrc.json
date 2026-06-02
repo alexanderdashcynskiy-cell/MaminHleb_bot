@@ -1,0 +1,9 @@
+{
+  "*.js": [
+    "eslint --config eslint.config.security.js",
+    "secretlint"
+  ],
+  "*.json": [
+    "secretlint"
+  ]
+}

@@ -1,0 +1,38 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (fail on high)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: secretlint
+        run: npx --yes secretlint "**/*.{js,json}"
+        continue-on-error: true
+
+      - name: ESLint (security ruleset)
+        run: npx --yes eslint --config eslint.config.security.js bot/
+        continue-on-error: true
+
+      - name: Run audit.sh (regression guards)
+        run: |
+          chmod +x audit.sh
+          ./audit.sh --ci
