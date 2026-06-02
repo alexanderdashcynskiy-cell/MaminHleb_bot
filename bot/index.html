@@ -497,13 +497,6 @@
     <!-- Scroll area -->
     <div style="flex:1 1 0%;overflow-y:auto;min-height:0;padding-bottom:140px;">
      <div id="cart-items-full" class="hide-scrollbar" style="display:flex;flex-direction:column;gap:10px;padding:0 clamp(8px,3vw,12px) 0;"></div>
-     <!-- Expand/collapse toggle -->
-     <div id="cart-expand-wrap" style="display:none;padding:4px 16px 0;">
-      <button id="cart-expand-btn" data-action="toggleCartExpand" style="width:100%;background:none;border:none;border-top:1px solid rgba(201,162,39,0.18);padding:7px 0 2px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:5px;color:#B8922A;font-size:12px;font-weight:600;font-family:'Montserrat',sans-serif;letter-spacing:0.01em;">
-       <span id="cart-expand-label">Развернуть полный список</span>
-       <svg id="cart-expand-chevron" width="11" height="11" fill="none" stroke="#B8922A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="transition:transform 0.2s ease;opacity:0.8;"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
-     </div>
      <div id="cart-empty-full" style="display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 0;">
       <span style="font-size:3.75rem;margin-bottom:1rem;">🥐</span>
       <p style="color:#E8B430;font-size:1.125rem;font-weight:600;">Корзина пуста</p>
@@ -2732,16 +2725,6 @@
       if (checkoutBtnSub) checkoutBtnSub.textContent = deliveryMethod === 'pickup' ? 'Самовывоз' : 'Доставка';
       if (subtotalDisp) subtotalDisp.innerHTML = subtotal.toFixed(2) + BYN;
       renderCartSuggestions();
-      // Show expand button only when more than 2 items; reset to collapsed
-      var expandWrap = document.getElementById('cart-expand-wrap');
-      if (expandWrap) {
-        expandWrap.style.display = cart.length > 2 ? 'block' : 'none';
-        if (cart.length <= 2 && _cartExpanded) {
-          _cartExpanded = false;
-          itemsContainer.style.maxHeight = '235px';
-          itemsContainer.style.overflowY = 'auto';
-        }
-      }
       var trashSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
       itemsContainer.innerHTML = cart.map(function(item) {
         var product = productsById.get(item.product_id);
@@ -2796,18 +2779,6 @@
       }).join('');
     }
 
-    var _cartExpanded = false;
-    function toggleCartExpand() {
-      _cartExpanded = !_cartExpanded;
-      var container = document.getElementById('cart-items-full');
-      var label = document.getElementById('cart-expand-label');
-      var chevron = document.getElementById('cart-expand-chevron');
-      if (!container || !label || !chevron) return;
-      container.style.maxHeight = _cartExpanded ? 'none' : '330px';
-      container.style.overflowY = _cartExpanded ? 'visible' : 'auto';
-      label.textContent = _cartExpanded ? 'Свернуть список' : 'Развернуть полный список';
-      chevron.style.transform = _cartExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
-    }
 
     function pluralItems(n) {
       const mod100 = n % 100, mod10 = n % 10;
@@ -4395,7 +4366,6 @@
         showReviewForm:         function ()      { showReviewForm(); },
         clearCart:              function ()      { clearCart(); },
         setCartDelivery:        function (el)    { setCartDelivery(el.dataset.arg); },
-        toggleCartExpand:       function ()      { toggleCartExpand(); },
         startCheckout:          function ()      { startCheckout(); },
         selectPayment:          function (el)    { selectPayment(el.dataset.arg); },
         togglePickupTimePicker: function ()      { togglePickupTimePicker(); },
