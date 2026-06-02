@@ -4115,51 +4115,49 @@
         var orderNumDisplay = '#Заказ' + rawId.replace(/\D/g, '') || rawId;
         var menuArg = JSON.stringify(order.id);
         var imagesHtml = items.slice(0, 4).map(function(item) {
-          return '<div style="width:calc((100% - 24px)/4);aspect-ratio:1;border-radius:10px;background:#F5EDE3;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+          return '<div style="width:calc((100% - 18px)/4);aspect-ratio:1;border-radius:12px;background:#F2EDE8;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.06);">'
             + _ohImgHTML(item)
             + '</div>';
         }).join('');
         if (items.length === 0) imagesHtml = '<p style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;margin:0;">—</p>';
-        return '<div style="background:#fff;border-radius:18px;padding:18px 18px 18px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.07);">'
-          // row: order number + three dots
-          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
+        return '<div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,0.07);">'
+          // order number + three dots
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
           +   '<span style="font-family:\'Montserrat\',sans-serif;font-size:22px;font-weight:800;color:#2d1505;line-height:1;">' + escHtml(orderNumDisplay) + '</span>'
-          +   '<button type="button" onclick="_ohShowMenu(' + menuArg + ')" style="width:32px;height:32px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;">'
-          +     '<svg width="4" height="18" viewBox="0 0 4 18" fill="#2d1505" style="pointer-events:none;"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="9" r="2"/><circle cx="2" cy="16" r="2"/></svg>'
+          +   '<button type="button" onclick="_ohShowMenu(' + menuArg + ')" style="width:28px;height:28px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;">'
+          +     '<svg width="4" height="18" viewBox="0 0 4 18" fill="#9a8060" style="pointer-events:none;"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="9" r="2"/><circle cx="2" cy="16" r="2"/></svg>'
           +   '</button>'
           + '</div>'
           // labels row
-          + '<div style="display:flex;margin-bottom:3px;">'
-          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">Итоговая сумма</span></div>'
-          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">Статус заказа</span></div>'
+          + '<div style="display:flex;margin-bottom:4px;">'
+          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:11px;color:#9a8060;font-weight:400;">Итоговая сумма</span></div>'
+          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:11px;color:#9a8060;font-weight:400;">Статус заказа</span></div>'
           + '</div>'
           // values row
-          + '<div style="display:flex;margin-bottom:14px;">'
-          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:17px;font-weight:700;color:#2d1505;">' + totalStr + BYN + '</span></div>'
-          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:17px;font-weight:700;color:' + statusColor + ';">' + escHtml(status) + '</span></div>'
+          + '<div style="display:flex;margin-bottom:16px;">'
+          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:16px;font-weight:700;color:#2d1505;">' + totalStr + BYN + '</span></div>'
+          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:16px;font-weight:700;color:' + statusColor + ';">' + escHtml(status) + '</span></div>'
           + '</div>'
-          // divider
-          + '<div style="height:1px;background:#F2E8DC;margin-bottom:14px;"></div>'
           // delivery/date labels
           + '<div style="display:flex;margin-bottom:4px;">'
-          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">' + escHtml(typeLabel) + '</span></div>'
-          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">Дата заказа</span></div>'
+          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:11px;color:#9a8060;font-weight:400;">' + escHtml(typeLabel) + '</span></div>'
+          +   (order.date ? '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:11px;color:#9a8060;font-weight:400;">Дата заказа</span></div>' : '')
           + '</div>'
           // delivery/date values
-          + '<div style="display:flex;align-items:center;margin-bottom:16px;">'
+          + '<div style="display:flex;align-items:center;margin-bottom:18px;">'
           +   '<div style="flex:1;display:flex;align-items:center;gap:5px;min-width:0;">'
-          +     '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="2.2" stroke-linecap="round" style="flex-shrink:0;"><path d="M12 22s-7-6.5-7-12a7 7 0 1114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>'
+          +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="2.2" stroke-linecap="round" style="flex-shrink:0;"><path d="M12 22s-7-6.5-7-12a7 7 0 1114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>'
           +     '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#2d1505;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(addr) + '</span>'
           +   '</div>'
-          +   '<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;white-space:nowrap;">'
-          +     '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#2d1505;">' + escHtml(order.date || '') + '</span>'
-          +     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'
-          +   '</div>'
+          +   (order.date ? '<div style="flex-shrink:0;display:flex;align-items:center;gap:5px;white-space:nowrap;margin-left:8px;">'
+          +     '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#2d1505;">' + escHtml(order.date) + '</span>'
+          +     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'
+          +   '</div>' : '')
           + '</div>'
           // heading
-          + '<div style="font-family:\'Montserrat\',sans-serif;font-size:16px;font-weight:700;color:#2d1505;margin-bottom:12px;">Состав заказа</div>'
+          + '<div style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:700;color:#2d1505;margin-bottom:12px;">Состав заказа</div>'
           // images
-          + '<div style="display:flex;gap:8px;">' + imagesHtml + '</div>'
+          + '<div style="display:flex;gap:6px;">' + imagesHtml + '</div>'
           + '</div>';
       }).join('');
     }
