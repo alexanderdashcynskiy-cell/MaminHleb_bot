@@ -14,7 +14,6 @@ const config = {
   BOT_TOKEN:        (process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN || '').trim(),
   ADMIN_ID:         (process.env.ADMIN_ID || '').trim(),
   DELIVERY_CHAT_ID: (process.env.DELIVERY_CHAT_ID || '').trim(),
-  PREORDER_CHAT_ID: (process.env.PREORDER_CHAT_ID || '').trim(),
   WEBHOOK_SECRET:   (process.env.WEBHOOK_SECRET || '').trim(),
 
   // HTTP
@@ -45,7 +44,6 @@ const SCHEMA = {
   WEBHOOK_SECRET:   { required: false, desc: 'Секрет X-Telegram-Bot-Api-Secret-Token для проверки вебхука и защиты /api/admin/checkin' },
   WEBHOOK_BASE_URL: { required: false, desc: 'Публичный URL для setWebhook (RAILWAY_PUBLIC_DOMAIN или WEBHOOK_BASE_URL); без него вебхук не регистрируется' },
   DELIVERY_CHAT_ID: { required: false, desc: 'Чат для уведомлений о доставке' },
-  PREORDER_CHAT_ID: { required: false, desc: 'Чат для уведомлений о предзаказах' },
 };
 
 function validateConfig() {

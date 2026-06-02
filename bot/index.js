@@ -44,7 +44,7 @@ const orderLimiter = rateLimit({ windowMs: 60 * 1000, max: 10,  standardHeaders:
 const stockLimiter = rateLimit({ windowMs: 60 * 1000, max: 30,  standardHeaders: true, legacyHeaders: false });
 const hhLimiter    = rateLimit({ windowMs: 60 * 1000, max: 60,  standardHeaders: true, legacyHeaders: false });
 
-const { BOT_TOKEN, ADMIN_ID, DELIVERY_CHAT_ID, PREORDER_CHAT_ID, WEBHOOK_SECRET, PORT } = config;
+const { BOT_TOKEN, ADMIN_ID, DELIVERY_CHAT_ID, WEBHOOK_SECRET, PORT } = config;
 
 // ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
 const cbSeen = new Map(); // id → timestamp; pruned hourly
