@@ -1175,87 +1175,124 @@
    </div>
 
    <!-- Form overlay — full screen -->
-   <div id="preorder-form-overlay" style="display:none;position:absolute;inset:0;background:#FAF4EC;z-index:20;flex-direction:column;overflow:hidden;">
-    <!-- Header -->
-    <div style="flex-shrink:0;padding:max(env(safe-area-inset-top,18px),18px) 16px 0;background:#FAF4EC;">
-     <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
-      <button type="button" data-action="closePreorderForm" style="width:38px;height:38px;border-radius:50%;background:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.09);flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
-       <svg width="18" height="18" fill="none" stroke="#3d1f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
-      </button>
-      <span style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#2d1505;">Оформление заказа</span>
-     </div>
-     <!-- Stepper -->
-     <div style="display:flex;align-items:center;margin-bottom:18px;">
-      <div style="width:24px;height:24px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa;font-family:'Montserrat',sans-serif;flex-shrink:0;">1</div>
-      <span style="font-size:12px;color:#aaa;margin:0 6px;font-family:'Montserrat',sans-serif;white-space:nowrap;">Корзина</span>
-      <div style="flex:1;height:1px;background:#ddd;"></div>
-      <div style="width:24px;height:24px;border-radius:50%;background:#2d1505;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;font-family:'Montserrat',sans-serif;flex-shrink:0;margin:0 6px;">2</div>
-      <span style="font-size:12px;color:#2d1505;font-weight:700;font-family:'Montserrat',sans-serif;white-space:nowrap;margin-right:6px;">Данные</span>
-      <div style="flex:1;height:1px;background:#ddd;"></div>
-      <div style="width:24px;height:24px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa;font-family:'Montserrat',sans-serif;flex-shrink:0;margin-left:6px;">3</div>
-      <span style="font-size:12px;color:#aaa;margin-left:6px;font-family:'Montserrat',sans-serif;white-space:nowrap;">Подтверждение</span>
-     </div>
-    </div>
+   <div id="preorder-form-overlay" style="display:none;position:absolute;inset:0;background:#F5F0E8;z-index:20;flex-direction:column;overflow:hidden;">
     <!-- Scrollable content -->
-    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 100px;">
-     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <span style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#2d1505;">Ваш заказ</span>
-      <button type="button" data-action="closePreorderForm" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:700;color:#C9A227;display:flex;align-items:center;gap:4px;font-family:'Montserrat',sans-serif;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
-       Редактировать
-       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      </button>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:max(env(safe-area-inset-top,20px),20px) 16px 140px;">
+
+     <!-- TOP CARD: bag header + product list -->
+     <div style="background:#fff;border-radius:24px;box-shadow:0 2px 16px rgba(0,0,0,0.07);margin-bottom:22px;overflow:hidden;">
+      <!-- Card header row -->
+      <div style="display:flex;align-items:center;gap:14px;padding:18px 18px 12px;">
+       <div style="position:relative;flex-shrink:0;">
+        <div style="width:56px;height:56px;border-radius:16px;background:#F5EDE3;display:flex;align-items:center;justify-content:center;">
+         <svg width="26" height="26" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        </div>
+        <div id="preorder-form-badge" style="position:absolute;top:-6px;left:-6px;min-width:22px;height:22px;border-radius:99px;background:linear-gradient(135deg,#C9A227,#E8B430);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;padding:0 4px;border:1.5px solid #F5F0E8;font-family:'Montserrat',sans-serif;"><span id="preorder-form-count">0</span></div>
+       </div>
+       <div style="flex:1;min-width:0;">
+        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:800;color:#2d1505;line-height:1.1;">Корзина</div>
+        <div style="font-size:13px;color:#9a8060;margin-top:3px;font-family:'Montserrat',sans-serif;"><span id="preorder-form-count-word">0 товаров</span></div>
+       </div>
+       <button type="button" data-action="closePreorderForm" style="display:flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;font-size:13px;font-weight:700;color:#C9A227;font-family:'Montserrat',sans-serif;touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0;">
+        Редактировать
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+       </button>
+      </div>
+      <!-- Product list -->
+      <div id="preorder-form-items"></div>
      </div>
-     <div id="preorder-form-items" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 8px rgba(45,21,5,0.07);margin-bottom:2px;"></div>
-     <div id="preorder-form-total-row" style="background:#fff;border-radius:16px;box-shadow:0 1px 8px rgba(45,21,5,0.07);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"></div>
-     <form id="preorder-form">
-      <div style="display:flex;gap:10px;margin-bottom:14px;">
-       <div style="flex:1;min-width:0;">
-        <label style="display:block;font-size:12px;font-weight:700;color:#3d1f0a;margin-bottom:6px;font-family:'Montserrat',sans-serif;">Дата самовывоза</label>
-        <div style="position:relative;background:#fff;border-radius:14px;padding:12px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-         <span id="preorder-date-display" style="font-size:12px;color:#b0a898;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Выберите дату</span>
-         <svg width="12" height="12" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
-         <input type="date" id="preorder-date" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;" required>
-        </div>
-       </div>
-       <div style="flex:1;min-width:0;">
-        <label style="display:block;font-size:12px;font-weight:700;color:#3d1f0a;margin-bottom:6px;font-family:'Montserrat',sans-serif;">Время (07:00 – 11:00)</label>
-        <div style="position:relative;background:#fff;border-radius:14px;padding:12px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-         <span id="preorder-time-display" style="font-size:12px;color:#b0a898;flex:1;min-width:0;">Выберите время</span>
-         <svg width="12" height="12" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
-         <input type="time" id="preorder-time" min="07:00" max="11:00" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;" required>
-        </div>
-       </div>
-      </div>
-      <div style="display:flex;gap:10px;margin-bottom:14px;">
-       <div style="flex:1;min-width:0;">
-        <label style="display:block;font-size:12px;font-weight:700;color:#3d1f0a;margin-bottom:6px;font-family:'Montserrat',sans-serif;">Ваше имя</label>
-        <div style="background:#fff;border-radius:14px;padding:12px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-         <input type="text" id="preorder-name" placeholder="Ваше имя" style="border:none;outline:none;background:transparent;font-size:13px;color:#3d1f0a;flex:1;min-width:0;font-family:'Montserrat',sans-serif;" required>
-        </div>
-       </div>
-       <div style="flex:1;min-width:0;">
-        <label style="display:block;font-size:12px;font-weight:700;color:#3d1f0a;margin-bottom:6px;font-family:'Montserrat',sans-serif;">Телефон</label>
-        <div style="background:#fff;border-radius:14px;padding:12px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
-         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.7A2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.06 6.06l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
-         <input type="tel" id="preorder-phone" placeholder="+375 (XX) XXX-XX-XX" style="border:none;outline:none;background:transparent;font-size:13px;color:#3d1f0a;flex:1;min-width:0;font-family:'Montserrat',sans-serif;" maxlength="19" required>
-        </div>
-       </div>
-      </div>
+     <!-- Hidden total row (kept for JS compat) -->
+     <div id="preorder-form-total-row" style="display:none;"></div>
+
+     <!-- "Данные" section header -->
+     <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;padding:0 6px;">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:4px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <div>
-       <label style="display:block;font-size:12px;font-weight:700;color:#3d1f0a;margin-bottom:6px;font-family:'Montserrat',sans-serif;">Комментарий к заказу (необязательно)</label>
-       <div style="background:#fff;border-radius:14px;padding:12px 12px;display:flex;align-items:flex-start;gap:8px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        <textarea id="preorder-note" placeholder="Ваши пожелания..." rows="2" style="border:none;outline:none;background:transparent;font-size:13px;color:#3d1f0a;flex:1;min-width:0;resize:none;font-family:'Montserrat',sans-serif;line-height:1.4;"></textarea>
+       <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;font-style:italic;color:#2d1505;line-height:1.1;">Данные</div>
+       <div style="font-size:13px;color:#9a8060;margin-top:5px;font-family:'Montserrat',sans-serif;">Заполните информацию для самовывоза</div>
+      </div>
+     </div>
+
+     <!-- Form -->
+     <form id="preorder-form">
+      <!-- Date + Time -->
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+       <div style="flex:1;min-width:0;position:relative;background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 8px rgba(0,0,0,0.05);cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;">
+         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+         <span style="font-size:11px;color:#9a8060;font-family:'Montserrat',sans-serif;white-space:nowrap;">Дата самовывоза</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+         <span id="preorder-date-display" style="font-size:13px;font-weight:600;color:#2d1505;font-family:'Montserrat',sans-serif;flex:1;">Выберите дату</span>
+         <svg width="11" height="11" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <input type="date" id="preorder-date" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;" required>
        </div>
+       <div style="flex:1;min-width:0;position:relative;background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 8px rgba(0,0,0,0.05);cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;">
+         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+         <span style="font-size:11px;color:#9a8060;font-family:'Montserrat',sans-serif;white-space:nowrap;">Время самовывоза</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+         <span id="preorder-time-display" style="font-size:13px;font-weight:600;color:#2d1505;font-family:'Montserrat',sans-serif;flex:1;">Выберите время</span>
+         <svg width="11" height="11" fill="none" stroke="#C9A227" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <input type="time" id="preorder-time" min="07:00" max="11:00" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;" required>
+       </div>
+      </div>
+      <!-- Name + Phone -->
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+       <div style="flex:1;min-width:0;background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 8px rgba(0,0,0,0.05);">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+         <span style="font-size:11px;color:#9a8060;font-family:'Montserrat',sans-serif;">Ваше имя</span>
+        </div>
+        <input type="text" id="preorder-name" placeholder="Ваше имя" style="width:100%;border:none;outline:none;background:transparent;font-size:13px;font-weight:600;color:#2d1505;font-family:'Montserrat',sans-serif;" required>
+       </div>
+       <div style="flex:1;min-width:0;background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 8px rgba(0,0,0,0.05);">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.7A2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.06 6.06l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+         <span style="font-size:11px;color:#9a8060;font-family:'Montserrat',sans-serif;">Телефон</span>
+        </div>
+        <input type="tel" id="preorder-phone" placeholder="+375 (XX) XXX-XX-XX" style="width:100%;border:none;outline:none;background:transparent;font-size:13px;font-weight:600;color:#2d1505;font-family:'Montserrat',sans-serif;" maxlength="19" required>
+       </div>
+      </div>
+      <!-- Comment -->
+      <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 8px rgba(0,0,0,0.05);">
+       <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span style="font-size:11px;color:#9a8060;font-family:'Montserrat',sans-serif;">Комментарий к заказу (необязательно)</span>
+       </div>
+       <textarea id="preorder-note" placeholder="Ваши пожелания..." rows="2" style="width:100%;border:none;outline:none;background:transparent;font-size:13px;color:#2d1505;font-family:'Montserrat',sans-serif;line-height:1.4;resize:none;"></textarea>
       </div>
      </form>
     </div>
-    <!-- Floating confirm button -->
-    <div style="position:absolute;bottom:40px;left:0;right:0;padding:0 14px;padding-bottom:max(0px,env(safe-area-inset-bottom,0px));pointer-events:none;">
-     <button type="button" id="submit-preorder-btn" data-action="submitPreorder" style="width:100%;padding:16px;background:linear-gradient(90deg,#C9A227,#E8B430);color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:50px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.01em;box-shadow:0 8px 36px rgba(45,21,5,0.16),0 2px 8px rgba(45,21,5,0.08);pointer-events:auto;text-align:center;">Подтвердить предзаказ • <span id="preorder-confirm-total">0.00</span><span class="icon icon-rub"></span></button>
+
+    <!-- FOOTER BAR -->
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px max(20px,calc(env(safe-area-inset-bottom,16px) + 10px));z-index:10;pointer-events:none;background:linear-gradient(to top,#F5F0E8 75%,transparent);">
+     <div style="background:#fff;border-radius:24px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 36px rgba(45,21,5,0.14),0 2px 8px rgba(45,21,5,0.07);pointer-events:auto;">
+      <div style="position:relative;flex-shrink:0;">
+       <div style="width:48px;height:48px;border-radius:14px;background:#EDE0C4;display:flex;align-items:center;justify-content:center;">
+        <svg width="22" height="22" fill="none" stroke="#C9A227" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+       </div>
+       <div id="preorder-footer-badge" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:99px;background:linear-gradient(135deg,#C9A227,#E8B430);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;padding:0 4px;border:1.5px solid #fff;font-family:'Montserrat',sans-serif;"><span id="preorder-footer-count">0</span></div>
+      </div>
+      <div style="min-width:0;">
+       <div style="font-size:15px;font-weight:700;color:#2d1505;line-height:1.2;white-space:nowrap;"><span id="preorder-footer-count-text">0 товаров</span></div>
+       <div style="font-size:12px;color:#aaa;margin-top:2px;">Самовывоз</div>
+      </div>
+      <div style="width:1px;height:32px;background:rgba(0,0,0,0.08);flex-shrink:0;"></div>
+      <div style="min-width:0;">
+       <div style="font-size:18px;font-weight:800;color:#2d1505;line-height:1.2;white-space:nowrap;"><span id="preorder-confirm-total">0.00</span> ₽</div>
+       <div style="font-size:11px;color:#aaa;margin-top:2px;">Итого</div>
+      </div>
+      <div style="flex:1;display:flex;min-width:0;">
+       <button type="button" id="submit-preorder-btn" data-action="submitPreorder" style="width:100%;background:linear-gradient(90deg,#C9A227,#E8B430);border-radius:18px;padding:11px 8px;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 12px rgba(201,162,39,0.38);text-align:center;pointer-events:auto;">
+        <div style="font-size:13px;font-weight:700;color:#fff;line-height:1.2;pointer-events:none;">Подтвердить заказ →</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.8);margin-top:2px;pointer-events:none;">Самовывоз</div>
+       </button>
+      </div>
+     </div>
     </div>
    </div>
    </div>
@@ -3775,29 +3812,49 @@
     }
 
     function buildPreorderFormItemsHTML() {
+      var trashSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
       return preorderCart.map(function(item, idx) {
         var product = productsById.get(item.product_id);
-        var imgSrc = productImages[item.product_id] || coffeePreorderImages[item.product_id] || '';
+        var pid = item.product_id;
+        var imgSrc = productImages[pid] || coffeePreorderImages[pid] || '';
         var weightInfo = product ? ((product.sizes && product.sizes.length > 0) ? product.sizes[0].size : (product.weight || '')) : '';
         var subText = item.addons || weightInfo;
         var imgHTML = imgSrc
-          ? '<img src="' + imgSrc + '" style="width:60px;height:60px;object-fit:cover;border-radius:12px;flex-shrink:0;" alt="">'
-          : '<div style="width:60px;height:60px;border-radius:12px;background:#F2E8D8;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">' + (product ? product.image : '🍞') + '</div>';
+          ? '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;" alt="">'
+          : '<span style="font-size:2.2rem;">' + (product ? product.image : '🍞') + '</span>';
+        var isNew = product && product.isNew;
+        var cat = product ? (product.category || '') : '';
+        var tagText = '', tagStyle = '';
+        if (isNew) { tagText = 'НОВИНКА'; tagStyle = 'background:#E53935;color:#fff;'; }
+        else if (cat === 'Напитки') { tagText = 'НАТУРАЛЬНЫЙ'; tagStyle = 'background:#E8F5E9;color:#2E7D32;'; }
+        else if (cat === 'Хлеб') { tagText = 'С ХРУСТЯЩЕЙ КОРОЧКОЙ'; tagStyle = 'background:#EDE7F6;color:#512DA8;'; }
+        else if (cat === 'Торты' || cat === 'Пироги') { tagText = 'АВТОРСКИЙ'; tagStyle = 'background:#FFF3E0;color:#E65100;'; }
+        else if (cat === 'Снеки' || cat === 'Выпечка') { tagText = 'ИЗ ПЕЧИ'; tagStyle = 'background:#FFF3E0;color:#BF360C;'; }
+        var tagHtml = tagText ? '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.03em;white-space:nowrap;' + tagStyle + '">' + tagText + '</span>' : '';
+        var dot = '<span style="font-size:10px;color:#C8A87A;line-height:1;margin:0 1px;">•</span>';
+        var ratingVal = product ? (4.5 + ((pid.split('').reduce(function(h,c){return (h*31+c.charCodeAt(0))&0xFFFF;},0) % 6) * 0.1)).toFixed(1) : '';
+        var secondaryParts = [];
+        if (subText) secondaryParts.push('<span style="font-size:11px;color:#a07b50;">' + escHtml(subText) + '</span>');
+        if (tagHtml) secondaryParts.push(tagHtml);
+        if (ratingVal) secondaryParts.push('<span style="font-size:11px;font-weight:600;color:#8b6040;">★ ' + ratingVal + '</span>');
+        var secondaryRow = secondaryParts.join(dot);
         var isLast = idx === preorderCart.length - 1;
-        return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;' + (isLast ? '' : 'border-bottom:1px solid #F5EDE5;') + '">'
-          + imgHTML
-          + '<div style="flex:1;min-width:0;">'
-          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:13px;color:#2d1505;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(item.product_name) + '</div>'
-          + (subText ? '<div style="font-size:11px;color:#9a8060;margin-top:2px;line-height:1.3;">' + escHtml(subText) + '</div>' : '')
+        return '<div style="display:flex;gap:12px;padding:14px 16px;' + (isLast ? '' : 'border-bottom:1px solid #F5EDE5;') + '">'
+          + '<div style="width:90px;height:90px;flex-shrink:0;border-radius:14px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;">' + imgHTML + '</div>'
+          + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;">'
+          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:700;color:#2d1505;font-size:14px;line-height:1.25;margin-bottom:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(item.product_name) + '</div>'
+          + '<div style="display:flex;align-items:center;gap:3px;margin-bottom:10px;flex-wrap:wrap;">' + secondaryRow + '</div>'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;">'
+          + '<div style="display:flex;align-items:center;gap:6px;">'
+          + '<button type="button" onclick="updatePreorderQuantityFromForm(\'' + pid + '\',-1)" style="width:28px;height:28px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.14);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:16px;line-height:1;font-weight:400;">−</button>'
+          + '<span style="font-weight:700;font-size:14px;color:#2d1505;min-width:16px;text-align:center;">' + item.quantity + '</span>'
+          + '<button type="button" onclick="updatePreorderQuantityFromForm(\'' + pid + '\',1)" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:600;">+</button>'
           + '</div>'
-          + '<div style="text-align:right;flex-shrink:0;margin-right:4px;">'
-          + '<div style="font-size:12px;color:#9a8060;font-family:\'Montserrat\',sans-serif;">' + item.quantity + ' ×</div>'
-          + '<div style="font-size:13px;font-weight:800;color:#2d1505;font-family:\'Montserrat\',sans-serif;margin-top:1px;">' + (item.price * item.quantity).toFixed(2) + BYN + '</div>'
-          + '</div>'
-          + '<button type="button" onclick="removePreorderFormItem(\'' + item.product_id + '\')" style="flex-shrink:0;background:none;border:none;cursor:pointer;padding:6px;color:#C9A227;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;">'
-          + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>'
-          + '</button>'
-          + '</div>';
+          + '<div style="display:flex;align-items:center;gap:7px;">'
+          + '<span style="font-size:14px;font-weight:800;color:#2d1505;">' + (item.price * item.quantity).toFixed(2) + ' ₽</span>'
+          + '<button type="button" onclick="removePreorderFormItem(\'' + pid + '\')" style="width:28px;height:28px;border:none;background:#F5EDE3;border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;">' + trashSvg + '</button>'
+          + '</div></div>'
+          + '</div></div>';
       }).join('');
     }
 
@@ -3815,11 +3872,19 @@
     function refreshPreorderFormItems() {
       var itemsEl = document.getElementById('preorder-form-items');
       if (itemsEl) itemsEl.innerHTML = buildPreorderFormItemsHTML();
-      var totalEl = document.getElementById('preorder-form-total-row');
-      if (totalEl) totalEl.innerHTML = buildPreorderFormTotalHTML();
       var total = preorderCart.reduce(function(s, i) { return s + i.price * i.quantity; }, 0);
+      var count = preorderCart.reduce(function(s, i) { return s + i.quantity; }, 0);
+      var word = count === 1 ? 'товар' : (count >= 2 && count <= 4 ? 'товара' : 'товаров');
       var ct = document.getElementById('preorder-confirm-total');
       if (ct) ct.textContent = total.toFixed(2);
+      var fc = document.getElementById('preorder-form-count');
+      if (fc) fc.textContent = count;
+      var fcw = document.getElementById('preorder-form-count-word');
+      if (fcw) fcw.textContent = count + ' ' + word;
+      var fbc = document.getElementById('preorder-footer-count');
+      if (fbc) fbc.textContent = count;
+      var fbct = document.getElementById('preorder-footer-count-text');
+      if (fbct) fbct.textContent = count + ' ' + word;
     }
 
     function removePreorderFormItem(productId) {
@@ -3830,11 +3895,24 @@
       refreshPreorderFormItems();
     }
 
+    function updatePreorderQuantityFromForm(productId, delta) {
+      var item = preorderCart.find(function(i) { return i.product_id === productId; });
+      if (!item) return;
+      item.quantity += delta;
+      if (item.quantity <= 0) {
+        preorderCart = preorderCart.filter(function(i) { return i !== item; });
+        if (preorderCart.length === 0) { closePreorderForm(); return; }
+      }
+      updatePreorderTotal();
+      updatePreorderCartUI();
+      refreshPreorderFormItems();
+    }
+
     function openPreorderForm() {
       var overlay = document.getElementById('preorder-form-overlay');
       if (overlay) overlay.style.display = 'flex';
       var btn = document.getElementById('submit-preorder-btn');
-      if (btn) { btn.disabled = false; btn.innerHTML = 'Подтвердить предзаказ • <span id="preorder-confirm-total">0.00</span><span class="icon icon-rub"></span>'; _preorderLock = false; }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;line-height:1.2;pointer-events:none;">Подтвердить заказ →</div><div style="font-size:10px;color:rgba(255,255,255,0.8);margin-top:2px;pointer-events:none;">Самовывоз</div>'; _preorderLock = false; }
       refreshPreorderFormItems();
     }
 
@@ -3849,7 +3927,7 @@
       if (_preorderLock) return;
       _preorderLock = true;
       const btn = document.getElementById('submit-preorder-btn');
-      const resetBtn = () => { btn.disabled = false; btn.innerHTML = 'Подтвердить предзаказ • <span id="preorder-confirm-total">0.00</span> Б'; _preorderLock = false; };
+      const resetBtn = () => { btn.disabled = false; btn.innerHTML = '<div style="font-size:13px;font-weight:700;color:#fff;line-height:1.2;pointer-events:none;">Подтвердить заказ →</div><div style="font-size:10px;color:rgba(255,255,255,0.8);margin-top:2px;pointer-events:none;">Самовывоз</div>'; _preorderLock = false; refreshPreorderFormItems(); };
       const dateVal=document.getElementById('preorder-date')?.value;
       const timeVal=document.getElementById('preorder-time')?.value;
       if(!dateVal || !timeVal) { resetBtn(); showToast('Пожалуйста выберите дату и время', '⚠️'); return; }
