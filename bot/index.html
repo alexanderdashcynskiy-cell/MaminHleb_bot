@@ -445,7 +445,7 @@
   </div><!-- /screen-main -->
 
    <!-- Cart Screen -->
-   <div id="screen-cart" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-cart" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:none;touch-action:pan-y;">
     <!-- Header — compact -->
     <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px;background:#FFFEFC;position:relative;">
      <button data-action="showScreen" data-arg="main" style="width:42px;height:42px;border-radius:13px;background:rgba(0,0,0,0.06);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -613,8 +613,8 @@
    </div>
 
    <!-- Checkout Screen -->
-   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
-    <div style="flex:1;overflow-y:auto;min-height:0;overscroll-behavior:none;">
+   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:none;touch-action:pan-y;">
+    <div style="flex:1;overflow-y:auto;min-height:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
 
      <!-- Header: title centered, illustration absolute top-right -->
      <div style="position:relative;padding:max(env(safe-area-inset-top,12px),36px) 20px 4px;overflow:visible;min-height:70px;">
@@ -835,7 +835,7 @@
    </div>
 
    <!-- Referral Screen -->
-   <div id="screen-referral" style="display:none;overflow:auto;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-referral" style="display:none;overflow-y:auto;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
     <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3">
      <button data-action="showScreen" data-arg="main" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Реферальная программа</h2>
@@ -870,7 +870,7 @@
    </div>
 
    <!-- Locations Screen -->
-   <div id="screen-locations" style="display:none;overflow:auto;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-locations" style="display:none;overflow-y:auto;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
     <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3">
      <button data-action="showScreen" data-arg="main" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Выбрать локацию</h2>
@@ -1014,7 +1014,7 @@
   <div id="floating-cart-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:40;transition:opacity 0.3s;" data-action="toggleFloatingCart"></div>
 
   <!-- Receipt Screen -->
-  <div id="screen-receipt" style="display:none;flex-direction:column;overflow-y:auto;background:#F0E8DC;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;-webkit-overflow-scrolling:touch;">
+  <div id="screen-receipt" style="display:none;flex-direction:column;overflow-y:auto;background:#F0E8DC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
    <!-- Header -->
    <div style="text-align:center;padding:max(env(safe-area-inset-top,20px),36px) 20px 24px;">
     <div style="width:88px;height:88px;background:#22C55E;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(34,197,94,0.3);">
@@ -1109,7 +1109,7 @@
   </div>
 
   <!-- Preorder Screen -->
-  <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+  <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:none;touch-action:pan-y;">
    <!-- Scroll area -->
    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overflow-x:clip;">
     <!-- Hero Header -->
@@ -1502,7 +1502,7 @@
   </div>
 
   <!-- Bestsellers Screen -->
-  <div id="screen-bestsellers" style="display:none;flex-direction:column;overflow:auto;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+  <div id="screen-bestsellers" style="display:none;flex-direction:column;overflow-y:auto;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
    <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3 flex-shrink-0">
     <button data-action="showScreen" data-arg="main" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
     <div style="display:flex;align-items:center;gap:6px;">
