@@ -386,9 +386,9 @@
   </div><!-- /screen-main -->
 
    <!-- Cart Screen -->
-   <div id="screen-cart" style="display:none;flex-direction:column;overflow:hidden;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-cart" style="display:none;flex-direction:column;overflow:hidden;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <!-- Header — compact -->
-    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px;background:#FFF8F0;position:relative;">
+    <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px;background:#FAF7F2;position:relative;">
      <button data-action="showScreen" data-arg="main" style="width:42px;height:42px;border-radius:13px;background:rgba(0,0,0,0.06);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
       <svg width="20" height="20" fill="none" stroke="#3d1f0a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><path d="M15 19l-7-7 7-7"/></svg>
      </button>
@@ -396,9 +396,6 @@
       <div style="font-size:24px;font-weight:800;color:#2d1505;font-family:'Playfair Display',serif;line-height:1.15;">Мамин хлеб</div>
       <div style="font-size:15px;color:#C9A227;font-family:'Playfair Display',serif;font-style:italic;line-height:1.3;">Корзина</div>
      </div>
-     <button id="cart-clear-btn" data-action="clearCart" style="display:none;width:42px;height:42px;border-radius:13px;background:rgba(0,0,0,0.06);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;align-items:center;justify-content:center;flex-shrink:0;">
-      <svg width="15" height="15" fill="none" stroke="#c0392b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="pointer-events:none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-     </button>
      <button data-action="showOrderHistory" style="width:42px;height:42px;border-radius:13px;background:#fff;border:1.5px solid rgba(201,162,39,0.45);box-shadow:0 2px 8px rgba(201,162,39,0.12);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><path d="M3 12h9"/></svg>
      </button>
@@ -553,7 +550,7 @@
    </div>
 
    <!-- Checkout Screen -->
-   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#FAF4EC;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <div style="flex:1;overflow-y:auto;min-height:0;overscroll-behavior:none;">
 
      <!-- Header: title centered, illustration absolute top-right -->
@@ -777,7 +774,7 @@
    </div>
 
    <!-- Referral Screen -->
-   <div id="screen-referral" style="display:none;overflow:auto;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-referral" style="display:none;overflow:auto;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3">
      <button data-action="showScreen" data-arg="main" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Реферальная программа</h2>
@@ -812,7 +809,7 @@
    </div>
 
    <!-- Locations Screen -->
-   <div id="screen-locations" style="display:none;overflow:auto;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+   <div id="screen-locations" style="display:none;overflow:auto;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
     <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3">
      <button data-action="showScreen" data-arg="main" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
      <h2 class="text-xl font-bold text-coffee">Выбрать локацию</h2>
@@ -1051,11 +1048,11 @@
   </div>
 
   <!-- Preorder Screen -->
-  <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+  <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
    <!-- Scroll area -->
    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overflow-x:clip;">
     <!-- Hero Header -->
-    <div style="background:#FFF8F0;padding:max(env(safe-area-inset-top,16px),16px) 16px 0;position:relative;">
+    <div style="background:#FAF7F2;padding:max(env(safe-area-inset-top,16px),16px) 16px 0;position:relative;">
      <!-- Card -->
      <div style="background:#FEF3E8;border-radius:24px;position:relative;overflow:hidden;min-height:160px;padding:18px 20px 22px;margin-bottom:12px;">
       <!-- Left: text content -->
@@ -1175,7 +1172,7 @@
    </div>
 
    <!-- Form overlay — full screen -->
-   <div id="preorder-form-overlay" style="display:none;position:absolute;inset:0;background:#F5F0E8;z-index:20;flex-direction:column;overflow:hidden;">
+   <div id="preorder-form-overlay" style="display:none;position:absolute;inset:0;background:#FAF7F2;z-index:20;flex-direction:column;overflow:hidden;">
     <!-- Scrollable content -->
     <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:max(env(safe-area-inset-top,20px),20px) 16px 140px;">
 
@@ -1299,26 +1296,26 @@
   </div>
 
   <!-- Order history overlay -->
-  <div id="order-history-overlay" style="display:none;position:fixed;inset:0;background:#F2F2F7;z-index:150;flex-direction:column;overflow:hidden;">
+  <div id="order-history-overlay" style="display:none;position:fixed;inset:0;background:#FAF7F2;z-index:150;flex-direction:column;overflow:hidden;">
    <!-- Header -->
    <div style="background:#fff;padding:18px 20px 14px;flex-shrink:0;box-shadow:0 1px 0 rgba(0,0,0,0.06);">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;">
      <div>
-      <div style="font-size:26px;font-weight:800;color:#1C1C1E;font-family:'Montserrat',sans-serif;line-height:1.1;">Мои заказы</div>
-      <div id="order-history-today-date" style="font-size:14px;color:#8E8E93;margin-top:4px;font-family:'Montserrat',sans-serif;"></div>
+      <div style="font-size:26px;font-weight:800;color:#2d1505;font-family:'Montserrat',sans-serif;line-height:1.1;">Мои заказы</div>
+      <div id="order-history-today-date" style="font-size:14px;color:#9a8060;margin-top:4px;font-family:'Montserrat',sans-serif;"></div>
      </div>
      <button type="button" data-action="closeOrderHistory" style="width:44px;height:44px;border-radius:50%;background:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:-2px;box-shadow:0 1px 8px rgba(0,0,0,0.10);">
-      <svg width="5" height="20" viewBox="0 0 5 22" fill="#1C1C1E" style="pointer-events:none;"><circle cx="2.5" cy="2.5" r="2.5"/><circle cx="2.5" cy="11" r="2.5"/><circle cx="2.5" cy="19.5" r="2.5"/></svg>
+      <svg width="5" height="20" viewBox="0 0 5 22" fill="#2d1505" style="pointer-events:none;"><circle cx="2.5" cy="2.5" r="2.5"/><circle cx="2.5" cy="11" r="2.5"/><circle cx="2.5" cy="19.5" r="2.5"/></svg>
      </button>
     </div>
    </div>
    <div id="order-history-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 32px;"></div>
    <!-- Card action sheet -->
    <div id="oh-action-sheet" style="display:none;position:fixed;inset:0;z-index:160;background:rgba(0,0,0,0.35);" onclick="_ohHideMenu()">
-    <div onclick="event.stopPropagation()" style="position:absolute;bottom:0;left:0;right:0;background:#F2F2F7;border-radius:18px 18px 0 0;padding:0 12px max(28px,calc(env(safe-area-inset-bottom,14px)+14px));">
+    <div onclick="event.stopPropagation()" style="position:absolute;bottom:0;left:0;right:0;background:#FAF7F2;border-radius:18px 18px 0 0;padding:0 12px max(28px,calc(env(safe-area-inset-bottom,14px)+14px));">
      <div style="width:40px;height:4px;background:rgba(0,0,0,0.2);border-radius:2px;margin:10px auto 14px;"></div>
      <div style="background:#fff;border-radius:14px;overflow:hidden;margin-bottom:10px;">
-      <button type="button" onclick="_ohRepeatFromMenu()" style="width:100%;padding:17px 18px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-align:center;font-family:'Montserrat',sans-serif;font-size:16px;font-weight:600;color:#1C1C1E;display:block;">Повторить заказ</button>
+      <button type="button" onclick="_ohRepeatFromMenu()" style="width:100%;padding:17px 18px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-align:center;font-family:'Montserrat',sans-serif;font-size:16px;font-weight:600;color:#2d1505;display:block;">Повторить заказ</button>
      </div>
      <div style="background:#fff;border-radius:14px;overflow:hidden;">
       <button type="button" onclick="_ohHideMenu()" style="width:100%;padding:17px 18px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-align:center;font-family:'Montserrat',sans-serif;font-size:16px;font-weight:700;color:#C9A227;display:block;">Отмена</button>
@@ -1329,7 +1326,7 @@
 
   <!-- Coffee addons modal — global -->
   <div id="coffee-addons-overlay" style="display:none;position:fixed;inset:0;background:rgba(45,21,5,0.55);z-index:200;align-items:flex-end;justify-content:center;padding:0 12px 28px;" data-action="closeCoffeeAddons">
-   <div style="width:100%;max-width:480px;background:#FFF8F0;border-radius:28px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 40px rgba(45,21,5,0.18);" data-action="stopPropagation">
+   <div style="width:100%;max-width:480px;background:#FAF7F2;border-radius:28px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 40px rgba(45,21,5,0.18);" data-action="stopPropagation">
     <!-- Drag handle -->
     <div style="padding-top:12px;display:flex;justify-content:center;flex-shrink:0;">
      <div style="width:42px;height:4px;background:rgba(45,21,5,0.15);border-radius:2px;"></div>
@@ -1395,7 +1392,7 @@
      </div>
     </div>
     <!-- Bottom bar -->
-    <div style="flex-shrink:0;padding:12px 20px;padding-bottom:max(env(safe-area-inset-bottom,18px),18px);display:flex;align-items:center;gap:12px;border-top:1px solid rgba(45,21,5,0.07);background:#FFF8F0;">
+    <div style="flex-shrink:0;padding:12px 20px;padding-bottom:max(env(safe-area-inset-bottom,18px),18px);display:flex;align-items:center;gap:12px;border-top:1px solid rgba(45,21,5,0.07);background:#FAF7F2;">
      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
       <button type="button" data-action="changeCoffeeModalQty" data-arg="-1" style="width:40px;height:40px;border-radius:50%;background:#F0EAE0;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;color:#6B4423;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font-weight:700;line-height:1;">−</button>
       <span id="coffee-modal-qty" style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:800;color:#2d1505;min-width:22px;text-align:center;">1</span>
@@ -1430,7 +1427,7 @@
   </div>
 
   <!-- Bestsellers Screen -->
-  <div id="screen-bestsellers" style="display:none;flex-direction:column;overflow:auto;background:#FFF8F0;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
+  <div id="screen-bestsellers" style="display:none;flex-direction:column;overflow:auto;background:#FAF7F2;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:50;">
    <header class="bg-warmWhite px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center gap-3 flex-shrink-0">
     <button data-action="showScreen" data-arg="main" class="w-11 h-11 bg-beige rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-coffee" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
     <div style="display:flex;align-items:center;gap:6px;">
@@ -2622,8 +2619,6 @@
       var badgeDot = document.getElementById('cart-badge-dot');
       if (badgeDot) { badgeDot.style.display = count === 0 ? 'none' : 'flex'; }
       totalFull.textContent = total.toFixed(2);
-      const clearBtn = document.getElementById('cart-clear-btn');
-      if (clearBtn) clearBtn.style.display = cart.length === 0 ? 'none' : 'flex';
       const orderLabel = document.getElementById('cart-order-label');
       const suggSection = document.getElementById('cart-suggestions-section');
       const infoBlock = document.getElementById('cart-info-block');
@@ -2707,21 +2702,20 @@
           + '<div style="width:110px;height:110px;flex-shrink:0;border-radius:14px;background:#F5E6D3;overflow:hidden;display:flex;align-items:center;justify-content:center;align-self:flex-start;">' + imgHTML + '</div>'
           // Content
           + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;">'
-          // Name + three dots
+          // Name + trash button (replacing ···)
           + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:5px;">'
-          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:700;color:#2d1505;font-size:15px;line-height:1.25;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(item.product_name) + '</div>'
-          + '<span style="color:#c0a87a;font-size:16px;letter-spacing:2px;flex-shrink:0;line-height:1;margin-top:2px;cursor:default;">···</span>'
+          + '<div style="font-family:\'Montserrat\',sans-serif;font-weight:600;color:#2d1505;font-size:15px;line-height:1.25;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + escHtml(item.product_name) + '</div>'
+          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:30px;height:30px;border:none;background:#F5EDE3;border-radius:9px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;">' + trashSvg + '</button>'
           + '</div>'
           // Weight · tag · rating
           + '<div style="display:flex;align-items:center;gap:3px;margin-bottom:10px;flex-wrap:wrap;">' + secondaryRow + '</div>'
-          // Price + controls
+          // Price + controls (no separate trash — it's at top)
           + '<div style="display:flex;align-items:center;justify-content:space-between;">'
           + '<span style="font-family:\'Montserrat\',sans-serif;font-size:20px;font-weight:800;color:#C9A227;line-height:1;">' + item.price.toFixed(2) + ' ₽</span>'
           + '<div style="display:flex;align-items:center;gap:7px;">'
           + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:31px;height:31px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.14);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:17px;line-height:1;font-weight:400;">−</button>'
           + '<span style="font-weight:700;font-size:15px;color:#2d1505;min-width:18px;text-align:center;">' + item.quantity + '</span>'
           + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:31px;height:31px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;line-height:1;font-weight:600;">+</button>'
-          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:31px;height:31px;border:none;background:#F5EDE3;border-radius:9px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;">' + trashSvg + '</button>'
           + '</div></div>'
           + '</div></div>';
       }).join('');
@@ -4019,12 +4013,12 @@
       });
     }
     function _ohStatusColor(status) {
-      if (!status) return '#8E8E93';
+      if (!status) return '#9a8060';
       var s = status.toLowerCase();
-      if (s.includes('доставл') || s.includes('пути') || s.includes('принят') || s.includes('готов')) return '#34C759';
-      if (s.includes('отмен')) return '#FF3B30';
-      if (s.includes('выдан') || s.includes('выполн')) return '#8E8E93';
-      return '#FF9500';
+      if (s.includes('доставл') || s.includes('пути') || s.includes('принят') || s.includes('готов')) return '#2E7D32';
+      if (s.includes('отмен')) return '#c0392b';
+      if (s.includes('выдан') || s.includes('выполн')) return '#9a8060';
+      return '#C9A227';
     }
     function _ohImgHTML(item) {
       var pid = item.product_id || item.id || '';
@@ -4054,7 +4048,7 @@
     }
     function _renderHistoryList(list, history) {
       if (history.length === 0) {
-        list.innerHTML = '<div style="text-align:center;padding:60px 16px 40px;"><div style="font-size:3rem;margin-bottom:14px;">📦</div><p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:600;color:#3C3C43;">Заказов пока нет</p><p style="font-family:\'Montserrat\',sans-serif;font-size:13px;color:#8E8E93;margin-top:6px;">Здесь появятся ваши заказы</p></div>';
+        list.innerHTML = '<div style="text-align:center;padding:60px 16px 40px;"><div style="font-size:3rem;margin-bottom:14px;">📦</div><p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:600;color:#2d1505;">Заказов пока нет</p><p style="font-family:\'Montserrat\',sans-serif;font-size:13px;color:#9a8060;margin-top:6px;">Здесь появятся ваши заказы</p></div>';
         return;
       }
       list.innerHTML = history.map(function(order) {
@@ -4070,49 +4064,49 @@
         var orderNumDisplay = '#Заказ' + rawId.replace(/\D/g, '') || rawId;
         var menuArg = JSON.stringify(order.id);
         var imagesHtml = items.slice(0, 4).map(function(item) {
-          return '<div style="width:calc((100% - 24px)/4);aspect-ratio:1;border-radius:10px;background:#F5F5F5;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+          return '<div style="width:calc((100% - 24px)/4);aspect-ratio:1;border-radius:10px;background:#F5EDE3;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
             + _ohImgHTML(item)
             + '</div>';
         }).join('');
-        if (items.length === 0) imagesHtml = '<p style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#8E8E93;margin:0;">—</p>';
+        if (items.length === 0) imagesHtml = '<p style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;margin:0;">—</p>';
         return '<div style="background:#fff;border-radius:18px;padding:18px 18px 18px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.07);">'
           // row: order number + three dots
           + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
-          +   '<span style="font-family:\'Montserrat\',sans-serif;font-size:22px;font-weight:800;color:#1C1C1E;line-height:1;">' + escHtml(orderNumDisplay) + '</span>'
+          +   '<span style="font-family:\'Montserrat\',sans-serif;font-size:22px;font-weight:800;color:#2d1505;line-height:1;">' + escHtml(orderNumDisplay) + '</span>'
           +   '<button type="button" onclick="_ohShowMenu(' + menuArg + ')" style="width:32px;height:32px;background:none;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;">'
-          +     '<svg width="4" height="18" viewBox="0 0 4 18" fill="#1C1C1E" style="pointer-events:none;"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="9" r="2"/><circle cx="2" cy="16" r="2"/></svg>'
+          +     '<svg width="4" height="18" viewBox="0 0 4 18" fill="#2d1505" style="pointer-events:none;"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="9" r="2"/><circle cx="2" cy="16" r="2"/></svg>'
           +   '</button>'
           + '</div>'
           // labels row
           + '<div style="display:flex;margin-bottom:3px;">'
-          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#8E8E93;font-weight:400;">Итоговая сумма</span></div>'
-          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#8E8E93;font-weight:400;">Статус заказа</span></div>'
+          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">Итоговая сумма</span></div>'
+          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">Статус заказа</span></div>'
           + '</div>'
           // values row
           + '<div style="display:flex;margin-bottom:14px;">'
-          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:17px;font-weight:700;color:#1C1C1E;">' + totalStr + ' ₽</span></div>'
+          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:17px;font-weight:700;color:#2d1505;">' + totalStr + ' ₽</span></div>'
           +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:17px;font-weight:700;color:' + statusColor + ';">' + escHtml(status) + '</span></div>'
           + '</div>'
           // divider
-          + '<div style="height:1px;background:#EBEBEB;margin-bottom:14px;"></div>'
+          + '<div style="height:1px;background:#F2E8DC;margin-bottom:14px;"></div>'
           // delivery/date labels
           + '<div style="display:flex;margin-bottom:4px;">'
-          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#8E8E93;font-weight:400;">' + escHtml(typeLabel) + '</span></div>'
-          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#8E8E93;font-weight:400;">Дата заказа</span></div>'
+          +   '<div style="flex:1;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">' + escHtml(typeLabel) + '</span></div>'
+          +   '<div style="flex:1;text-align:right;"><span style="font-family:\'Montserrat\',sans-serif;font-size:12px;color:#9a8060;font-weight:400;">Дата заказа</span></div>'
           + '</div>'
           // delivery/date values
           + '<div style="display:flex;align-items:center;margin-bottom:16px;">'
           +   '<div style="flex:1;display:flex;align-items:center;gap:5px;min-width:0;">'
-          +     '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2.2" stroke-linecap="round" style="flex-shrink:0;"><path d="M12 22s-7-6.5-7-12a7 7 0 1114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>'
-          +     '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#1C1C1E;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(addr) + '</span>'
+          +     '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="2.2" stroke-linecap="round" style="flex-shrink:0;"><path d="M12 22s-7-6.5-7-12a7 7 0 1114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>'
+          +     '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#2d1505;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(addr) + '</span>'
           +   '</div>'
           +   '<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;white-space:nowrap;">'
-          +     '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#1C1C1E;">' + escHtml(order.date || '') + '</span>'
-          +     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'
+          +     '<span style="font-family:\'Montserrat\',sans-serif;font-size:14px;color:#2d1505;">' + escHtml(order.date || '') + '</span>'
+          +     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9a8060" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'
           +   '</div>'
           + '</div>'
           // heading
-          + '<div style="font-family:\'Montserrat\',sans-serif;font-size:16px;font-weight:700;color:#1C1C1E;margin-bottom:12px;">Состав заказа</div>'
+          + '<div style="font-family:\'Montserrat\',sans-serif;font-size:16px;font-weight:700;color:#2d1505;margin-bottom:12px;">Состав заказа</div>'
           // images
           + '<div style="display:flex;gap:8px;">' + imagesHtml + '</div>'
           + '</div>';
@@ -4126,7 +4120,7 @@
       // Set header date
       var todayEl = document.getElementById('order-history-today-date');
       if (todayEl) todayEl.textContent = new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
-      list.innerHTML = '<div style="text-align:center;padding:50px 16px;"><div style="font-size:1.5rem;margin-bottom:10px;">⏳</div><p style="font-family:\'Montserrat\',sans-serif;font-size:13px;color:#8E8E93;">Загружаем историю...</p></div>';
+      list.innerHTML = '<div style="text-align:center;padding:50px 16px;"><div style="font-size:1.5rem;margin-bottom:10px;">⏳</div><p style="font-family:\'Montserrat\',sans-serif;font-size:13px;color:#9a8060;">Загружаем историю...</p></div>';
       var tid = String(telegramId || '0');
       if (tid !== '0') {
         fetch('/api/orders/history?telegramId=' + encodeURIComponent(tid))
