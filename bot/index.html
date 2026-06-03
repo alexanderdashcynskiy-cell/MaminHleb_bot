@@ -2166,7 +2166,7 @@
         : `<p data-stockbadge="${p.id}" style="display:none;font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;"></p>`;
       const imgHTML = productImages[p.id]
         ? `<img src="${productImages[p.id]}" class="w-full h-full" style="object-fit:cover;object-position:center 40%;" alt="${p.name}" loading="lazy" data-fb-html="<div class=&quot;w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige&quot;>${p.image}</div>">`
-        : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
+        : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${escHtml(p.image)}</div>`;
       const oosOverlay = !available ? `
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.52);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;">
           <p style="color:#fff;font-weight:800;font-size:${compact?'9px':'11px'};text-align:center;line-height:1.3;font-family:'Montserrat',sans-serif;">Товар закончился,<br>завтра сделаем<br>новую партию 🔥</p>
@@ -2508,7 +2508,7 @@
         if (productImages[productId]) {
           imgEl.innerHTML = '<img src="' + productImages[productId] + '" class="w-full h-full object-cover" alt="' + product.name + '" data-fb-html="<span style=&quot;font-size:6rem;&quot;>' + product.image + '</span>">';
         } else {
-          imgEl.innerHTML = '<span style="font-size:6rem;">' + product.image + '</span>';
+          imgEl.innerHTML = '<span style="font-size:6rem;">' + escHtml(product.image) + '</span>';
         }
         const ingEl = document.getElementById('detail-ingredients-text');
         if (ingEl) ingEl.textContent = product.ingredients ? 'Состав: ' + product.ingredients : '';
@@ -3478,7 +3478,7 @@
         if (!product) return '';
         return `
           <div class="flex items-center gap-2 p-2 bg-beige/20 rounded-lg">
-            <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-beige flex items-center justify-center text-2xl">${product.image}</div>
+            <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-beige flex items-center justify-center text-2xl">${escHtml(product.image)}</div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-semibold text-coffee truncate">${escHtml(item.product_name)}</p>
               <p class="text-xs text-caramel">${item.price.toFixed(2)}${BYN} × ${item.quantity}</p>
@@ -3664,7 +3664,7 @@
       var coffeeImg = coffeePreorderImages[p.id] || productImages[p.id];
       var imgHTML = coffeeImg
         ? '<img src="' + coffeeImg + '" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;" alt="' + escHtml(p.name) + '" loading="lazy">'
-        : '<div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:3.5rem;">' + p.image + '</div>';
+        : '<div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:3.5rem;">' + escHtml(p.image) + '</div>';
       return '<div style="flex-shrink:0;width:155px;scroll-snap-align:start;position:relative;">'
         + '<div style="position:absolute;top:-101px;left:50%;transform:translateX(-50%);width:178px;height:168px;pointer-events:none;z-index:2;">' + imgHTML + '</div>'
         + '<div style="background:#ffffff;border-radius:22px;box-shadow:0 6px 24px rgba(45,21,5,0.11);padding:68px 12px 12px;display:flex;flex-direction:column;gap:2px;">'
@@ -3879,7 +3879,7 @@
         var subText = item.addons || weightInfo;
         var imgHTML = imgSrc
           ? '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;" alt="">'
-          : '<span style="font-size:2.2rem;">' + (product ? product.image : '🍞') + '</span>';
+          : '<span style="font-size:2.2rem;">' + escHtml(product ? product.image : '🍞') + '</span>';
         var isNew = product && product.isNew;
         var cat = product ? (product.category || '') : '';
         var tagText = '', tagStyle = '';
@@ -4206,7 +4206,7 @@
               return { id: o.orderNumber, date: dateStr, items: items, total: parseFloat(o.amount) || 0, type: type, status: o.status || 'Новый', address: addr };
             });
             _renderHistoryList(list, history);
-            try { localStorage.setItem('mh_order_history', JSON.stringify(history)); } catch(e) {}
+            try { localStorage.setItem('mh_order_history', JSON.stringify(history.map(function(o) { return { id: o.id, date: o.date, items: o.items, total: o.total, type: o.type, status: o.status }; }))); } catch(e) {}
           })
           .catch(function() {
             var fallback = [];

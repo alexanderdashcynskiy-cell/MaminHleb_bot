@@ -33,7 +33,7 @@ app.use((req, res, next) => {
     ? ALLOWED_ORIGINS.includes(origin)
     : isTelegram || !origin;
   if (allowed) {
-    res.header('Access-Control-Allow-Origin',   origin || '*');
+    if (origin) res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Methods',  'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers',  'Content-Type');
   }
