@@ -727,9 +727,18 @@ app.post('/api/order/done', async (req, res) => {
   }
 });
 
-app.get('/api/orders/history', stockLimiter, async (req, res) => {
-  const telegramId = String(req.query.telegramId || '');
-  if (!telegramId || telegramId === '0') return res.json({ ok: true, orders: [] });
+// BOT-H1/DS-01: история доступна только по верифицированному initData.
+// telegramId берётся из подписанного payload'а Telegram, не из query-параметра.
+app.post('/api/orders/history', stockLimiter, async (req, res) => {
+  const rawInitData = req.body?.tgInitData || '';
+  if (!rawInitData) return res.json({ ok: true, orders: [] });
+
+  const tgUser = verifyTgInitData(rawInitData, BOT_TOKEN);
+  if (!tgUser || !tgUser.id) {
+    return res.status(401).json({ ok: false, error: 'initData verification failed' });
+  }
+
+  const telegramId = String(tgUser.id);
   if (!pgPool) return res.json({ ok: true, orders: [], source: 'no_db' });
   try {
     const { rows } = await pgPool.query(

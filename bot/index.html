@@ -4170,9 +4170,14 @@
       var todayEl = document.getElementById('order-history-today-date');
       if (todayEl) todayEl.textContent = new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
       list.innerHTML = '<div style="text-align:center;padding:50px 16px;"><div style="font-size:1.5rem;margin-bottom:10px;">⏳</div><p style="font-family:\'Montserrat\',sans-serif;font-size:13px;color:#9a8060;">Загружаем историю...</p></div>';
-      var tid = String(telegramId || '0');
-      if (tid !== '0') {
-        fetch('/api/orders/history?telegramId=' + encodeURIComponent(tid))
+      var initData = window._tgInitData || '';
+      if (initData) {
+        // BOT-H1: POST с tgInitData — сервер сам извлекает telegramId из верифицированного payload
+        fetch('/api/orders/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tgInitData: initData })
+        })
           .then(function(r) { return r.ok ? r.json() : null; })
           .then(function(data) {
             if (!data || !data.ok) throw new Error('api error');
