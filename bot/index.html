@@ -445,7 +445,7 @@
   </div><!-- /screen-main -->
 
    <!-- Cart Screen -->
-   <div id="screen-cart" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:none;touch-action:pan-y;">
+   <div id="screen-cart" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:none;">
     <!-- Header — compact -->
     <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px;background:#FFFEFC;position:relative;">
      <button data-action="showScreen" data-arg="main" style="width:42px;height:42px;border-radius:13px;background:rgba(0,0,0,0.06);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -606,7 +606,7 @@
    </div>
 
    <!-- Checkout Screen -->
-   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:none;touch-action:pan-y;">
+   <div id="screen-checkout" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:none;">
     <div style="flex:1;overflow-y:auto;min-height:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
 
      <!-- Header: title centered, illustration absolute top-right -->
@@ -1102,7 +1102,7 @@
   </div>
 
   <!-- Preorder Screen -->
-  <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:none;touch-action:pan-y;">
+  <div id="screen-preorder" style="display:none;flex-direction:column;overflow:hidden;background:#FFFEFC;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;overscroll-behavior:none;">
    <!-- Scroll area -->
    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overflow-x:clip;">
     <!-- Hero Header -->
@@ -2164,7 +2164,7 @@
           <div class="flex-shrink-0" style="width:175px;${!available ? 'opacity:0.55;' : ''}" data-pid="${p.id}">
             <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col overflow-hidden" style="isolation:isolate;">
               <div style="overflow:hidden;flex-shrink:0;height:152px;">
-                <button onclick="showProductDetail('${p.id}')" style="position:relative;width:100%;height:100%;border:none;padding:0;cursor:pointer;background:#F5E6D3;display:block;overflow:hidden;">
+                <button onclick="showProductDetail('${p.id}')" style="position:relative;width:100%;height:100%;border:none;padding:0;cursor:pointer;background:#F5E6D3;display:block;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
                   <div class="w-full h-full">${imgHTML}</div>
                   ${oosOverlay}
                 </button>
@@ -2203,7 +2203,7 @@
         <div data-pid="${p.id}" style="${!available ? 'opacity:0.55;' : ''}">
           <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);isolation:isolate;">
             <div style="overflow:hidden;aspect-ratio:4/3;">
-              <button onclick="showProductDetail('${p.id}')" style="position:relative;width:100%;height:100%;overflow:hidden;display:block;border:none;padding:0;cursor:pointer;background:#F5E6D3;">
+              <button onclick="showProductDetail('${p.id}')" style="position:relative;width:100%;height:100%;overflow:hidden;display:block;border:none;padding:0;cursor:pointer;background:#F5E6D3;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
                 <div style="width:100%;height:100%;">${imgHTML}</div>
                 ${p.isNew && available ? '<div style="position:absolute;top:6px;left:6px;background:#E05252;color:#fff;font-weight:700;font-size:7px;padding:2px 6px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.04em;">НОВИНКА</div>' : ''}
                 ${oosOverlay}
