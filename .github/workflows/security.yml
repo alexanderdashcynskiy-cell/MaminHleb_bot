@@ -27,11 +27,22 @@ jobs:
         continue-on-error: true
 
       - name: secretlint
-        run: npx --yes secretlint "**/*.{js,json}"
+        # Явно указываем пакет правил — иначе npx установит только саму CLI без preset
+        run: |
+          npx --yes \
+            --package secretlint \
+            --package @secretlint/secretlint-rule-preset-recommend \
+            secretlint "**/*.{js,json}"
         continue-on-error: true
 
       - name: ESLint (security ruleset)
-        run: npx --yes eslint --config eslint.config.security.js bot/
+        # Явно устанавливаем все нужные пакеты — bot/package.json не содержит devDependencies
+        run: |
+          npx --yes \
+            --package eslint \
+            --package @eslint/js \
+            --package eslint-plugin-security \
+            eslint --config eslint.config.security.js bot/
         continue-on-error: true
 
       - name: Run audit.sh (regression guards)
