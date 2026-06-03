@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+# Pre-commit guard для MaminHleb_bot.
+# Активация (однократно): npm install -D husky lint-staged && npx husky init
+# (init перезапишет этот файл — верни строки ниже).
+
+# 1. Линт + поиск секретов только в staged-файлах
+npx --no-install lint-staged || exit 1
+
+# 2. Быстрый регрессионный прогон (grep-guard'ы, без npm)
+if [ -x ./audit.sh ]; then
+  ./audit.sh --quick || exit 1
+fi

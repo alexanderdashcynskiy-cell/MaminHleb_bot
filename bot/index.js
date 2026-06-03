@@ -281,7 +281,20 @@ async function tgAll(calls) {
   return Promise.all(calls.map(([method, payload]) => tg(method, payload)));
 }
 
-// ─── Дедупликация заказов ─────────────────────────────────────────────────────
+// BOT-L1: constant-time сравнение строк-секретов — предотвращает timing-атаку.
+function safeEquals(a, b) {
+  if (!a || !b) return false;
+  const aBuf = Buffer.from(String(a));
+  const bBuf = Buffer.from(String(b));
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
+}
+
+// ─── Верификация Telegram initData ────────────────────────────────────────────
+// BOT-M5: проверяем auth_date — initData не старше 1 часа.
+// Без этого перехваченный или утёкший initData остаётся валидным бесконечно.
+const INIT_DATA_MAX_AGE_SEC = 3600;
+
 function verifyTgInitData(initData, botToken) {
   if (!initData || !botToken) return null;
   try {
@@ -296,6 +309,9 @@ function verifyTgInitData(initData, botToken) {
     const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
     const expected  = crypto.createHmac('sha256', secretKey).update(dataCheckStr).digest('hex');
     if (hash !== expected) return null;
+    // Проверка свежести: auth_date обязан присутствовать и быть не старее MAX_AGE.
+    const authDate = parseInt(params.get('auth_date') || '0', 10);
+    if (!authDate || Math.floor(Date.now() / 1000) - authDate > INIT_DATA_MAX_AGE_SEC) return null;
     const userStr = params.get('user');
     return userStr ? JSON.parse(userStr) : {};
   } catch(e) { return null; }
@@ -326,17 +342,15 @@ function isHappyHourNow() {
 // handleOrder() теперь только оркестрирует БД/состояние/Telegram, а
 // идентификация / ценообразование / формат доставки — отдельные функции без side-effects.
 
-// P1 #2: Верифицируем Telegram initData; fallback на body.telegramId (для совместимости)
+// BOT-M1: telegramId принимается только из верифицированного Telegram initData.
+// Fallback на body.telegramId удалён — при провале верификации возвращаем '0'
+// (анонимный заказ). Это предотвращает spoofing чужого Telegram ID.
 function resolveClientId(body) {
-  // Mini App шлёт поле tgInitData; поддерживаем также initData для совместимости
   const rawInitData = body.tgInitData || body.initData;
   if (rawInitData && BOT_TOKEN) {
     const tgUser = verifyTgInitData(rawInitData, BOT_TOKEN);
     if (tgUser && tgUser.id) return String(tgUser.id);
     console.warn('resolveClientId: initData verification failed (hash mismatch or missing user)');
-  }
-  if (body.telegramId && body.telegramId !== '0') {
-    return String(body.telegramId);
   }
   return '0';
 }
@@ -622,7 +636,7 @@ app.post('/webhook', (req, res) => {
     console.warn('[webhook] WEBHOOK_SECRET не задан — webhook открыт для любых запросов');
   } else {
     const token = req.headers['x-telegram-bot-api-secret-token'];
-    if (token !== WEBHOOK_SECRET) return res.sendStatus(403);
+    if (!safeEquals(token, WEBHOOK_SECRET)) return res.sendStatus(403);
   }
   res.sendStatus(200);
   const body = req.body;
@@ -685,7 +699,7 @@ app.post('/api/order/done', async (req, res) => {
   const secret = config.ADMIN_SECRET;
   if (secret) {
     const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
-    if (provided !== secret) {
+    if (!safeEquals(provided, secret)) {
       console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
       return res.status(403).json({ ok: false, error: 'unauthorized' });
     }
@@ -727,9 +741,18 @@ app.post('/api/order/done', async (req, res) => {
   }
 });
 
-app.get('/api/orders/history', stockLimiter, async (req, res) => {
-  const telegramId = String(req.query.telegramId || '');
-  if (!telegramId || telegramId === '0') return res.json({ ok: true, orders: [] });
+// BOT-H1/DS-01: история доступна только по верифицированному initData.
+// telegramId берётся из подписанного payload'а Telegram, не из query-параметра.
+app.post('/api/orders/history', stockLimiter, async (req, res) => {
+  const rawInitData = req.body?.tgInitData || '';
+  if (!rawInitData) return res.json({ ok: true, orders: [] });
+
+  const tgUser = verifyTgInitData(rawInitData, BOT_TOKEN);
+  if (!tgUser || !tgUser.id) {
+    return res.status(401).json({ ok: false, error: 'initData verification failed' });
+  }
+
+  const telegramId = String(tgUser.id);
   if (!pgPool) return res.json({ ok: true, orders: [], source: 'no_db' });
   try {
     const { rows } = await pgPool.query(
@@ -785,7 +808,7 @@ app.get('/api/happyhour', hhLimiter, (req, res) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.post('/api/admin/checkin', async (req, res) => {
   const secret = req.headers['x-admin-secret'] || '';
-  if (!WEBHOOK_SECRET || secret !== WEBHOOK_SECRET) {
+  if (!WEBHOOK_SECRET || !safeEquals(secret, WEBHOOK_SECRET)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   try {
