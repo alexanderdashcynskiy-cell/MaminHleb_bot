@@ -654,11 +654,11 @@ async function handleTextMessage(message) {
 
 app.post('/webhook', (req, res) => {
   if (!WEBHOOK_SECRET) {
-    console.warn('[webhook] WEBHOOK_SECRET не задан — webhook открыт для любых запросов');
-  } else {
-    const token = req.headers['x-telegram-bot-api-secret-token'];
-    if (!safeEquals(token, WEBHOOK_SECRET)) return res.sendStatus(403);
+    console.error('[webhook] WEBHOOK_SECRET не задан — все запросы отклоняются. Задайте WEBHOOK_SECRET в .env');
+    return res.sendStatus(403);
   }
+  const token = req.headers['x-telegram-bot-api-secret-token'];
+  if (!safeEquals(token, WEBHOOK_SECRET)) return res.sendStatus(403);
   res.sendStatus(200);
   const body = req.body;
   if (!body) return;
