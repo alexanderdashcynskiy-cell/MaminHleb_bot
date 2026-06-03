@@ -542,7 +542,7 @@ async function handleCallback(cb) {
       );
       if (!rows.length) { console.warn(`delivered: order id=${dbId} not found`); return; }
       const { orderNumber, telegramId } = rows[0];
-      console.log(`delivered: order #${orderNumber} → Доставлен, clientId=${telegramId}`);
+      console.log(`delivered: order #${orderNumber} → Доставлен, clientId=…${String(telegramId).slice(-4)}`);
       if (telegramId && telegramId !== '0') {
         await tg('sendMessage', {
           chat_id:      String(telegramId),
@@ -687,7 +687,7 @@ app.post('/order', orderLimiter, async (req, res) => {
   const type  = String(body.type  || '').trim();
 
   if (!phone || !PHONE_RE.test(phone)) {
-    console.warn('/order rejected: missing or invalid phone', JSON.stringify(phone));
+    console.warn('/order rejected: missing or invalid phone (****' + String(phone).slice(-4) + ')');
     return res.status(400).json({ ok: false, error: 'invalid_phone' });
   }
   if (!name) {
@@ -701,7 +701,7 @@ app.post('/order', orderLimiter, async (req, res) => {
 
   // P2 #12 (сервер): дожидаемся подтверждения записи заказа и отдаём клиенту реальный
   // результат, чтобы фронт не очищал корзину и не показывал чек при сбое.
-  console.log('/order accepted, type:', type, 'name:', name, 'phone:', phone);
+  console.log('/order accepted, type:', type, 'name:', (name ? name[0]+'***' : '?'), 'phone: ****'+String(phone).slice(-4));
   try {
     const result = await handleOrder(body);
     if (result && result.ok) {
@@ -750,7 +750,7 @@ app.post('/api/order/done', async (req, res) => {
     return;
   }
 
-  console.log(`/api/order/done: clientId=${clientId} orderNum=${orderNum}`);
+  console.log(`/api/order/done: clientId=…${String(clientId).slice(-4)} orderNum=${orderNum}`);
   const ratingResult = await tg('sendMessage', {
     chat_id:      String(clientId),
     text:         `🎉 Ваш заказ №${orderNum} уже у вас!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
