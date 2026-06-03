@@ -326,17 +326,15 @@ function isHappyHourNow() {
 // handleOrder() теперь только оркестрирует БД/состояние/Telegram, а
 // идентификация / ценообразование / формат доставки — отдельные функции без side-effects.
 
-// P1 #2: Верифицируем Telegram initData; fallback на body.telegramId (для совместимости)
+// BOT-M1: telegramId принимается только из верифицированного Telegram initData.
+// Fallback на body.telegramId удалён — при провале верификации возвращаем '0'
+// (анонимный заказ). Это предотвращает spoofing чужого Telegram ID.
 function resolveClientId(body) {
-  // Mini App шлёт поле tgInitData; поддерживаем также initData для совместимости
   const rawInitData = body.tgInitData || body.initData;
   if (rawInitData && BOT_TOKEN) {
     const tgUser = verifyTgInitData(rawInitData, BOT_TOKEN);
     if (tgUser && tgUser.id) return String(tgUser.id);
     console.warn('resolveClientId: initData verification failed (hash mismatch or missing user)');
-  }
-  if (body.telegramId && body.telegramId !== '0') {
-    return String(body.telegramId);
   }
   return '0';
 }
