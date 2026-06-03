@@ -2165,7 +2165,7 @@
         ? `<p data-stockbadge="${p.id}" style="font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;">⚠ Осталось: ${stockQty} шт.</p>`
         : `<p data-stockbadge="${p.id}" style="display:none;font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;"></p>`;
       const imgHTML = productImages[p.id]
-        ? `<img src="${productImages[p.id]}" class="w-full h-full" style="object-fit:cover;object-position:center 40%;" alt="${p.name}" loading="lazy" data-fb-html="<div class=&quot;w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige&quot;>${p.image}</div>">`
+        ? `<img src="${escHtml(productImages[p.id])}" class="w-full h-full" style="object-fit:cover;object-position:center 40%;" alt="${escHtml(p.name)}" loading="lazy" data-fb-html="<div class=&quot;w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige&quot;>${escHtml(p.image)}</div>">`
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${escHtml(p.image)}</div>`;
       const oosOverlay = !available ? `
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.52);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;">
@@ -2323,7 +2323,7 @@
       var disc = happyPrice(p);
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var imgHTML = productImages[p.id]
-        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        ? '<img src="' + escHtml(productImages[p.id]) + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
       var hitBadge = p.bestseller
         ? '<div style="position:absolute;top:9px;left:9px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;pointer-events:none;box-shadow:0 2px 6px rgba(201,162,39,0.40);z-index:4;">Хит</div>' : '';
@@ -2832,7 +2832,7 @@
       var item = cart.find(function(i) { return i.product_id === p.id; });
       if (item) qty = item.quantity;
       var imgHTML = productImages[p.id]
-        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        ? '<img src="' + escHtml(productImages[p.id]) + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:#F2E8D8;">' + escHtml(p.image) + '</div>';
       return '<div style="flex-shrink:0;width:132px;height:171px;scroll-snap-align:center;position:relative;">'
         + '<div style="width:100%;height:100%;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(45,21,5,0.07);background:#fff;display:flex;flex-direction:column;cursor:pointer;" onclick="showProductDetail(' + JSON.stringify(p.id) + ')">'
@@ -3511,7 +3511,7 @@
 
     function preorderCardHTML(p, isBakery) {
       var imgHTML = productImages[p.id]
-        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        ? '<img src="' + escHtml(productImages[p.id]) + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
       var now = new Date(); var h = now.getHours();
       var freshBadge = (isBakery && h >= 7 && h < 11) ? '<div style="position:absolute;top:9px;right:9px;background:#fff;color:#C0360A;font-size:9px;font-weight:800;padding:3px 8px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;box-shadow:0 1px 6px rgba(0,0,0,0.12);z-index:4;">Из печи 🔥</div>' : '';
@@ -3733,7 +3733,7 @@
       if (imgWrap) {
         var imgSrc = (typeof coffeePreorderImages !== 'undefined' && coffeePreorderImages[productId]) || productImages[productId];
         if (imgSrc) {
-          imgWrap.innerHTML = '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;" alt="">';
+          imgWrap.innerHTML = '<img src="' + escHtml(imgSrc) + '" style="width:100%;height:100%;object-fit:cover;" alt="">';
         } else {
           imgWrap.textContent = product ? (product.image || '\u2615') : '\u2615';
         }
@@ -3878,7 +3878,7 @@
         var weightInfo = product ? ((product.sizes && product.sizes.length > 0) ? product.sizes[0].size : (product.weight || '')) : '';
         var subText = item.addons || weightInfo;
         var imgHTML = imgSrc
-          ? '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;" alt="">'
+          ? '<img src="' + escHtml(imgSrc) + '" style="width:100%;height:100%;object-fit:cover;" alt="">'
           : '<span style="font-size:2.2rem;">' + escHtml(product ? product.image : '🍞') + '</span>';
         var isNew = product && product.isNew;
         var cat = product ? (product.category || '') : '';
@@ -4090,9 +4090,9 @@
       var product = productsById.get(pid);
       var emoji = (product && product.image) ? product.image : '🥐';
       if (imgSrc) {
-        return '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" loading="lazy" data-fb-html="<span style=&quot;font-size:1.8rem;line-height:1;&quot;>' + emoji + '</span>">';
+        return '<img src="' + escHtml(imgSrc) + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" loading="lazy" data-fb-html="<span style=&quot;font-size:1.8rem;line-height:1;&quot;>' + escHtml(emoji) + '</span>">';
       }
-      return '<span style="font-size:1.8rem;line-height:1;">' + emoji + '</span>';
+      return '<span style="font-size:1.8rem;line-height:1;">' + escHtml(emoji) + '</span>';
     }
     var _ohMenuOrderId = null;
     function _ohShowMenu(orderId) {
