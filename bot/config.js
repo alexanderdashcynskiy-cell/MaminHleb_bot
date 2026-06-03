@@ -42,6 +42,7 @@ const SCHEMA = {
   ADMIN_ID:         { required: true,  desc: 'Telegram ID администратора для check-in и уведомлений' },
   DATABASE_URL:     { required: false, desc: 'Строка подключения PostgreSQL (без неё состояние хранится только в памяти и теряется при рестарте)' },
   WEBHOOK_SECRET:   { required: false, desc: 'Секрет X-Telegram-Bot-Api-Secret-Token — без него webhook отклоняет ВСЕ запросы с 403. Задайте случайную строку 32+ символов.' },
+  ADMIN_SECRET:     { required: false, desc: 'Секрет для /api/order/done (X-Admin-Secret) — без него endpoint отклоняет ВСЕ запросы с 403. Задайте случайную строку 32+ символов.' },
   WEBHOOK_BASE_URL: { required: false, desc: 'Публичный URL для setWebhook (RAILWAY_PUBLIC_DOMAIN или WEBHOOK_BASE_URL); без него вебхук не регистрируется' },
   DELIVERY_CHAT_ID: { required: false, desc: 'Чат для уведомлений о доставке' },
 };

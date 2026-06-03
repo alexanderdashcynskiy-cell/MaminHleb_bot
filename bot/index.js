@@ -717,12 +717,14 @@ app.post('/order', orderLimiter, async (req, res) => {
 // Вызывается дашбордом когда заказ выдан/доставлен — отправляет клиенту запрос оценки
 app.post('/api/order/done', async (req, res) => {
   const secret = config.ADMIN_SECRET;
-  if (secret) {
-    const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
-    if (!safeEquals(provided, secret)) {
-      console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
-      return res.status(403).json({ ok: false, error: 'unauthorized' });
-    }
+  if (!secret) {
+    console.error('[order/done] ADMIN_SECRET не задан — все запросы отклоняются. Задайте ADMIN_SECRET в .env');
+    return res.status(403).json({ ok: false, error: 'unauthorized' });
+  }
+  const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
+  if (!safeEquals(provided, secret)) {
+    console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
+    return res.status(403).json({ ok: false, error: 'unauthorized' });
   }
 
   const orderNum = String((req.body || {}).orderNumber || '');
