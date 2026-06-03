@@ -391,7 +391,7 @@ function priceOrder(body, isPreorder) {
         if (!name || !Number.isFinite(qty) || qty <= 0) return [];
         const serverPrice = catalogPriceMap[name.toLowerCase()];
         if (serverPrice === undefined) {
-          console.warn(`priceOrder: unknown product "${name}" — rejected (not in CATALOG)`);
+          console.warn(`priceOrder: unknown product "${name.replace(/[\r\n\t]/g, ' ')}" — rejected (not in CATALOG)`);
           return [];
         }
         const price = serverPrice;
