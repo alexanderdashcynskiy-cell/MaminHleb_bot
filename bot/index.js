@@ -2,7 +2,6 @@
 require('dotenv').config();
 
 const express   = require('express');
-const fetch     = require('node-fetch');
 const path      = require('path');
 const { Pool }  = require('pg');
 const helmet    = require('helmet');
@@ -17,8 +16,8 @@ app.use(helmet({
   frameguard:               false, // Mini App встраивается в Telegram WebView
   crossOriginEmbedderPolicy: false, // нужно для Telegram WebApp embedding
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.text({ type: 'text/plain', limit: '10mb' }));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.text({ type: 'text/plain', limit: '100kb' }));
 app.use('/images',     express.static(path.join(__dirname, 'public/images')));
 app.use('/fonts',      express.static(path.join(__dirname, 'public/fonts')));
 // BOT-M2: статический CSS вместо Tailwind CDN
@@ -34,7 +33,7 @@ app.use((req, res, next) => {
     ? ALLOWED_ORIGINS.includes(origin)
     : isTelegram || !origin;
   if (allowed) {
-    res.header('Access-Control-Allow-Origin',   origin || '*');
+    if (origin) res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Methods',  'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers',  'Content-Type');
   }
@@ -326,8 +325,9 @@ function verifyTgInitData(initData, botToken) {
       .map(([k, v]) => `${k}=${v}`)
       .join('\n');
     const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
-    const expected  = crypto.createHmac('sha256', secretKey).update(dataCheckStr).digest('hex');
-    if (hash !== expected) return null;
+    const expected  = crypto.createHmac('sha256', secretKey).update(dataCheckStr).digest();
+    const hashBuf   = Buffer.from(hash, 'hex');
+    if (hashBuf.length !== expected.length || !crypto.timingSafeEqual(hashBuf, expected)) return null;
     // Проверка свежести: auth_date обязан присутствовать и быть не старее MAX_AGE.
     const authDate = parseInt(params.get('auth_date') || '0', 10);
     if (!authDate || Math.floor(Date.now() / 1000) - authDate > INIT_DATA_MAX_AGE_SEC) return null;
@@ -391,7 +391,7 @@ function priceOrder(body, isPreorder) {
         if (!name || !Number.isFinite(qty) || qty <= 0) return [];
         const serverPrice = catalogPriceMap[name.toLowerCase()];
         if (serverPrice === undefined) {
-          console.warn(`priceOrder: unknown product "${name}" — rejected (not in CATALOG)`);
+          console.warn(`priceOrder: unknown product "${name.replace(/[\r\n\t]/g, ' ')}" — rejected (not in CATALOG)`);
           return [];
         }
         const price = serverPrice;
@@ -542,7 +542,7 @@ async function handleCallback(cb) {
       );
       if (!rows.length) { console.warn(`delivered: order id=${dbId} not found`); return; }
       const { orderNumber, telegramId } = rows[0];
-      console.log(`delivered: order #${orderNumber} → Доставлен, clientId=${telegramId}`);
+      console.log(`delivered: order #${orderNumber} → Доставлен, clientId=…${String(telegramId).slice(-4)}`);
       if (telegramId && telegramId !== '0') {
         await tg('sendMessage', {
           chat_id:      String(telegramId),
@@ -610,8 +610,8 @@ async function handleTextMessage(message) {
     if (cd.promptMsgId) await tg('deleteMessage', { chat_id: senderId, message_id: cd.promptMsgId });
     await tg('sendMessage', {
       chat_id:    senderId,
-      text:       `✅ Записано! Сегодня работает: *${msgText}*`,
-      parse_mode: 'Markdown'
+      text:       `✅ Записано! Сегодня работает: <b>${escHtml(msgText)}</b>`,
+      parse_mode: 'HTML'
     });
     delProp(`pending_checkin_${senderId}`);
     return;
@@ -654,11 +654,11 @@ async function handleTextMessage(message) {
 
 app.post('/webhook', (req, res) => {
   if (!WEBHOOK_SECRET) {
-    console.warn('[webhook] WEBHOOK_SECRET не задан — webhook открыт для любых запросов');
-  } else {
-    const token = req.headers['x-telegram-bot-api-secret-token'];
-    if (!safeEquals(token, WEBHOOK_SECRET)) return res.sendStatus(403);
+    console.error('[webhook] WEBHOOK_SECRET не задан — все запросы отклоняются. Задайте WEBHOOK_SECRET в .env');
+    return res.sendStatus(403);
   }
+  const token = req.headers['x-telegram-bot-api-secret-token'];
+  if (!safeEquals(token, WEBHOOK_SECRET)) return res.sendStatus(403);
   res.sendStatus(200);
   const body = req.body;
   if (!body) return;
@@ -687,7 +687,7 @@ app.post('/order', orderLimiter, async (req, res) => {
   const type  = String(body.type  || '').trim();
 
   if (!phone || !PHONE_RE.test(phone)) {
-    console.warn('/order rejected: missing or invalid phone', JSON.stringify(phone));
+    console.warn('/order rejected: missing or invalid phone (****' + String(phone).slice(-4) + ')');
     return res.status(400).json({ ok: false, error: 'invalid_phone' });
   }
   if (!name) {
@@ -701,7 +701,7 @@ app.post('/order', orderLimiter, async (req, res) => {
 
   // P2 #12 (сервер): дожидаемся подтверждения записи заказа и отдаём клиенту реальный
   // результат, чтобы фронт не очищал корзину и не показывал чек при сбое.
-  console.log('/order accepted, type:', type, 'name:', name, 'phone:', phone);
+  console.log('/order accepted, type:', type, 'name:', (name ? name[0]+'***' : '?'), 'phone: ****'+String(phone).slice(-4));
   try {
     const result = await handleOrder(body);
     if (result && result.ok) {
@@ -718,12 +718,14 @@ app.post('/order', orderLimiter, async (req, res) => {
 // Вызывается дашбордом когда заказ выдан/доставлен — отправляет клиенту запрос оценки
 app.post('/api/order/done', async (req, res) => {
   const secret = config.ADMIN_SECRET;
-  if (secret) {
-    const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
-    if (!safeEquals(provided, secret)) {
-      console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
-      return res.status(403).json({ ok: false, error: 'unauthorized' });
-    }
+  if (!secret) {
+    console.error('[order/done] ADMIN_SECRET не задан — все запросы отклоняются. Задайте ADMIN_SECRET в .env');
+    return res.status(403).json({ ok: false, error: 'unauthorized' });
+  }
+  const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
+  if (!safeEquals(provided, secret)) {
+    console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
+    return res.status(403).json({ ok: false, error: 'unauthorized' });
   }
 
   const orderNum = String((req.body || {}).orderNumber || '');
@@ -750,7 +752,7 @@ app.post('/api/order/done', async (req, res) => {
     return;
   }
 
-  console.log(`/api/order/done: clientId=${clientId} orderNum=${orderNum}`);
+  console.log(`/api/order/done: clientId=…${String(clientId).slice(-4)} orderNum=${orderNum}`);
   const ratingResult = await tg('sendMessage', {
     chat_id:      String(clientId),
     text:         `🎉 Ваш заказ №${orderNum} уже у вас!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
