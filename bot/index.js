@@ -19,8 +19,10 @@ app.use(helmet({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.text({ type: 'text/plain', limit: '10mb' }));
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
-app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
+app.use('/images',     express.static(path.join(__dirname, 'public/images')));
+app.use('/fonts',      express.static(path.join(__dirname, 'public/fonts')));
+// BOT-M2: статический CSS вместо Tailwind CDN
+app.use('/styles.css', express.static(path.join(__dirname, 'public/styles.css')));
 
 const ALLOWED_ORIGINS = config.ALLOWED_ORIGINS;
 
