@@ -325,8 +325,9 @@ function verifyTgInitData(initData, botToken) {
       .map(([k, v]) => `${k}=${v}`)
       .join('\n');
     const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
-    const expected  = crypto.createHmac('sha256', secretKey).update(dataCheckStr).digest('hex');
-    if (hash !== expected) return null;
+    const expected  = crypto.createHmac('sha256', secretKey).update(dataCheckStr).digest();
+    const hashBuf   = Buffer.from(hash, 'hex');
+    if (hashBuf.length !== expected.length || !crypto.timingSafeEqual(hashBuf, expected)) return null;
     // Проверка свежести: auth_date обязан присутствовать и быть не старее MAX_AGE.
     const authDate = parseInt(params.get('auth_date') || '0', 10);
     if (!authDate || Math.floor(Date.now() / 1000) - authDate > INIT_DATA_MAX_AGE_SEC) return null;
