@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Telegram bot for MaminHleb bakery",
   "scripts": {
-    "start": "node bot/index.js"
+    "start": "node bot/index.js",
+    "build:css": "tailwindcss -i bot/input.css -o bot/public/styles.css --minify"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -13,7 +14,13 @@
     "express": "4.22.2",
     "express-rate-limit": "8.5.2",
     "helmet": "8.2.0",
-    "node-fetch": "2.7.0",
     "pg": "8.21.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.1",
+    "eslint-plugin-no-secrets": "^2.3.3",
+    "eslint-plugin-security": "^4.0.0",
+    "tailwindcss": "^3.4.17"
   }
 }

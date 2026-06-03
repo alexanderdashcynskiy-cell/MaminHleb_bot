@@ -2,7 +2,6 @@
 require('dotenv').config();
 
 const express   = require('express');
-const fetch     = require('node-fetch');
 const path      = require('path');
 const { Pool }  = require('pg');
 const helmet    = require('helmet');
@@ -17,10 +16,12 @@ app.use(helmet({
   frameguard:               false, // Mini App встраивается в Telegram WebView
   crossOriginEmbedderPolicy: false, // нужно для Telegram WebApp embedding
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.text({ type: 'text/plain', limit: '10mb' }));
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
-app.use('/fonts',  express.static(path.join(__dirname, 'public/fonts')));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.text({ type: 'text/plain', limit: '100kb' }));
+app.use('/images',     express.static(path.join(__dirname, 'public/images')));
+app.use('/fonts',      express.static(path.join(__dirname, 'public/fonts')));
+// BOT-M2: статический CSS вместо Tailwind CDN
+app.use('/styles.css', express.static(path.join(__dirname, 'public/styles.css')));
 
 const ALLOWED_ORIGINS = config.ALLOWED_ORIGINS;
 
@@ -32,7 +33,7 @@ app.use((req, res, next) => {
     ? ALLOWED_ORIGINS.includes(origin)
     : isTelegram || !origin;
   if (allowed) {
-    res.header('Access-Control-Allow-Origin',   origin || '*');
+    if (origin) res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Methods',  'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers',  'Content-Type');
   }
@@ -125,6 +126,15 @@ async function initDB() {
     }
   } catch(e) { console.error('list tables:', e.message); }
 }
+
+// BOT-M3: единый источник расписания «счастливого часа» и скидки.
+// Используется и в isHappyHourNow(), и в /api/happyhour, и в /api/config —
+// чтобы расписание не расходилось между бэкендом и Mini App.
+const HAPPY_HOUR = {
+  weekday: { start: 19, end: 20 }, // Пн–Пт
+  weekend: { start: 17, end: 18 }, // Сб–Вс
+  discount: 0.30,                  // 30% скидка
+};
 
 // Bot Арх #5: shared catalog schema with frontend — server is the canonical source
 const CATALOG = [
@@ -249,6 +259,14 @@ function parsePreorderTime(timeStr) {
   return { valid: true, niceDate: `${m[3]}.${m[2]}.${m[1]}`, rawTime: m[4] };
 }
 
+// BOT-M3: экранирование пользовательского текста для Telegram parse_mode:HTML.
+function escHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 // ─── Telegram API ─────────────────────────────────────────────────────────────
 const TG_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
@@ -281,7 +299,20 @@ async function tgAll(calls) {
   return Promise.all(calls.map(([method, payload]) => tg(method, payload)));
 }
 
-// ─── Дедупликация заказов ─────────────────────────────────────────────────────
+// BOT-L1: constant-time сравнение строк-секретов — предотвращает timing-атаку.
+function safeEquals(a, b) {
+  if (!a || !b) return false;
+  const aBuf = Buffer.from(String(a));
+  const bBuf = Buffer.from(String(b));
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
+}
+
+// ─── Верификация Telegram initData ────────────────────────────────────────────
+// BOT-M5: проверяем auth_date — initData не старше 1 часа.
+// Без этого перехваченный или утёкший initData остаётся валидным бесконечно.
+const INIT_DATA_MAX_AGE_SEC = 3600;
+
 function verifyTgInitData(initData, botToken) {
   if (!initData || !botToken) return null;
   try {
@@ -294,8 +325,12 @@ function verifyTgInitData(initData, botToken) {
       .map(([k, v]) => `${k}=${v}`)
       .join('\n');
     const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
-    const expected  = crypto.createHmac('sha256', secretKey).update(dataCheckStr).digest('hex');
-    if (hash !== expected) return null;
+    const expected  = crypto.createHmac('sha256', secretKey).update(dataCheckStr).digest();
+    const hashBuf   = Buffer.from(hash, 'hex');
+    if (hashBuf.length !== expected.length || !crypto.timingSafeEqual(hashBuf, expected)) return null;
+    // Проверка свежести: auth_date обязан присутствовать и быть не старее MAX_AGE.
+    const authDate = parseInt(params.get('auth_date') || '0', 10);
+    if (!authDate || Math.floor(Date.now() / 1000) - authDate > INIT_DATA_MAX_AGE_SEC) return null;
     const userStr = params.get('user');
     return userStr ? JSON.parse(userStr) : {};
   } catch(e) { return null; }
@@ -316,9 +351,9 @@ function isHappyHourNow() {
   const msk = new Date(now.getTime() + 3 * 3600_000);
   const day = msk.getUTCDay();
   const h   = msk.getUTCHours();
-  const weekday = day >= 1 && day <= 5;
-  const weekend = day === 0 || day === 6;
-  return (weekday && h >= 19 && h < 20) || (weekend && h >= 17 && h < 18);
+  const isWeekend = day === 0 || day === 6;
+  const win = isWeekend ? HAPPY_HOUR.weekend : HAPPY_HOUR.weekday;
+  return h >= win.start && h < win.end;
 }
 
 // ─── Обработка заказа ─────────────────────────────────────────────────────────
@@ -326,17 +361,15 @@ function isHappyHourNow() {
 // handleOrder() теперь только оркестрирует БД/состояние/Telegram, а
 // идентификация / ценообразование / формат доставки — отдельные функции без side-effects.
 
-// P1 #2: Верифицируем Telegram initData; fallback на body.telegramId (для совместимости)
+// BOT-M1: telegramId принимается только из верифицированного Telegram initData.
+// Fallback на body.telegramId удалён — при провале верификации возвращаем '0'
+// (анонимный заказ). Это предотвращает spoofing чужого Telegram ID.
 function resolveClientId(body) {
-  // Mini App шлёт поле tgInitData; поддерживаем также initData для совместимости
   const rawInitData = body.tgInitData || body.initData;
   if (rawInitData && BOT_TOKEN) {
     const tgUser = verifyTgInitData(rawInitData, BOT_TOKEN);
     if (tgUser && tgUser.id) return String(tgUser.id);
     console.warn('resolveClientId: initData verification failed (hash mismatch or missing user)');
-  }
-  if (body.telegramId && body.telegramId !== '0') {
-    return String(body.telegramId);
   }
   return '0';
 }
@@ -358,7 +391,7 @@ function priceOrder(body, isPreorder) {
         if (!name || !Number.isFinite(qty) || qty <= 0) return [];
         const serverPrice = catalogPriceMap[name.toLowerCase()];
         if (serverPrice === undefined) {
-          console.warn(`priceOrder: unknown product "${name}" — rejected (not in CATALOG)`);
+          console.warn(`priceOrder: unknown product "${name.replace(/[\r\n\t]/g, ' ')}" — rejected (not in CATALOG)`);
           return [];
         }
         const price = serverPrice;
@@ -373,8 +406,10 @@ function priceOrder(body, isPreorder) {
   }
 
   const hhActive = !isPreorder && isHappyHourNow();
-  if (hhActive) total = Math.round(total * 0.7 * 100) / 100;
-  const totalStr = (hhActive ? `~~${(total / 0.7).toFixed(2)}~~ ` : '') + total.toFixed(2) + ' Br' + (hhActive ? ' 🎉 -30% Счастливый час' : '');
+  const hhFactor = 1 - HAPPY_HOUR.discount;
+  if (hhActive) total = Math.round(total * hhFactor * 100) / 100;
+  const hhPct = Math.round(HAPPY_HOUR.discount * 100);
+  const totalStr = (hhActive ? `~~${(total / hhFactor).toFixed(2)}~~ ` : '') + total.toFixed(2) + ' Br' + (hhActive ? ` 🎉 -${hhPct}% Счастливый час` : '');
 
   return { itemsText, total, totalStr, hhActive };
 }
@@ -507,7 +542,7 @@ async function handleCallback(cb) {
       );
       if (!rows.length) { console.warn(`delivered: order id=${dbId} not found`); return; }
       const { orderNumber, telegramId } = rows[0];
-      console.log(`delivered: order #${orderNumber} → Доставлен, clientId=${telegramId}`);
+      console.log(`delivered: order #${orderNumber} → Доставлен, clientId=…${String(telegramId).slice(-4)}`);
       if (telegramId && telegramId !== '0') {
         await tg('sendMessage', {
           chat_id:      String(telegramId),
@@ -575,8 +610,8 @@ async function handleTextMessage(message) {
     if (cd.promptMsgId) await tg('deleteMessage', { chat_id: senderId, message_id: cd.promptMsgId });
     await tg('sendMessage', {
       chat_id:    senderId,
-      text:       `✅ Записано! Сегодня работает: *${msgText}*`,
-      parse_mode: 'Markdown'
+      text:       `✅ Записано! Сегодня работает: <b>${escHtml(msgText)}</b>`,
+      parse_mode: 'HTML'
     });
     delProp(`pending_checkin_${senderId}`);
     return;
@@ -619,11 +654,11 @@ async function handleTextMessage(message) {
 
 app.post('/webhook', (req, res) => {
   if (!WEBHOOK_SECRET) {
-    console.warn('[webhook] WEBHOOK_SECRET не задан — webhook открыт для любых запросов');
-  } else {
-    const token = req.headers['x-telegram-bot-api-secret-token'];
-    if (token !== WEBHOOK_SECRET) return res.sendStatus(403);
+    console.error('[webhook] WEBHOOK_SECRET не задан — все запросы отклоняются. Задайте WEBHOOK_SECRET в .env');
+    return res.sendStatus(403);
   }
+  const token = req.headers['x-telegram-bot-api-secret-token'];
+  if (!safeEquals(token, WEBHOOK_SECRET)) return res.sendStatus(403);
   res.sendStatus(200);
   const body = req.body;
   if (!body) return;
@@ -652,7 +687,7 @@ app.post('/order', orderLimiter, async (req, res) => {
   const type  = String(body.type  || '').trim();
 
   if (!phone || !PHONE_RE.test(phone)) {
-    console.warn('/order rejected: missing or invalid phone', JSON.stringify(phone));
+    console.warn('/order rejected: missing or invalid phone (****' + String(phone).slice(-4) + ')');
     return res.status(400).json({ ok: false, error: 'invalid_phone' });
   }
   if (!name) {
@@ -666,7 +701,7 @@ app.post('/order', orderLimiter, async (req, res) => {
 
   // P2 #12 (сервер): дожидаемся подтверждения записи заказа и отдаём клиенту реальный
   // результат, чтобы фронт не очищал корзину и не показывал чек при сбое.
-  console.log('/order accepted, type:', type, 'name:', name, 'phone:', phone);
+  console.log('/order accepted, type:', type, 'name:', (name ? name[0]+'***' : '?'), 'phone: ****'+String(phone).slice(-4));
   try {
     const result = await handleOrder(body);
     if (result && result.ok) {
@@ -683,12 +718,14 @@ app.post('/order', orderLimiter, async (req, res) => {
 // Вызывается дашбордом когда заказ выдан/доставлен — отправляет клиенту запрос оценки
 app.post('/api/order/done', async (req, res) => {
   const secret = config.ADMIN_SECRET;
-  if (secret) {
-    const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
-    if (provided !== secret) {
-      console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
-      return res.status(403).json({ ok: false, error: 'unauthorized' });
-    }
+  if (!secret) {
+    console.error('[order/done] ADMIN_SECRET не задан — все запросы отклоняются. Задайте ADMIN_SECRET в .env');
+    return res.status(403).json({ ok: false, error: 'unauthorized' });
+  }
+  const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
+  if (!safeEquals(provided, secret)) {
+    console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
+    return res.status(403).json({ ok: false, error: 'unauthorized' });
   }
 
   const orderNum = String((req.body || {}).orderNumber || '');
@@ -715,7 +752,7 @@ app.post('/api/order/done', async (req, res) => {
     return;
   }
 
-  console.log(`/api/order/done: clientId=${clientId} orderNum=${orderNum}`);
+  console.log(`/api/order/done: clientId=…${String(clientId).slice(-4)} orderNum=${orderNum}`);
   const ratingResult = await tg('sendMessage', {
     chat_id:      String(clientId),
     text:         `🎉 Ваш заказ №${orderNum} уже у вас!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
@@ -727,9 +764,18 @@ app.post('/api/order/done', async (req, res) => {
   }
 });
 
-app.get('/api/orders/history', stockLimiter, async (req, res) => {
-  const telegramId = String(req.query.telegramId || '');
-  if (!telegramId || telegramId === '0') return res.json({ ok: true, orders: [] });
+// BOT-H1/DS-01: история доступна только по верифицированному initData.
+// telegramId берётся из подписанного payload'а Telegram, не из query-параметра.
+app.post('/api/orders/history', stockLimiter, async (req, res) => {
+  const rawInitData = req.body?.tgInitData || '';
+  if (!rawInitData) return res.json({ ok: true, orders: [] });
+
+  const tgUser = verifyTgInitData(rawInitData, BOT_TOKEN);
+  if (!tgUser || !tgUser.id) {
+    return res.status(401).json({ ok: false, error: 'initData verification failed' });
+  }
+
+  const telegramId = String(tgUser.id);
   if (!pgPool) return res.json({ ok: true, orders: [], source: 'no_db' });
   try {
     const { rows } = await pgPool.query(
@@ -745,6 +791,36 @@ app.get('/api/orders/history', stockLimiter, async (req, res) => {
     console.error('/api/orders/history error:', e.message);
     res.json({ ok: true, orders: [] });
   }
+});
+
+// BOT-M3: приём отзыва из Mini App. Текст экранируется и пересылается админу.
+// telegramId считается недоверенным (клиент шлёт его напрямую, без initData),
+// поэтому используется только как информационная метка, не как идентификатор.
+app.post('/review', orderLimiter, async (req, res) => {
+  const body = req.body || {};
+  const name = String(body.name || '').trim().slice(0, 100);
+  const text = String(body.text || '').trim().slice(0, 2000);
+  const items = String(body.items || '').trim().slice(0, 1000);
+  const tgId = String(body.telegramId || '0').replace(/[^0-9]/g, '').slice(0, 20) || '0';
+
+  if (!name || !text) {
+    return res.status(400).json({ ok: false, error: 'name and text required' });
+  }
+
+  const adminMsg =
+    `📝 <b>Новый отзыв из Mini App</b>\n\n` +
+    `👤 <b>Имя:</b> ${escHtml(name)}\n` +
+    `🆔 <b>Telegram ID:</b> ${escHtml(tgId)} <i>(не верифицирован)</i>\n` +
+    (items ? `🛒 <b>Заказ:</b> ${escHtml(items)}\n` : '') +
+    `\n💬 ${escHtml(text)}`;
+
+  if (ADMIN_ID) {
+    await tg('sendMessage', { chat_id: String(ADMIN_ID), text: adminMsg, parse_mode: 'HTML' });
+  } else {
+    console.warn('/review: ADMIN_ID не задан — отзыв не переслан');
+  }
+
+  res.json({ ok: true });
 });
 
 app.get('/api/stock', stockLimiter, async (req, res) => {
@@ -774,18 +850,30 @@ app.get('/api/happyhour', hhLimiter, (req, res) => {
   const day = msk.getUTCDay();
   const h   = msk.getUTCHours();
   const m   = msk.getUTCMinutes();
-  const weekday = day >= 1 && day <= 5;
-  const weekend = day === 0 || day === 6;
-  const active  = (weekday && h >= 19 && h < 20) || (weekend && h >= 17 && h < 18);
-  const endH    = weekday ? 20 : 18;
-  const minLeft = active ? (endH * 60) - (h * 60 + m) : 0;
+  const isWeekend = day === 0 || day === 6;
+  const win     = isWeekend ? HAPPY_HOUR.weekend : HAPPY_HOUR.weekday;
+  const active  = h >= win.start && h < win.end;
+  const minLeft = active ? (win.end * 60) - (h * 60 + m) : 0;
   res.json({ ok: true, active, minLeft });
+});
+
+// BOT-M3: конфиг для Mini App (fetchConfig) — расписание happy hour и скидка.
+// Single source of truth — const HAPPY_HOUR выше.
+app.get('/api/config', hhLimiter, (req, res) => {
+  res.json({
+    ok: true,
+    happyHour: {
+      weekday:  HAPPY_HOUR.weekday,
+      weekend:  HAPPY_HOUR.weekend,
+      discount: HAPPY_HOUR.discount,
+    },
+  });
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.post('/api/admin/checkin', async (req, res) => {
   const secret = req.headers['x-admin-secret'] || '';
-  if (!WEBHOOK_SECRET || secret !== WEBHOOK_SECRET) {
+  if (!WEBHOOK_SECRET || !safeEquals(secret, WEBHOOK_SECRET)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   try {
@@ -869,9 +957,9 @@ setInterval(() => {
   const day = msk.getUTCDay();
   const h   = msk.getUTCHours();
   const dateKey   = mskDateKey();
-  const isWeekday = day >= 1 && day <= 5;
   const isWeekend = day === 0 || day === 6;
-  if (((isWeekday && h === 19) || (isWeekend && h === 17)) && getProp('happy_hour_sent_date') !== dateKey) {
+  const startH    = isWeekend ? HAPPY_HOUR.weekend.start : HAPPY_HOUR.weekday.start;
+  if (h === startH && getProp('happy_hour_sent_date') !== dateKey) {
     setProp('happy_hour_sent_date', dateKey);
     sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
   }

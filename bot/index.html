@@ -2,34 +2,25 @@
 <html lang="ru" class="h-full">
  <head>
   <meta charset="UTF-8">
+  <!-- BOT-M4: CSP ограничивает источники скриптов/стилей/фреймов. 'unsafe-inline'
+       необходим из-за inline onclick-обработчиков. Tailwind CDN удалён (BOT-M2). -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://telegram.org;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com data:;
+    img-src 'self' data: https:;
+    connect-src 'self';
+    frame-src 'none';
+    object-src 'none';
+    base-uri 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=0.85, maximum-scale=0.85, user-scalable=no, viewport-fit=cover">
   <title>Мамин хлеб</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="stylesheet" href="/styles.css" integrity="sha256-Q29Uz3EMpqZWap5IAUbr0b6dOZWI+BZH8jj7NZaMcm0=" crossorigin="anonymous">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            cream: '#FFFDF9',
-            beige: '#F5E6D3',
-            caramel: '#E8B430',
-            coffee: '#6B4423',
-            gold: '#C9A227',
-            warmWhite: '#FFFDF9'
-          },
-          fontFamily: {
-            poppins: ['Poppins', 'sans-serif'],
-            montserrat: ['Montserrat', 'sans-serif'],
-            playfair: ['Playfair Display', 'serif']
-          }
-        }
-      }
-    }
-  </script>
   <style>
     * { -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
@@ -236,7 +227,7 @@
      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
       <div style="width:56px;height:56px;border-radius:50%;border:2.5px solid #D4732A;padding:2px;box-sizing:border-box;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
        <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;">
-        <img id="user-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;" onerror="this.style.display='none';document.getElementById('user-avatar-fallback').style.display='flex';">
+        <img id="user-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;" data-fb="avatar">
         <div id="user-avatar-fallback" style="width:100%;height:100%;background:linear-gradient(135deg,#E8B430,#C9A227);display:flex;align-items:center;justify-content:center;">
          <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style="pointer-events:none;"><path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.333 0-10 1.667-10 5v2h20v-2c0-3.333-6.667-5-10-5z"/></svg>
         </div>
@@ -304,15 +295,15 @@
        <div id="carousel-container" class="flex transition-transform duration-500 ease-out" style="height:166px;">
        <!-- Slide 1: Счастливый час -->
        <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:166px;background:#EDE4D8;flex-shrink:0;">
-        <img src="/images/carousel-happyhour.png" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;" onerror="this.style.display='none';" />
+        <img src="/images/carousel-happyhour.png" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;" data-fb="hide" />
        </div>
        <!-- Slide 2: Мамин хлеб -->
        <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:166px;background:#EDE4D8;flex-shrink:0;">
-        <img src="/images/carousel-brand.png" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;" onerror="this.style.display='none';" />
+        <img src="/images/carousel-brand.png" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;" data-fb="hide" />
        </div>
        <!-- Slide 3: Утренний предзаказ -->
        <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:166px;background:#EDE4D8;flex-shrink:0;">
-        <img src="/images/carousel-preorder.png" style="width:100%;height:100%;object-fit:cover;object-position:center calc(50% - 10px);display:block;" onerror="this.style.display='none';" />
+        <img src="/images/carousel-preorder.png" style="width:100%;height:100%;object-fit:cover;object-position:center calc(50% - 10px);display:block;" data-fb="hide" />
         <!-- Прозрачная кнопка поверх нарисованной "Заказать" -->
         <button data-action="showScreen" data-arg="preorder" style="position:absolute;bottom:20px;left:43%;width:117px;height:38px;background:transparent;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border-radius:50px;z-index:5;"></button>
        </div>
@@ -1130,7 +1121,7 @@
       </div>
       <!-- Right: hero image -->
       <div style="position:absolute;right:0;top:0;width:60%;height:100%;pointer-events:none;z-index:1;">
-       <img src="/images/mpriorder.png" style="width:100%;height:100%;object-fit:cover;object-position:left center;" onerror="this.style.display='none'">
+       <img src="/images/mpriorder.png" style="width:100%;height:100%;object-fit:cover;object-position:left center;" data-fb="hide">
       </div>
      </div>
     </div>
@@ -1511,6 +1502,28 @@
   </div>
 
   <script>
+    // ── BOT-L4: делегированная обработка ошибок загрузки <img> ──────────────────
+    // Вместо inline onerror="..." (inline-JS) — один слушатель в capture-фазе.
+    // Событие 'error' не всплывает, поэтому слушаем на document с useCapture=true.
+    // Поведение управляется data-атрибутами:
+    //   data-fb="hide"      → скрыть картинку
+    //   data-fb="avatar"    → скрыть и показать #user-avatar-fallback
+    //   data-fb-html="..."  → заменить родителя указанным HTML (эмодзи-заглушка)
+    document.addEventListener('error', function (e) {
+      var el = e.target;
+      if (!el || el.tagName !== 'IMG') return;
+      var fb = el.getAttribute('data-fb');
+      if (fb === 'hide') {
+        el.style.display = 'none';
+      } else if (fb === 'avatar') {
+        el.style.display = 'none';
+        var fbEl = document.getElementById('user-avatar-fallback');
+        if (fbEl) fbEl.style.display = 'flex';
+      } else if (el.getAttribute('data-fb-html') != null && el.parentNode) {
+        el.parentNode.innerHTML = el.getAttribute('data-fb-html');
+      }
+    }, true);
+
     // ── Telegram init ──────────────────────────────────────────────────────────
     let telegramId = null;
     let telegramName = "";
@@ -2152,27 +2165,29 @@
         ? `<p data-stockbadge="${p.id}" style="font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;">⚠ Осталось: ${stockQty} шт.</p>`
         : `<p data-stockbadge="${p.id}" style="display:none;font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;"></p>`;
       const imgHTML = productImages[p.id]
-        ? `<img src="${productImages[p.id]}" class="w-full h-full" style="object-fit:cover;object-position:center 40%;" alt="${p.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige\\'>${p.image}</div>'">`
-        : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
+        ? `<img src="${escHtml(productImages[p.id])}" class="w-full h-full" style="object-fit:cover;object-position:center 40%;" alt="${escHtml(p.name)}" loading="lazy" data-fb-html="<div class=&quot;w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige&quot;>${escHtml(p.image)}</div>">`
+        : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${escHtml(p.image)}</div>`;
       const oosOverlay = !available ? `
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.52);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;">
           <p style="color:#fff;font-weight:800;font-size:${compact?'9px':'11px'};text-align:center;line-height:1.3;font-family:'Montserrat',sans-serif;">Товар закончился,<br>завтра сделаем<br>новую партию 🔥</p>
         </div>` : '';
 
+      const _pidJ = JSON.stringify(p.id);
+      const _pidH = escHtml(p.id);
       if (compact) {
         return `
-          <div class="flex-shrink-0" style="width:175px;${!available ? 'opacity:0.55;' : ''}" data-pid="${p.id}">
+          <div class="flex-shrink-0" style="width:175px;${!available ? 'opacity:0.55;' : ''}" data-pid="${_pidH}">
             <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col overflow-hidden" style="isolation:isolate;">
               <div style="overflow:hidden;flex-shrink:0;height:152px;">
-                <button onclick="showProductDetail('${p.id}')" style="position:relative;width:100%;height:100%;border:none;padding:0;cursor:pointer;background:#F5E6D3;display:block;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+                <button onclick="showProductDetail(${_pidJ})" style="position:relative;width:100%;height:100%;border:none;padding:0;cursor:pointer;background:#F5E6D3;display:block;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
                   <div class="w-full h-full">${imgHTML}</div>
                   ${oosOverlay}
                 </button>
               </div>
               <div class="flex-1 px-3 pt-2 pb-3 flex flex-col justify-between gap-1">
-                <div onclick="showProductDetail('${p.id}')" style="cursor:pointer;">
-                  <h3 class="font-bold text-coffee leading-tight text-xs" style="font-family:'Playfair Display',serif;">${p.name}</h3>
-                  <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${weightInfo}</p>
+                <div onclick="showProductDetail(${_pidJ})" style="cursor:pointer;">
+                  <h3 class="font-bold text-coffee leading-tight text-xs" style="font-family:'Playfair Display',serif;">${escHtml(p.name)}</h3>
+                  <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${escHtml(weightInfo)}</p>
                   ${stockBadge}
                 </div>
                 <div class="flex items-center justify-between gap-2 mt-1">
@@ -2180,7 +2195,7 @@
                     ? `<div style="white-space:nowrap;"><span style="font-size:10px;color:#aaa;text-decoration:line-through;font-family:'Montserrat',sans-serif;">${p.price.toFixed(2)}${BYN}</span><br><span class="font-bold text-sm" style="color:#E05252;font-family:'Montserrat',sans-serif;white-space:nowrap;">${disc.toFixed(2)}${BYN}</span></div>`
                     : `<span class="font-bold text-coffee text-sm" style="font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)}${BYN}</span>`; })()
                     : `<span style="font-size:9px;color:#aaa;font-family:'Montserrat',sans-serif;">Нет в наличии</span>`}
-                  <div class="card-btn-zone" data-pid="${p.id}" data-compact="1" style="flex-shrink:0;position:relative;z-index:2;display:flex;justify-content:flex-end;align-items:center;">
+                  <div class="card-btn-zone" data-pid="${_pidH}" data-compact="1" style="flex-shrink:0;position:relative;z-index:2;display:flex;justify-content:flex-end;align-items:center;">
                     ${available ? cardBtnHTML(p.id, quantity, true) : ''}
                   </div>
                 </div>
@@ -2200,24 +2215,24 @@
           : `<span style="font-size:13px;font-weight:800;color:#2d1505;font-family:'Montserrat',sans-serif;white-space:nowrap;">${p.price.toFixed(2)}${BYN}</span>`;
 
       return `
-        <div data-pid="${p.id}" style="${!available ? 'opacity:0.55;' : ''}">
+        <div data-pid="${_pidH}" style="${!available ? 'opacity:0.55;' : ''}">
           <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);isolation:isolate;">
             <div style="overflow:hidden;aspect-ratio:4/3;">
-              <button onclick="showProductDetail('${p.id}')" style="position:relative;width:100%;height:100%;overflow:hidden;display:block;border:none;padding:0;cursor:pointer;background:#F5E6D3;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+              <button onclick="showProductDetail(${_pidJ})" style="position:relative;width:100%;height:100%;overflow:hidden;display:block;border:none;padding:0;cursor:pointer;background:#F5E6D3;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
                 <div style="width:100%;height:100%;">${imgHTML}</div>
                 ${p.isNew && available ? '<div style="position:absolute;top:6px;left:6px;background:#E05252;color:#fff;font-weight:700;font-size:7px;padding:2px 6px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.04em;">НОВИНКА</div>' : ''}
                 ${oosOverlay}
               </button>
             </div>
             <div style="padding:9px 10px 8px;display:flex;flex-direction:column;gap:2px;">
-              <div onclick="showProductDetail('${p.id}')" style="cursor:pointer;">
-                <h3 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#2d1505;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</h3>
-                <p style="font-family:'Montserrat',sans-serif;font-size:11px;color:#A08060;margin:1px 0 0;line-height:1;">${weightInfo}</p>
+              <div onclick="showProductDetail(${_pidJ})" style="cursor:pointer;">
+                <h3 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#2d1505;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(p.name)}</h3>
+                <p style="font-family:'Montserrat',sans-serif;font-size:11px;color:#A08060;margin:1px 0 0;line-height:1;">${escHtml(weightInfo)}</p>
                 ${stockBadge}
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
                 ${priceHTML}
-                <div class="card-btn-zone" data-pid="${p.id}" data-compact="0" style="flex-shrink:0;position:relative;z-index:2;display:flex;justify-content:flex-end;align-items:center;">
+                <div class="card-btn-zone" data-pid="${_pidH}" data-compact="0" style="flex-shrink:0;position:relative;z-index:2;display:flex;justify-content:flex-end;align-items:center;">
                   ${available ? cardBtnHTML(p.id, quantity, false) : ''}
                 </div>
               </div>
@@ -2235,17 +2250,18 @@
       var stockKey = product ? (product.name || '').trim().toLowerCase() : '';
       var stockLimit = (stockKey && stockKey in stockData) ? stockData[stockKey] : Infinity;
       var atLimit = stockLimit !== Infinity && quantity >= stockLimit;
+      const _pid = JSON.stringify(pid);
       if (quantity > 0) return `
         <div style="display:flex;align-items:center;gap:${isCompact?4:isBs?3:5}px;background:#f5ead8;border-radius:50px;padding:${isCompact?'4px 5px':isBs?'3px 4px':'5px 7px'};border:1px solid rgba(201,162,39,0.45);box-shadow:0 2px 6px rgba(180,130,60,0.1);">
-          <button onclick="updateQuantity('${pid}',-1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:#D4AA70;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;">−</button>
+          <button onclick="updateQuantity(${_pid},-1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:#D4AA70;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;">−</button>
           <span style="min-width:${isCompact?16:isBs?13:20}px;text-align:center;font-weight:800;color:#6B4423;font-size:${isCompact?12:isBs?11:14}px;">${quantity}</span>
           ${atLimit
             ? `<span style="width:${sz}px;height:${sz}px;border-radius:50%;background:#e8e0d0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;color:#bbb;flex-shrink:0;cursor:not-allowed;">+</span>`
-            : `<button onclick="updateQuantity('${pid}',1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;box-shadow:0 2px 6px rgba(201,162,39,0.35);">+</button>`}
+            : `<button onclick="updateQuantity(${_pid},1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;box-shadow:0 2px 6px rgba(201,162,39,0.35);">+</button>`}
         </div>`;
       var btnSz = isCompact ? 32 : isBs ? 36 : 36;
       var btnFs = isCompact ? 18 : isBs ? 19 : 19;
-      return `<button onclick="addToCartWithCoffeeCheck('${pid}')" style="width:${btnSz}px;height:${btnSz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:${btnFs}px;flex-shrink:0;box-shadow:0 4px 14px rgba(201,162,39,0.45);">+</button>`;
+      return `<button onclick="addToCartWithCoffeeCheck(${_pid})" style="width:${btnSz}px;height:${btnSz}px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:${btnFs}px;flex-shrink:0;box-shadow:0 4px 14px rgba(201,162,39,0.45);">+</button>`;
     }
 
     function updateProductCardButtons(productId) {
@@ -2293,14 +2309,14 @@
       var atLimit = stockLimit !== Infinity && quantity >= stockLimit;
       if (quantity > 0) {
         return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
-          + '<button onclick="updateQuantity(\'' + pid + '\',-1)" style="width:23px;height:23px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">−</button>'
+          + '<button onclick="updateQuantity(' + JSON.stringify(pid) + ',-1)" style="width:23px;height:23px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">−</button>'
           + '<span style="min-width:14px;text-align:center;font-weight:800;color:#2d1505;font-size:11px;font-family:\'Montserrat\',sans-serif;">' + quantity + '</span>'
           + (atLimit
             ? '<span style="width:23px;height:23px;border-radius:50%;background:#e8e0d0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#bbb;flex-shrink:0;cursor:not-allowed;">+</span>'
-            : '<button onclick="updateQuantity(\'' + pid + '\',1)" style="width:23px;height:23px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>')
+            : '<button onclick="updateQuantity(' + JSON.stringify(pid) + ',1)" style="width:23px;height:23px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>')
           + '</div>';
       }
-      return '<button onclick="addToCartWithCoffeeCheck(\'' + pid + '\')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
+      return '<button onclick="addToCartWithCoffeeCheck(' + JSON.stringify(pid) + ')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
     }
 
     function bsCardHTML(p) {
@@ -2310,7 +2326,7 @@
       var disc = happyPrice(p);
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var imgHTML = productImages[p.id]
-        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        ? '<img src="' + escHtml(productImages[p.id]) + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
       var hitBadge = p.bestseller
         ? '<div style="position:absolute;top:9px;left:9px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;pointer-events:none;box-shadow:0 2px 6px rgba(201,162,39,0.40);z-index:4;">Хит</div>' : '';
@@ -2319,7 +2335,7 @@
       var priceStr = disc < p.price ? disc.toFixed(2) : p.price.toFixed(2);
       var priceColor = disc < p.price ? '#E05252' : '#2d1505';
       return '<div style="flex-shrink:0;width:150px;height:185px;position:relative;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.10);' + (!available ? 'opacity:0.60;' : '') + '">'
-        + '<div class="bs-card-inner" style="position:absolute;inset:0;cursor:pointer;" onclick="showProductDetail(\'' + p.id + '\')">' + imgHTML + '</div>'
+        + '<div class="bs-card-inner" style="position:absolute;inset:0;cursor:pointer;" onclick="showProductDetail(' + JSON.stringify(p.id) + ')">' + imgHTML + '</div>'
         + hitBadge + oosOverlay
         + '<div style="position:absolute;bottom:0;left:0;right:0;height:94px;background:linear-gradient(to top,rgba(255,248,240,0.82) 0%,rgba(255,248,240,0.55) 55%,transparent 100%);pointer-events:none;"></div>'
         + '<div style="position:absolute;bottom:9px;left:0;right:0;padding:0 10px;display:flex;flex-direction:column;gap:4px;">'
@@ -2329,7 +2345,7 @@
         + (available
           ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:900;color:' + priceColor + ';margin:0;line-height:1;">' + priceStr + BYN + '</p>'
           : '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#aaa;margin:0;">Нет в наличии</p>')
-        + '<div class="card-btn-zone" data-pid="' + p.id + '" data-compact="3" style="display:flex;align-items:center;">'
+        + '<div class="card-btn-zone" data-pid="' + escHtml(p.id) + '" data-compact="3" style="display:flex;align-items:center;">'
         + (available ? bsFloatBtnHTML(p.id, quantity) : '')
         + '</div>'
         + '</div>'
@@ -2493,9 +2509,9 @@
         }
         const imgEl = document.getElementById('detail-image');
         if (productImages[productId]) {
-          imgEl.innerHTML = '<img src="' + productImages[productId] + '" class="w-full h-full object-cover" alt="' + product.name + '" onerror="this.parentNode.innerHTML=\'<span style=\\\'font-size:6rem;\\\'>' + product.image + '</span>\'">';
+          imgEl.innerHTML = '<img src="' + escHtml(productImages[productId]) + '" class="w-full h-full object-cover" alt="' + escHtml(product.name) + '" data-fb-html="<span style=&quot;font-size:6rem;&quot;>' + escHtml(product.image) + '</span>">';
         } else {
-          imgEl.innerHTML = '<span style="font-size:6rem;">' + product.image + '</span>';
+          imgEl.innerHTML = '<span style="font-size:6rem;">' + escHtml(product.image) + '</span>';
         }
         const ingEl = document.getElementById('detail-ingredients-text');
         if (ingEl) ingEl.textContent = product.ingredients ? 'Состав: ' + product.ingredients : '';
@@ -2505,7 +2521,7 @@
         if (product.sizes && product.sizes.length > 0) {
           sizeSection.style.display = 'block';
           document.getElementById('detail-size-buttons').innerHTML = product.sizes.map(function(sizeOpt, i) {
-            return '<button type="button" onclick="selectDetailSize(\'' + sizeOpt.size + '\', event)" class="detail-size-btn" style="padding:10px 20px;border-radius:50px;font-size:14px;font-weight:600;border:2px solid ' + (i === 0 ? 'transparent' : 'rgba(201,162,39,0.45)') + ';background:' + (i === 0 ? 'linear-gradient(90deg,#C9A227,#E8B430)' : 'transparent') + ';color:' + (i === 0 ? '#fff' : '#6B4423') + ';cursor:pointer;touch-action:manipulation;">' + sizeOpt.size + '</button>';
+            return '<button type="button" onclick="selectDetailSize(' + JSON.stringify(sizeOpt.size) + ', event)" class="detail-size-btn" style="padding:10px 20px;border-radius:50px;font-size:14px;font-weight:600;border:2px solid ' + (i === 0 ? 'transparent' : 'rgba(201,162,39,0.45)') + ';background:' + (i === 0 ? 'linear-gradient(90deg,#C9A227,#E8B430)' : 'transparent') + ';color:' + (i === 0 ? '#fff' : '#6B4423') + ';cursor:pointer;touch-action:manipulation;">' + escHtml(sizeOpt.size) + '</button>';
           }).join('');
           document.getElementById('detail-add-btn').dataset.selectedSize = product.sizes[0].size;
           document.getElementById('detail-add-btn').dataset.price = product.sizes[0].price;
@@ -2770,10 +2786,10 @@
           + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:25px;">'
           + '<span style="font-family:\'Montserrat\',sans-serif;font-size:18px;font-weight:800;color:#C9A227;line-height:1;">' + item.price.toFixed(2) + BYN + '</span>'
           + '<div style="display:flex;align-items:center;gap:5px;">'
-          + '<button onclick="updateQuantity(\'' + pid + '\',-1,\'' + size + '\')" style="width:28px;height:28px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.13);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:16px;line-height:1;font-weight:400;">−</button>'
+          + '<button onclick="updateQuantity(' + JSON.stringify(pid) + ',-1,' + JSON.stringify(size) + ')" style="width:28px;height:28px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.13);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:16px;line-height:1;font-weight:400;">−</button>'
           + '<span style="font-weight:700;font-size:14px;color:#2d1505;min-width:16px;text-align:center;">' + item.quantity + '</span>'
-          + '<button onclick="updateQuantity(\'' + pid + '\',1,\'' + size + '\')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:600;">+</button>'
-          + '<button onclick="removeFromCart(\'' + pid + '\')" style="width:28px;height:28px;border:none;background:#F5EDE3;border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;margin-left:6px;">' + trashSvg + '</button>'
+          + '<button onclick="updateQuantity(' + JSON.stringify(pid) + ',1,' + JSON.stringify(size) + ')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:600;">+</button>'
+          + '<button onclick="removeFromCart(' + JSON.stringify(pid) + ')" style="width:28px;height:28px;border:none;background:#F5EDE3;border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;margin-left:6px;">' + trashSvg + '</button>'
           + '</div></div>'
           + '</div></div>';
       }).join('');
@@ -2795,12 +2811,12 @@
     function csSuggBtnHTML(pid, qty) {
       if (qty > 0) {
         return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:2px;box-shadow:0 2px 10px rgba(0,0,0,0.11);border:1px solid rgba(201,162,39,0.18);">'
-          + '<button onclick="event.stopPropagation();updateQuantity(\'' + pid + '\',-1)" style="width:22px;height:22px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">−</button>'
+          + '<button onclick="event.stopPropagation();updateQuantity(' + JSON.stringify(pid) + ',-1)" style="width:22px;height:22px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">−</button>'
           + '<span style="min-width:12px;text-align:center;font-weight:800;color:#2d1505;font-size:10px;font-family:\'Montserrat\',sans-serif;">' + qty + '</span>'
-          + '<button onclick="event.stopPropagation();updateQuantity(\'' + pid + '\',1)" style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;box-shadow:0 2px 5px rgba(201,162,39,0.40);">+</button>'
+          + '<button onclick="event.stopPropagation();updateQuantity(' + JSON.stringify(pid) + ',1)" style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;box-shadow:0 2px 5px rgba(201,162,39,0.40);">+</button>'
           + '</div>';
       }
-      return '<button onclick="event.stopPropagation();addToCart(\'' + pid + '\')" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.48);">+</button>';
+      return '<button onclick="event.stopPropagation();addToCart(' + JSON.stringify(pid) + ')" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.48);">+</button>';
     }
 
     function updateCsSuggCard(pid) {
@@ -2819,16 +2835,16 @@
       var item = cart.find(function(i) { return i.product_id === p.id; });
       if (item) qty = item.quantity;
       var imgHTML = productImages[p.id]
-        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
-        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:#F2E8D8;">' + p.image + '</div>';
+        ? '<img src="' + escHtml(productImages[p.id]) + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:#F2E8D8;">' + escHtml(p.image) + '</div>';
       return '<div style="flex-shrink:0;width:132px;height:171px;scroll-snap-align:center;position:relative;">'
-        + '<div style="width:100%;height:100%;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(45,21,5,0.07);background:#fff;display:flex;flex-direction:column;cursor:pointer;" onclick="showProductDetail(\'' + p.id + '\')">'
+        + '<div style="width:100%;height:100%;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(45,21,5,0.07);background:#fff;display:flex;flex-direction:column;cursor:pointer;" onclick="showProductDetail(' + JSON.stringify(p.id) + ')">'
         + '<div style="position:relative;height:99px;flex-shrink:0;overflow:hidden;border-radius:14px;margin:5px 5px 0;">' + imgHTML + '</div>'
         + '<div style="flex:1;background:#fff;padding:5px 8px 8px;display:flex;flex-direction:column;justify-content:space-between;">'
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:11px;color:#2d1505;margin:0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;" onclick="event.stopPropagation()">'
         + '<p style="font-family:\'Montserrat\',sans-serif;font-size:13px;font-weight:800;color:#2d1505;margin:0;line-height:1;">' + price.toFixed(2) + BYN + '</p>'
-        + '<div class="cs-btn-zone" data-pid="' + p.id + '" style="display:flex;align-items:center;">' + csSuggBtnHTML(p.id, qty) + '</div>'
+        + '<div class="cs-btn-zone" data-pid="' + escHtml(p.id) + '" style="display:flex;align-items:center;">' + csSuggBtnHTML(p.id, qty) + '</div>'
         + '</div>'
         + '</div>'
         + '</div>'
@@ -3185,7 +3201,7 @@
       if (!q) { dd.style.display = 'none'; return; }
       const matches = VITEBSK_STREETS.filter(s => s.toLowerCase().includes(q)).slice(0, 6);
       if (!matches.length) { dd.style.display = 'none'; return; }
-      dd.innerHTML = matches.map(s => `<div onclick="selectAddress('${s.replace(/'/g,"\\'")}')" style="padding:10px 16px;font-size:14px;color:#3d2010;cursor:pointer;border-bottom:1px solid #f0e8dc;" onmousedown="event.preventDefault()">${s}</div>`).join('');
+      dd.innerHTML = matches.map(s => `<div onclick="selectAddress(${JSON.stringify(s)})" style="padding:10px 16px;font-size:14px;color:#3d2010;cursor:pointer;border-bottom:1px solid #f0e8dc;" onmousedown="event.preventDefault()">${escHtml(s)}</div>`).join('');
       dd.style.display = 'block';
     }
     function selectAddress(addr) {
@@ -3465,14 +3481,14 @@
         if (!product) return '';
         return `
           <div class="flex items-center gap-2 p-2 bg-beige/20 rounded-lg">
-            <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-beige flex items-center justify-center text-2xl">${product.image}</div>
+            <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-beige flex items-center justify-center text-2xl">${escHtml(product.image)}</div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-semibold text-coffee truncate">${escHtml(item.product_name)}</p>
               <p class="text-xs text-caramel">${item.price.toFixed(2)}${BYN} × ${item.quantity}</p>
             </div>
             <div class="flex items-center gap-1">
-              <button onclick="updateQuantity('${item.product_id}', -1, '${item.selected_size || ''}')" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">−</button>
-              <button onclick="updateQuantity('${item.product_id}', 1, '${item.selected_size || ''}')" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">+</button>
+              <button onclick="updateQuantity(${JSON.stringify(item.product_id)}, -1, ${JSON.stringify(item.selected_size || '')})" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">−</button>
+              <button onclick="updateQuantity(${JSON.stringify(item.product_id)}, 1, ${JSON.stringify(item.selected_size || '')})" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">+</button>
             </div>
           </div>`;
       }).join('');
@@ -3498,7 +3514,7 @@
 
     function preorderCardHTML(p, isBakery) {
       var imgHTML = productImages[p.id]
-        ? '<img src="' + productImages[p.id] + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        ? '<img src="' + escHtml(productImages[p.id]) + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
       var now = new Date(); var h = now.getHours();
       var freshBadge = (isBakery && h >= 7 && h < 11) ? '<div style="position:absolute;top:9px;right:9px;background:#fff;color:#C0360A;font-size:9px;font-weight:800;padding:3px 8px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;box-shadow:0 1px 6px rgba(0,0,0,0.12);z-index:4;">Из печи 🔥</div>' : '';
@@ -3523,17 +3539,17 @@
     function preorderBtnZoneHTML(productId, price, qty, isCoffee) {
       if (qty > 0) {
         var plusFn = isCoffee
-          ? 'openCoffeeAddonsModal(\'' + productId + '\',' + price + ')'
-          : 'updatePreorderQuantity(\'' + productId + '\', 1)';
+          ? 'openCoffeeAddonsModal(' + JSON.stringify(productId) + ',' + price + ')'
+          : 'updatePreorderQuantity(' + JSON.stringify(productId) + ', 1)';
         return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
-          + '<button type="button" onclick="updatePreorderQuantity(\'' + productId + '\', -1)" style="width:24px;height:24px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">−</button>'
+          + '<button type="button" onclick="updatePreorderQuantity(' + JSON.stringify(productId) + ', -1)" style="width:24px;height:24px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">−</button>'
           + '<span style="min-width:14px;text-align:center;font-weight:800;font-size:11px;color:#2d1505;font-family:\'Montserrat\',sans-serif;">' + qty + '</span>'
           + '<button type="button" onclick="' + plusFn + '" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
           + '</div>';
       }
       var addFn = isCoffee
-        ? 'openCoffeeAddonsModal(\'' + productId + '\',' + price + ')'
-        : 'addPreorderItem(\'' + productId + '\',' + price + ')';
+        ? 'openCoffeeAddonsModal(' + JSON.stringify(productId) + ',' + price + ')'
+        : 'addPreorderItem(' + JSON.stringify(productId) + ',' + price + ')';
       return '<button type="button" onclick="' + addFn + '" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
     }
 
@@ -3650,8 +3666,8 @@
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var coffeeImg = coffeePreorderImages[p.id] || productImages[p.id];
       var imgHTML = coffeeImg
-        ? '<img src="' + coffeeImg + '" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;" alt="' + escHtml(p.name) + '" loading="lazy">'
-        : '<div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:3.5rem;">' + p.image + '</div>';
+        ? '<img src="' + escHtml(coffeeImg) + '" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;" alt="' + escHtml(p.name) + '" loading="lazy">'
+        : '<div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;font-size:3.5rem;">' + escHtml(p.image) + '</div>';
       return '<div style="flex-shrink:0;width:155px;scroll-snap-align:start;position:relative;">'
         + '<div style="position:absolute;top:-101px;left:50%;transform:translateX(-50%);width:178px;height:168px;pointer-events:none;z-index:2;">' + imgHTML + '</div>'
         + '<div style="background:#ffffff;border-radius:22px;box-shadow:0 6px 24px rgba(45,21,5,0.11);padding:68px 12px 12px;display:flex;flex-direction:column;gap:2px;">'
@@ -3659,7 +3675,7 @@
         + (weightInfo ? '<p style="font-family:\'Montserrat\',sans-serif;font-size:10px;color:#A08060;margin:2px 0 0;line-height:1;text-align:center;">' + escHtml(weightInfo) + '</p>' : '')
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">'
         + '<p style="font-family:\'Montserrat\',sans-serif;font-size:15px;font-weight:800;color:#C9A227;margin:0;line-height:1;">' + p.price.toFixed(2) + BYN + '</p>'
-        + '<div class="preorder-btn-zone" data-pid="' + p.id + '" data-price="' + p.price + '" data-coffee="1" style="display:flex;align-items:center;">' + preorderBtnZoneHTML(p.id, p.price, qty, true) + '</div>'
+        + '<div class="preorder-btn-zone" data-pid="' + escHtml(p.id) + '" data-price="' + p.price + '" data-coffee="1" style="display:flex;align-items:center;">' + preorderBtnZoneHTML(p.id, p.price, qty, true) + '</div>'
         + '</div>'
         + '</div>'
         + '</div>';
@@ -3720,7 +3736,7 @@
       if (imgWrap) {
         var imgSrc = (typeof coffeePreorderImages !== 'undefined' && coffeePreorderImages[productId]) || productImages[productId];
         if (imgSrc) {
-          imgWrap.innerHTML = '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;" alt="">';
+          imgWrap.innerHTML = '<img src="' + escHtml(imgSrc) + '" style="width:100%;height:100%;object-fit:cover;" alt="">';
         } else {
           imgWrap.textContent = product ? (product.image || '\u2615') : '\u2615';
         }
@@ -3865,8 +3881,8 @@
         var weightInfo = product ? ((product.sizes && product.sizes.length > 0) ? product.sizes[0].size : (product.weight || '')) : '';
         var subText = item.addons || weightInfo;
         var imgHTML = imgSrc
-          ? '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;" alt="">'
-          : '<span style="font-size:2.2rem;">' + (product ? product.image : '🍞') + '</span>';
+          ? '<img src="' + escHtml(imgSrc) + '" style="width:100%;height:100%;object-fit:cover;" alt="">'
+          : '<span style="font-size:2.2rem;">' + escHtml(product ? product.image : '🍞') + '</span>';
         var isNew = product && product.isNew;
         var cat = product ? (product.category || '') : '';
         var tagText = '', tagStyle = '';
@@ -3891,13 +3907,13 @@
           + '<div style="display:flex;align-items:center;gap:3px;margin-bottom:10px;flex-wrap:wrap;">' + secondaryRow + '</div>'
           + '<div style="display:flex;align-items:center;justify-content:space-between;">'
           + '<div style="display:flex;align-items:center;gap:6px;">'
-          + '<button type="button" onclick="updatePreorderQuantityFromForm(\'' + pid + '\',-1)" style="width:28px;height:28px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.14);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:16px;line-height:1;font-weight:400;">−</button>'
+          + '<button type="button" onclick="updatePreorderQuantityFromForm(' + JSON.stringify(pid) + ',-1)" style="width:28px;height:28px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.14);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:16px;line-height:1;font-weight:400;">−</button>'
           + '<span style="font-weight:700;font-size:14px;color:#2d1505;min-width:16px;text-align:center;">' + item.quantity + '</span>'
-          + '<button type="button" onclick="updatePreorderQuantityFromForm(\'' + pid + '\',1)" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:600;">+</button>'
+          + '<button type="button" onclick="updatePreorderQuantityFromForm(' + JSON.stringify(pid) + ',1)" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:600;">+</button>'
           + '</div>'
           + '<div style="display:flex;align-items:center;gap:7px;">'
           + '<span style="font-size:14px;font-weight:800;color:#2d1505;">' + (item.price * item.quantity).toFixed(2) + ' ₽</span>'
-          + '<button type="button" onclick="removePreorderFormItem(\'' + pid + '\')" style="width:28px;height:28px;border:none;background:#F5EDE3;border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;">' + trashSvg + '</button>'
+          + '<button type="button" onclick="removePreorderFormItem(' + JSON.stringify(pid) + ')" style="width:28px;height:28px;border:none;background:#F5EDE3;border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;">' + trashSvg + '</button>'
           + '</div></div>'
           + '</div></div>';
       }).join('');
@@ -4077,9 +4093,9 @@
       var product = productsById.get(pid);
       var emoji = (product && product.image) ? product.image : '🥐';
       if (imgSrc) {
-        return '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" loading="lazy" onerror="this.parentNode.innerHTML=\'<span style=\\\'font-size:1.8rem;line-height:1;\\\'>' + emoji + '</span>\'">';
+        return '<img src="' + escHtml(imgSrc) + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" loading="lazy" data-fb-html="<span style=&quot;font-size:1.8rem;line-height:1;&quot;>' + escHtml(emoji) + '</span>">';
       }
-      return '<span style="font-size:1.8rem;line-height:1;">' + emoji + '</span>';
+      return '<span style="font-size:1.8rem;line-height:1;">' + escHtml(emoji) + '</span>';
     }
     var _ohMenuOrderId = null;
     function _ohShowMenu(orderId) {
@@ -4170,9 +4186,14 @@
       var todayEl = document.getElementById('order-history-today-date');
       if (todayEl) todayEl.textContent = new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
       list.innerHTML = '<div style="text-align:center;padding:50px 16px;"><div style="font-size:1.5rem;margin-bottom:10px;">⏳</div><p style="font-family:\'Montserrat\',sans-serif;font-size:13px;color:#9a8060;">Загружаем историю...</p></div>';
-      var tid = String(telegramId || '0');
-      if (tid !== '0') {
-        fetch('/api/orders/history?telegramId=' + encodeURIComponent(tid))
+      var initData = window._tgInitData || '';
+      if (initData) {
+        // BOT-H1: POST с tgInitData — сервер сам извлекает telegramId из верифицированного payload
+        fetch('/api/orders/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tgInitData: initData })
+        })
           .then(function(r) { return r.ok ? r.json() : null; })
           .then(function(data) {
             if (!data || !data.ok) throw new Error('api error');
@@ -4188,7 +4209,7 @@
               return { id: o.orderNumber, date: dateStr, items: items, total: parseFloat(o.amount) || 0, type: type, status: o.status || 'Новый', address: addr };
             });
             _renderHistoryList(list, history);
-            try { localStorage.setItem('mh_order_history', JSON.stringify(history)); } catch(e) {}
+            try { localStorage.setItem('mh_order_history', JSON.stringify(history.map(function(o) { return { id: o.id, date: o.date, items: o.items, total: o.total, type: o.type, status: o.status }; }))); } catch(e) {}
           })
           .catch(function() {
             var fallback = [];
@@ -4314,7 +4335,7 @@
         var history = JSON.parse(localStorage.getItem('mh_order_history') || '[]');
         var now = new Date();
         var dateStr = now.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
-        history.unshift({ id: Date.now(), date: dateStr, items: items.map(function(i) { return { product_id: i.product_id, product_name: i.product_name, price: i.price, quantity: i.quantity, selected_size: i.selected_size || null }; }), total: total, name: name, phone: phone, type: type });
+        history.unshift({ id: Date.now(), date: dateStr, items: items.map(function(i) { return { product_id: i.product_id, product_name: i.product_name, price: i.price, quantity: i.quantity, selected_size: i.selected_size || null }; }), total: total, type: type });
         if (history.length > 10) history = history.slice(0, 10);
         localStorage.setItem('mh_order_history', JSON.stringify(history));
       } catch(e) {}
@@ -4330,7 +4351,6 @@
                     type: order.type,
                     name: order.name,
                     phone: order.phone,
-                    telegramId: String(telegramId || "0"),
                     tgInitData: window._tgInitData || "",
                     deliveryMethod: order.deliveryMethod || "pickup",
                     address: order.address || "Самовывоз",
