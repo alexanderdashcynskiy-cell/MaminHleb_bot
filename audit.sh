@@ -88,7 +88,8 @@ if [ "$QUICK" = false ]; then
   section "Статический анализ"
 
   if [ -f eslint.config.security.js ]; then
-    if npx --no-install eslint --config eslint.config.security.js bot/ >/tmp/eslint.log 2>&1; then
+    if npx --yes --package eslint --package @eslint/js --package eslint-plugin-security \
+        eslint --config eslint.config.security.js bot/ >/tmp/eslint.log 2>&1; then
       ok "ESLint security — без ошибок"
     else
       warn "ESLint security — есть замечания (см. /tmp/eslint.log)"
@@ -96,11 +97,12 @@ if [ "$QUICK" = false ]; then
   fi
 
   if [ -f .secretlintrc.json ]; then
-    npx --no-install secretlint '**/*.{js,json}' >/tmp/secretlint.log 2>&1
+    npx --yes \
+      --package secretlint \
+      --package @secretlint/secretlint-rule-preset-recommend \
+      secretlint '**/*.{js,json}' >/tmp/secretlint.log 2>&1
     SL_EXIT=$?
-    if grep -qE "AggregationError|is not found|Failed to load|Cannot find module" /tmp/secretlint.log 2>/dev/null; then
-      warn "secretlint — пакет не установлен локально (установите: npm i -D @secretlint/secretlint-rule-preset-recommend)"
-    elif [ "$SL_EXIT" -eq 0 ]; then
+    if [ "$SL_EXIT" -eq 0 ]; then
       ok "secretlint — секретов не найдено"
     else
       bad "secretlint — обнаружены потенциальные секреты (см. /tmp/secretlint.log)"
