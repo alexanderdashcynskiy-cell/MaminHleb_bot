@@ -281,7 +281,11 @@ async function tgAll(calls) {
   return Promise.all(calls.map(([method, payload]) => tg(method, payload)));
 }
 
-// ─── Дедупликация заказов ─────────────────────────────────────────────────────
+// ─── Верификация Telegram initData ────────────────────────────────────────────
+// BOT-M5: проверяем auth_date — initData не старше 1 часа.
+// Без этого перехваченный или утёкший initData остаётся валидным бесконечно.
+const INIT_DATA_MAX_AGE_SEC = 3600;
+
 function verifyTgInitData(initData, botToken) {
   if (!initData || !botToken) return null;
   try {
@@ -296,6 +300,9 @@ function verifyTgInitData(initData, botToken) {
     const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
     const expected  = crypto.createHmac('sha256', secretKey).update(dataCheckStr).digest('hex');
     if (hash !== expected) return null;
+    // Проверка свежести: auth_date обязан присутствовать и быть не старее MAX_AGE.
+    const authDate = parseInt(params.get('auth_date') || '0', 10);
+    if (!authDate || Math.floor(Date.now() / 1000) - authDate > INIT_DATA_MAX_AGE_SEC) return null;
     const userStr = params.get('user');
     return userStr ? JSON.parse(userStr) : {};
   } catch(e) { return null; }
