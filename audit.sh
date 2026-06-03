@@ -96,7 +96,11 @@ if [ "$QUICK" = false ]; then
   fi
 
   if [ -f .secretlintrc.json ]; then
-    if npx --no-install secretlint '**/*.{js,json}' >/tmp/secretlint.log 2>&1; then
+    npx --no-install secretlint '**/*.{js,json}' >/tmp/secretlint.log 2>&1
+    SL_EXIT=$?
+    if grep -qE "AggregationError|is not found|Failed to load|Cannot find module" /tmp/secretlint.log 2>/dev/null; then
+      warn "secretlint — пакет не установлен локально (установите: npm i -D @secretlint/secretlint-rule-preset-recommend)"
+    elif [ "$SL_EXIT" -eq 0 ]; then
       ok "secretlint — секретов не найдено"
     else
       bad "secretlint — обнаружены потенциальные секреты (см. /tmp/secretlint.log)"

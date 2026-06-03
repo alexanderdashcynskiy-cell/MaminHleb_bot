@@ -281,6 +281,15 @@ async function tgAll(calls) {
   return Promise.all(calls.map(([method, payload]) => tg(method, payload)));
 }
 
+// BOT-L1: constant-time сравнение строк-секретов — предотвращает timing-атаку.
+function safeEquals(a, b) {
+  if (!a || !b) return false;
+  const aBuf = Buffer.from(String(a));
+  const bBuf = Buffer.from(String(b));
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
+}
+
 // ─── Верификация Telegram initData ────────────────────────────────────────────
 // BOT-M5: проверяем auth_date — initData не старше 1 часа.
 // Без этого перехваченный или утёкший initData остаётся валидным бесконечно.
@@ -627,7 +636,7 @@ app.post('/webhook', (req, res) => {
     console.warn('[webhook] WEBHOOK_SECRET не задан — webhook открыт для любых запросов');
   } else {
     const token = req.headers['x-telegram-bot-api-secret-token'];
-    if (token !== WEBHOOK_SECRET) return res.sendStatus(403);
+    if (!safeEquals(token, WEBHOOK_SECRET)) return res.sendStatus(403);
   }
   res.sendStatus(200);
   const body = req.body;
@@ -690,7 +699,7 @@ app.post('/api/order/done', async (req, res) => {
   const secret = config.ADMIN_SECRET;
   if (secret) {
     const provided = req.headers['x-admin-secret'] || (req.body || {}).adminSecret;
-    if (provided !== secret) {
+    if (!safeEquals(provided, secret)) {
       console.warn('/api/order/done: 403 — неверный ADMIN_SECRET');
       return res.status(403).json({ ok: false, error: 'unauthorized' });
     }
@@ -799,7 +808,7 @@ app.get('/api/happyhour', hhLimiter, (req, res) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.post('/api/admin/checkin', async (req, res) => {
   const secret = req.headers['x-admin-secret'] || '';
-  if (!WEBHOOK_SECRET || secret !== WEBHOOK_SECRET) {
+  if (!WEBHOOK_SECRET || !safeEquals(secret, WEBHOOK_SECRET)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   try {
