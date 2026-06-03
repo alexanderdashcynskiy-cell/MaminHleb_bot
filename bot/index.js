@@ -610,8 +610,8 @@ async function handleTextMessage(message) {
     if (cd.promptMsgId) await tg('deleteMessage', { chat_id: senderId, message_id: cd.promptMsgId });
     await tg('sendMessage', {
       chat_id:    senderId,
-      text:       `✅ Записано! Сегодня работает: *${msgText}*`,
-      parse_mode: 'Markdown'
+      text:       `✅ Записано! Сегодня работает: <b>${escHtml(msgText)}</b>`,
+      parse_mode: 'HTML'
     });
     delProp(`pending_checkin_${senderId}`);
     return;
