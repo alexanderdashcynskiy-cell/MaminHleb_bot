@@ -3,11 +3,10 @@
  <head>
   <meta charset="UTF-8">
   <!-- BOT-M4: CSP ограничивает источники скриптов/стилей/фреймов. 'unsafe-inline'
-       необходим из-за tailwind.config и inline onclick-обработчиков.
-       object-src/frame-src 'none' блокируют встроенные объекты и iframe-обёртки. -->
+       необходим из-за inline onclick-обработчиков. Tailwind CDN удалён (BOT-M2). -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' 'unsafe-inline' https://telegram.org https://cdn.tailwindcss.com;
+    script-src 'self' 'unsafe-inline' https://telegram.org;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com data:;
     img-src 'self' data: https:;
@@ -18,31 +17,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.85, maximum-scale=0.85, user-scalable=no, viewport-fit=cover">
   <title>Мамин хлеб</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="stylesheet" href="/styles.css" integrity="sha256-Q29Uz3EMpqZWap5IAUbr0b6dOZWI+BZH8jj7NZaMcm0=" crossorigin="anonymous">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            cream: '#FFFDF9',
-            beige: '#F5E6D3',
-            caramel: '#E8B430',
-            coffee: '#6B4423',
-            gold: '#C9A227',
-            warmWhite: '#FFFDF9'
-          },
-          fontFamily: {
-            poppins: ['Poppins', 'sans-serif'],
-            montserrat: ['Montserrat', 'sans-serif'],
-            playfair: ['Playfair Display', 'serif']
-          }
-        }
-      }
-    }
-  </script>
   <style>
     * { -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }

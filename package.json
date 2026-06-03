@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Telegram bot for MaminHleb bakery",
   "scripts": {
-    "start": "node bot/index.js"
+    "start": "node bot/index.js",
+    "build:css": "tailwindcss -i bot/input.css -o bot/public/styles.css --minify"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -15,5 +16,8 @@
     "helmet": "8.2.0",
     "node-fetch": "2.7.0",
     "pg": "8.21.0"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
   }
 }
