@@ -2175,7 +2175,7 @@
           <p style="color:#fff;font-weight:800;font-size:${compact?'9px':'11px'};text-align:center;line-height:1.3;font-family:'Montserrat',sans-serif;">Товар закончился,<br>завтра сделаем<br>новую партию 🔥</p>
         </div>` : '';
 
-      const _pidJ = JSON.stringify(p.id);
+      const _pidJ = escHtml(JSON.stringify(p.id));
       const _pidH = escHtml(p.id);
       if (compact) {
         return `
@@ -2255,7 +2255,7 @@
       var stockKey = product ? (product.name || '').trim().toLowerCase() : '';
       var stockLimit = (stockKey && stockKey in stockData) ? stockData[stockKey] : Infinity;
       var atLimit = stockLimit !== Infinity && quantity >= stockLimit;
-      const _pid = JSON.stringify(pid);
+      const _pid = escHtml(JSON.stringify(pid));
       if (quantity > 0) return `
         <div style="display:flex;align-items:center;gap:${isCompact?4:isBs?3:5}px;background:#f5ead8;border-radius:50px;padding:${isCompact?'4px 5px':isBs?'3px 4px':'5px 7px'};border:1px solid rgba(201,162,39,0.45);box-shadow:0 2px 6px rgba(180,130,60,0.1);">
           <button onclick="updateQuantity(${_pid},-1)" style="width:${sz}px;height:${sz}px;border-radius:50%;background:#D4AA70;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fsz}px;">−</button>
@@ -2314,14 +2314,14 @@
       var atLimit = stockLimit !== Infinity && quantity >= stockLimit;
       if (quantity > 0) {
         return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
-          + '<button onclick="updateQuantity(' + JSON.stringify(pid) + ',-1)" style="width:23px;height:23px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">−</button>'
+          + '<button onclick="updateQuantity(' + escHtml(JSON.stringify(pid)) + ',-1)" style="width:23px;height:23px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">−</button>'
           + '<span style="min-width:14px;text-align:center;font-weight:800;color:#2d1505;font-size:11px;font-family:\'Montserrat\',sans-serif;">' + quantity + '</span>'
           + (atLimit
             ? '<span style="width:23px;height:23px;border-radius:50%;background:#e8e0d0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#bbb;flex-shrink:0;cursor:not-allowed;">+</span>'
-            : '<button onclick="updateQuantity(' + JSON.stringify(pid) + ',1)" style="width:23px;height:23px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>')
+            : '<button onclick="updateQuantity(' + escHtml(JSON.stringify(pid)) + ',1)" style="width:23px;height:23px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>')
           + '</div>';
       }
-      return '<button onclick="addToCartWithCoffeeCheck(' + JSON.stringify(pid) + ')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
+      return '<button onclick="addToCartWithCoffeeCheck(' + escHtml(JSON.stringify(pid)) + ')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
     }
 
     function bsCardHTML(p) {
@@ -2340,7 +2340,7 @@
       var priceStr = disc < p.price ? disc.toFixed(2) : p.price.toFixed(2);
       var priceColor = disc < p.price ? '#E05252' : '#2d1505';
       return '<div style="flex-shrink:0;width:150px;height:185px;position:relative;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(45,21,5,0.10);' + (!available ? 'opacity:0.60;' : '') + '">'
-        + '<div class="bs-card-inner" style="position:absolute;inset:0;cursor:pointer;" onclick="showProductDetail(' + JSON.stringify(p.id) + ')">' + imgHTML + '</div>'
+        + '<div class="bs-card-inner" style="position:absolute;inset:0;cursor:pointer;" onclick="showProductDetail(' + escHtml(JSON.stringify(p.id)) + ')">' + imgHTML + '</div>'
         + hitBadge + oosOverlay
         + '<div style="position:absolute;bottom:0;left:0;right:0;height:94px;background:linear-gradient(to top,rgba(255,248,240,0.82) 0%,rgba(255,248,240,0.55) 55%,transparent 100%);pointer-events:none;"></div>'
         + '<div style="position:absolute;bottom:9px;left:0;right:0;padding:0 10px;display:flex;flex-direction:column;gap:4px;">'
@@ -2526,7 +2526,7 @@
         if (product.sizes && product.sizes.length > 0) {
           sizeSection.style.display = 'block';
           document.getElementById('detail-size-buttons').innerHTML = product.sizes.map(function(sizeOpt, i) {
-            return '<button type="button" onclick="selectDetailSize(' + JSON.stringify(sizeOpt.size) + ', event)" class="detail-size-btn" style="padding:10px 20px;border-radius:50px;font-size:14px;font-weight:600;border:2px solid ' + (i === 0 ? 'transparent' : 'rgba(201,162,39,0.45)') + ';background:' + (i === 0 ? 'linear-gradient(90deg,#C9A227,#E8B430)' : 'transparent') + ';color:' + (i === 0 ? '#fff' : '#6B4423') + ';cursor:pointer;touch-action:manipulation;">' + escHtml(sizeOpt.size) + '</button>';
+            return '<button type="button" onclick="selectDetailSize(' + escHtml(JSON.stringify(sizeOpt.size)) + ', event)" class="detail-size-btn" style="padding:10px 20px;border-radius:50px;font-size:14px;font-weight:600;border:2px solid ' + (i === 0 ? 'transparent' : 'rgba(201,162,39,0.45)') + ';background:' + (i === 0 ? 'linear-gradient(90deg,#C9A227,#E8B430)' : 'transparent') + ';color:' + (i === 0 ? '#fff' : '#6B4423') + ';cursor:pointer;touch-action:manipulation;">' + escHtml(sizeOpt.size) + '</button>';
           }).join('');
           document.getElementById('detail-add-btn').dataset.selectedSize = product.sizes[0].size;
           document.getElementById('detail-add-btn').dataset.price = product.sizes[0].price;
@@ -2791,10 +2791,10 @@
           + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:25px;">'
           + '<span style="font-family:\'Montserrat\',sans-serif;font-size:18px;font-weight:800;color:#C9A227;line-height:1;">' + item.price.toFixed(2) + BYN + '</span>'
           + '<div style="display:flex;align-items:center;gap:5px;">'
-          + '<button onclick="updateQuantity(' + JSON.stringify(pid) + ',-1,' + JSON.stringify(size) + ')" style="width:28px;height:28px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.13);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:16px;line-height:1;font-weight:400;">−</button>'
+          + '<button onclick="updateQuantity(' + escHtml(JSON.stringify(pid)) + ',-1,' + escHtml(JSON.stringify(size)) + ')" style="width:28px;height:28px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.13);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:16px;line-height:1;font-weight:400;">−</button>'
           + '<span style="font-weight:700;font-size:14px;color:#2d1505;min-width:16px;text-align:center;">' + item.quantity + '</span>'
-          + '<button onclick="updateQuantity(' + JSON.stringify(pid) + ',1,' + JSON.stringify(size) + ')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:600;">+</button>'
-          + '<button onclick="removeFromCart(' + JSON.stringify(pid) + ')" style="width:28px;height:28px;border:none;background:#F5EDE3;border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;margin-left:6px;">' + trashSvg + '</button>'
+          + '<button onclick="updateQuantity(' + escHtml(JSON.stringify(pid)) + ',1,' + escHtml(JSON.stringify(size)) + ')" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:600;">+</button>'
+          + '<button onclick="removeFromCart(' + escHtml(JSON.stringify(pid)) + ')" style="width:28px;height:28px;border:none;background:#F5EDE3;border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;margin-left:6px;">' + trashSvg + '</button>'
           + '</div></div>'
           + '</div></div>';
       }).join('');
@@ -2816,12 +2816,12 @@
     function csSuggBtnHTML(pid, qty) {
       if (qty > 0) {
         return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:2px;box-shadow:0 2px 10px rgba(0,0,0,0.11);border:1px solid rgba(201,162,39,0.18);">'
-          + '<button onclick="event.stopPropagation();updateQuantity(' + JSON.stringify(pid) + ',-1)" style="width:22px;height:22px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">−</button>'
+          + '<button onclick="event.stopPropagation();updateQuantity(' + escHtml(JSON.stringify(pid)) + ',-1)" style="width:22px;height:22px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">−</button>'
           + '<span style="min-width:12px;text-align:center;font-weight:800;color:#2d1505;font-size:10px;font-family:\'Montserrat\',sans-serif;">' + qty + '</span>'
-          + '<button onclick="event.stopPropagation();updateQuantity(' + JSON.stringify(pid) + ',1)" style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;box-shadow:0 2px 5px rgba(201,162,39,0.40);">+</button>'
+          + '<button onclick="event.stopPropagation();updateQuantity(' + escHtml(JSON.stringify(pid)) + ',1)" style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;box-shadow:0 2px 5px rgba(201,162,39,0.40);">+</button>'
           + '</div>';
       }
-      return '<button onclick="event.stopPropagation();addToCart(' + JSON.stringify(pid) + ')" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.48);">+</button>';
+      return '<button onclick="event.stopPropagation();addToCart(' + escHtml(JSON.stringify(pid)) + ')" style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,0.48);">+</button>';
     }
 
     function updateCsSuggCard(pid) {
@@ -2843,7 +2843,7 @@
         ? '<img src="' + escHtml(productImages[p.id]) + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:#F2E8D8;">' + escHtml(p.image) + '</div>';
       return '<div style="flex-shrink:0;width:132px;height:171px;scroll-snap-align:center;position:relative;">'
-        + '<div style="width:100%;height:100%;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(45,21,5,0.07);background:#fff;display:flex;flex-direction:column;cursor:pointer;" onclick="showProductDetail(' + JSON.stringify(p.id) + ')">'
+        + '<div style="width:100%;height:100%;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(45,21,5,0.07);background:#fff;display:flex;flex-direction:column;cursor:pointer;" onclick="showProductDetail(' + escHtml(JSON.stringify(p.id)) + ')">'
         + '<div style="position:relative;height:99px;flex-shrink:0;overflow:hidden;border-radius:14px;margin:5px 5px 0;">' + imgHTML + '</div>'
         + '<div style="flex:1;background:#fff;padding:5px 8px 8px;display:flex;flex-direction:column;justify-content:space-between;">'
         + '<h3 style="font-family:\'Montserrat\',sans-serif;font-weight:700;font-size:11px;color:#2d1505;margin:0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(p.name) + '</h3>'
@@ -3206,7 +3206,7 @@
       if (!q) { dd.style.display = 'none'; return; }
       const matches = VITEBSK_STREETS.filter(s => s.toLowerCase().includes(q)).slice(0, 6);
       if (!matches.length) { dd.style.display = 'none'; return; }
-      dd.innerHTML = matches.map(s => `<div onclick="selectAddress(${JSON.stringify(s)})" style="padding:10px 16px;font-size:14px;color:#3d2010;cursor:pointer;border-bottom:1px solid #f0e8dc;" onmousedown="event.preventDefault()">${escHtml(s)}</div>`).join('');
+      dd.innerHTML = matches.map(s => `<div onclick="selectAddress(${escHtml(JSON.stringify(s))})" style="padding:10px 16px;font-size:14px;color:#3d2010;cursor:pointer;border-bottom:1px solid #f0e8dc;" onmousedown="event.preventDefault()">${escHtml(s)}</div>`).join('');
       dd.style.display = 'block';
     }
     function selectAddress(addr) {
@@ -3492,8 +3492,8 @@
               <p class="text-xs text-caramel">${item.price.toFixed(2)}${BYN} × ${item.quantity}</p>
             </div>
             <div class="flex items-center gap-1">
-              <button onclick="updateQuantity(${JSON.stringify(item.product_id)}, -1, ${JSON.stringify(item.selected_size || '')})" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">−</button>
-              <button onclick="updateQuantity(${JSON.stringify(item.product_id)}, 1, ${JSON.stringify(item.selected_size || '')})" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">+</button>
+              <button onclick="updateQuantity(${escHtml(JSON.stringify(item.product_id))}, -1, ${escHtml(JSON.stringify(item.selected_size || ''))})" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">−</button>
+              <button onclick="updateQuantity(${escHtml(JSON.stringify(item.product_id))}, 1, ${escHtml(JSON.stringify(item.selected_size || ''))})" class="w-6 h-6 bg-white rounded text-xs font-bold text-coffee hover:bg-gold/20">+</button>
             </div>
           </div>`;
       }).join('');
@@ -3544,17 +3544,17 @@
     function preorderBtnZoneHTML(productId, price, qty, isCoffee) {
       if (qty > 0) {
         var plusFn = isCoffee
-          ? 'openCoffeeAddonsModal(' + JSON.stringify(productId) + ',' + price + ')'
-          : 'updatePreorderQuantity(' + JSON.stringify(productId) + ', 1)';
+          ? 'openCoffeeAddonsModal(' + escHtml(JSON.stringify(productId)) + ',' + price + ')'
+          : 'updatePreorderQuantity(' + escHtml(JSON.stringify(productId)) + ', 1)';
         return '<div style="display:flex;align-items:center;gap:2px;background:rgba(255,251,245,0.97);border-radius:50px;padding:3px;box-shadow:0 3px 14px rgba(0,0,0,0.13);border:1px solid rgba(201,162,39,0.20);">'
-          + '<button type="button" onclick="updatePreorderQuantity(' + JSON.stringify(productId) + ', -1)" style="width:24px;height:24px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">−</button>'
+          + '<button type="button" onclick="updatePreorderQuantity(' + escHtml(JSON.stringify(productId)) + ', -1)" style="width:24px;height:24px;border-radius:50%;background:#EDE0C4;color:#6B4423;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">−</button>'
           + '<span style="min-width:14px;text-align:center;font-weight:800;font-size:11px;color:#2d1505;font-family:\'Montserrat\',sans-serif;">' + qty + '</span>'
           + '<button type="button" onclick="' + plusFn + '" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 6px rgba(201,162,39,0.42);">+</button>'
           + '</div>';
       }
       var addFn = isCoffee
-        ? 'openCoffeeAddonsModal(' + JSON.stringify(productId) + ',' + price + ')'
-        : 'addPreorderItem(' + JSON.stringify(productId) + ',' + price + ')';
+        ? 'openCoffeeAddonsModal(' + escHtml(JSON.stringify(productId)) + ',' + price + ')'
+        : 'addPreorderItem(' + escHtml(JSON.stringify(productId)) + ',' + price + ')';
       return '<button type="button" onclick="' + addFn + '" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 10px rgba(201,162,39,0.50);">+</button>';
     }
 
@@ -3912,13 +3912,13 @@
           + '<div style="display:flex;align-items:center;gap:3px;margin-bottom:10px;flex-wrap:wrap;">' + secondaryRow + '</div>'
           + '<div style="display:flex;align-items:center;justify-content:space-between;">'
           + '<div style="display:flex;align-items:center;gap:6px;">'
-          + '<button type="button" onclick="updatePreorderQuantityFromForm(' + JSON.stringify(pid) + ',-1)" style="width:28px;height:28px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.14);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:16px;line-height:1;font-weight:400;">−</button>'
+          + '<button type="button" onclick="updatePreorderQuantityFromForm(' + escHtml(JSON.stringify(pid)) + ',-1)" style="width:28px;height:28px;border-radius:50%;background:none;border:1.5px solid rgba(0,0,0,0.14);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#2d1505;font-size:16px;line-height:1;font-weight:400;">−</button>'
           + '<span style="font-weight:700;font-size:14px;color:#2d1505;min-width:16px;text-align:center;">' + item.quantity + '</span>'
-          + '<button type="button" onclick="updatePreorderQuantityFromForm(' + JSON.stringify(pid) + ',1)" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:600;">+</button>'
+          + '<button type="button" onclick="updatePreorderQuantityFromForm(' + escHtml(JSON.stringify(pid)) + ',1)" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#C9A227,#E8B430);border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;line-height:1;font-weight:600;">+</button>'
           + '</div>'
           + '<div style="display:flex;align-items:center;gap:7px;">'
           + '<span style="font-size:14px;font-weight:800;color:#2d1505;">' + (item.price * item.quantity).toFixed(2) + ' ₽</span>'
-          + '<button type="button" onclick="removePreorderFormItem(' + JSON.stringify(pid) + ')" style="width:28px;height:28px;border:none;background:#F5EDE3;border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;">' + trashSvg + '</button>'
+          + '<button type="button" onclick="removePreorderFormItem(' + escHtml(JSON.stringify(pid)) + ')" style="width:28px;height:28px;border:none;background:#F5EDE3;border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;padding:0;">' + trashSvg + '</button>'
           + '</div></div>'
           + '</div></div>';
       }).join('');
@@ -4134,7 +4134,7 @@
         var items = order.items || [];
         var rawId = String(order.id || order.orderNumber || '');
         var orderNumDisplay = '#Заказ' + rawId.replace(/\D/g, '') || rawId;
-        var menuArg = JSON.stringify(order.id);
+        var menuArg = escHtml(JSON.stringify(order.id));
         var imagesHtml = items.slice(0, 4).map(function(item) {
           return '<div style="width:calc((100% - 18px)/4);aspect-ratio:1;border-radius:12px;background:#F2EDE8;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.06);">'
             + _ohImgHTML(item)
