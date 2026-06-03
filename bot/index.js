@@ -128,6 +128,15 @@ async function initDB() {
   } catch(e) { console.error('list tables:', e.message); }
 }
 
+// BOT-M3: единый источник расписания «счастливого часа» и скидки.
+// Используется и в isHappyHourNow(), и в /api/happyhour, и в /api/config —
+// чтобы расписание не расходилось между бэкендом и Mini App.
+const HAPPY_HOUR = {
+  weekday: { start: 19, end: 20 }, // Пн–Пт
+  weekend: { start: 17, end: 18 }, // Сб–Вс
+  discount: 0.30,                  // 30% скидка
+};
+
 // Bot Арх #5: shared catalog schema with frontend — server is the canonical source
 const CATALOG = [
   { name: 'Круассан Французский',    price: 3.50,  category: 'Выпечка',  emoji: '🥐', desc: 'Классический французский круассан с хрустящей слоёной корочкой' },
@@ -251,6 +260,14 @@ function parsePreorderTime(timeStr) {
   return { valid: true, niceDate: `${m[3]}.${m[2]}.${m[1]}`, rawTime: m[4] };
 }
 
+// BOT-M3: экранирование пользовательского текста для Telegram parse_mode:HTML.
+function escHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 // ─── Telegram API ─────────────────────────────────────────────────────────────
 const TG_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
@@ -334,9 +351,9 @@ function isHappyHourNow() {
   const msk = new Date(now.getTime() + 3 * 3600_000);
   const day = msk.getUTCDay();
   const h   = msk.getUTCHours();
-  const weekday = day >= 1 && day <= 5;
-  const weekend = day === 0 || day === 6;
-  return (weekday && h >= 19 && h < 20) || (weekend && h >= 17 && h < 18);
+  const isWeekend = day === 0 || day === 6;
+  const win = isWeekend ? HAPPY_HOUR.weekend : HAPPY_HOUR.weekday;
+  return h >= win.start && h < win.end;
 }
 
 // ─── Обработка заказа ─────────────────────────────────────────────────────────
@@ -389,8 +406,10 @@ function priceOrder(body, isPreorder) {
   }
 
   const hhActive = !isPreorder && isHappyHourNow();
-  if (hhActive) total = Math.round(total * 0.7 * 100) / 100;
-  const totalStr = (hhActive ? `~~${(total / 0.7).toFixed(2)}~~ ` : '') + total.toFixed(2) + ' Br' + (hhActive ? ' 🎉 -30% Счастливый час' : '');
+  const hhFactor = 1 - HAPPY_HOUR.discount;
+  if (hhActive) total = Math.round(total * hhFactor * 100) / 100;
+  const hhPct = Math.round(HAPPY_HOUR.discount * 100);
+  const totalStr = (hhActive ? `~~${(total / hhFactor).toFixed(2)}~~ ` : '') + total.toFixed(2) + ' Br' + (hhActive ? ` 🎉 -${hhPct}% Счастливый час` : '');
 
   return { itemsText, total, totalStr, hhActive };
 }
@@ -772,6 +791,36 @@ app.post('/api/orders/history', stockLimiter, async (req, res) => {
   }
 });
 
+// BOT-M3: приём отзыва из Mini App. Текст экранируется и пересылается админу.
+// telegramId считается недоверенным (клиент шлёт его напрямую, без initData),
+// поэтому используется только как информационная метка, не как идентификатор.
+app.post('/review', orderLimiter, async (req, res) => {
+  const body = req.body || {};
+  const name = String(body.name || '').trim().slice(0, 100);
+  const text = String(body.text || '').trim().slice(0, 2000);
+  const items = String(body.items || '').trim().slice(0, 1000);
+  const tgId = String(body.telegramId || '0').replace(/[^0-9]/g, '').slice(0, 20) || '0';
+
+  if (!name || !text) {
+    return res.status(400).json({ ok: false, error: 'name and text required' });
+  }
+
+  const adminMsg =
+    `📝 <b>Новый отзыв из Mini App</b>\n\n` +
+    `👤 <b>Имя:</b> ${escHtml(name)}\n` +
+    `🆔 <b>Telegram ID:</b> ${escHtml(tgId)} <i>(не верифицирован)</i>\n` +
+    (items ? `🛒 <b>Заказ:</b> ${escHtml(items)}\n` : '') +
+    `\n💬 ${escHtml(text)}`;
+
+  if (ADMIN_ID) {
+    await tg('sendMessage', { chat_id: String(ADMIN_ID), text: adminMsg, parse_mode: 'HTML' });
+  } else {
+    console.warn('/review: ADMIN_ID не задан — отзыв не переслан');
+  }
+
+  res.json({ ok: true });
+});
+
 app.get('/api/stock', stockLimiter, async (req, res) => {
   if (!pgPool) {
     return res.json({ ok: false, error: 'db_unavailable', stock: {}, catalog: [], flags: {} });
@@ -799,12 +848,24 @@ app.get('/api/happyhour', hhLimiter, (req, res) => {
   const day = msk.getUTCDay();
   const h   = msk.getUTCHours();
   const m   = msk.getUTCMinutes();
-  const weekday = day >= 1 && day <= 5;
-  const weekend = day === 0 || day === 6;
-  const active  = (weekday && h >= 19 && h < 20) || (weekend && h >= 17 && h < 18);
-  const endH    = weekday ? 20 : 18;
-  const minLeft = active ? (endH * 60) - (h * 60 + m) : 0;
+  const isWeekend = day === 0 || day === 6;
+  const win     = isWeekend ? HAPPY_HOUR.weekend : HAPPY_HOUR.weekday;
+  const active  = h >= win.start && h < win.end;
+  const minLeft = active ? (win.end * 60) - (h * 60 + m) : 0;
   res.json({ ok: true, active, minLeft });
+});
+
+// BOT-M3: конфиг для Mini App (fetchConfig) — расписание happy hour и скидка.
+// Single source of truth — const HAPPY_HOUR выше.
+app.get('/api/config', hhLimiter, (req, res) => {
+  res.json({
+    ok: true,
+    happyHour: {
+      weekday:  HAPPY_HOUR.weekday,
+      weekend:  HAPPY_HOUR.weekend,
+      discount: HAPPY_HOUR.discount,
+    },
+  });
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
@@ -894,9 +955,9 @@ setInterval(() => {
   const day = msk.getUTCDay();
   const h   = msk.getUTCHours();
   const dateKey   = mskDateKey();
-  const isWeekday = day >= 1 && day <= 5;
   const isWeekend = day === 0 || day === 6;
-  if (((isWeekday && h === 19) || (isWeekend && h === 17)) && getProp('happy_hour_sent_date') !== dateKey) {
+  const startH    = isWeekend ? HAPPY_HOUR.weekend.start : HAPPY_HOUR.weekday.start;
+  if (h === startH && getProp('happy_hour_sent_date') !== dateKey) {
     setProp('happy_hour_sent_date', dateKey);
     sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
   }
