@@ -17,8 +17,8 @@ app.use(helmet({
   frameguard:               false, // Mini App встраивается в Telegram WebView
   crossOriginEmbedderPolicy: false, // нужно для Telegram WebApp embedding
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.text({ type: 'text/plain', limit: '10mb' }));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.text({ type: 'text/plain', limit: '100kb' }));
 app.use('/images',     express.static(path.join(__dirname, 'public/images')));
 app.use('/fonts',      express.static(path.join(__dirname, 'public/fonts')));
 // BOT-M2: статический CSS вместо Tailwind CDN
