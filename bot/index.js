@@ -2,7 +2,6 @@
 require('dotenv').config();
 
 const express   = require('express');
-const fetch     = require('node-fetch');
 const path      = require('path');
 const { Pool }  = require('pg');
 const helmet    = require('helmet');
