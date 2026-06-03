@@ -2162,8 +2162,11 @@
       const stockKey = (p.name || '').trim().toLowerCase();
       const stockQty = (stockKey in stockData) ? stockData[stockKey] : undefined;
       const stockBadge = (stockQty !== undefined && stockQty > 0 && stockQty < 10)
-        ? `<p data-stockbadge="${p.id}" style="font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;">⚠ Осталось: ${stockQty} шт.</p>`
+        ? `<p data-stockbadge="${p.id}" style="font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;">Осталось: ${stockQty} шт.</p>`
         : `<p data-stockbadge="${p.id}" style="display:none;font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;"></p>`;
+      const hurryBadge = (stockQty !== undefined && stockQty > 0 && stockQty < 10)
+        ? `<div data-hurrybadge="${escHtml(p.id)}" style="position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#E65100,#FF8F00);color:#fff;font-weight:800;font-size:7px;padding:2px 7px;border-radius:99px;font-family:'Montserrat',sans-serif;letter-spacing:0.04em;box-shadow:0 2px 6px rgba(230,81,0,0.38);pointer-events:none;z-index:4;">🔥 УСПЕЙ ЗАБРАТЬ</div>`
+        : `<div data-hurrybadge="${escHtml(p.id)}" style="display:none;position:absolute;top:6px;right:6px;pointer-events:none;z-index:4;"></div>`;
       const imgHTML = productImages[p.id]
         ? `<img src="${escHtml(productImages[p.id])}" class="w-full h-full" style="object-fit:cover;object-position:center 40%;" alt="${escHtml(p.name)}" loading="lazy" data-fb-html="<div class=&quot;w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige&quot;>${escHtml(p.image)}</div>">`
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${escHtml(p.image)}</div>`;
@@ -2179,13 +2182,14 @@
           <div class="flex-shrink-0" style="width:175px;${!available ? 'opacity:0.55;' : ''}" data-pid="${_pidH}">
             <div class="product-card bg-white rounded-3xl shadow-sm h-full flex flex-col overflow-hidden" style="isolation:isolate;">
               <div style="overflow:hidden;flex-shrink:0;height:152px;">
-                <button onclick="showProductDetail(${_pidJ})" style="position:relative;width:100%;height:100%;border:none;padding:0;cursor:pointer;background:#F5E6D3;display:block;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+                <button ${available ? `onclick="showProductDetail(${_pidJ})"` : ''} style="position:relative;width:100%;height:100%;border:none;padding:0;${available?'cursor:pointer;':'cursor:default;'}background:#F5E6D3;display:block;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
                   <div class="w-full h-full">${imgHTML}</div>
+                  ${hurryBadge}
                   ${oosOverlay}
                 </button>
               </div>
               <div class="flex-1 px-3 pt-2 pb-3 flex flex-col justify-between gap-1">
-                <div onclick="showProductDetail(${_pidJ})" style="cursor:pointer;">
+                <div ${available ? `onclick="showProductDetail(${_pidJ})"` : ''} style="${available?'cursor:pointer;':''}">
                   <h3 class="font-bold text-coffee leading-tight text-xs" style="font-family:'Playfair Display',serif;">${escHtml(p.name)}</h3>
                   <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${escHtml(weightInfo)}</p>
                   ${stockBadge}
@@ -2218,14 +2222,15 @@
         <div data-pid="${_pidH}" style="${!available ? 'opacity:0.55;' : ''}">
           <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);isolation:isolate;">
             <div style="overflow:hidden;aspect-ratio:4/3;">
-              <button onclick="showProductDetail(${_pidJ})" style="position:relative;width:100%;height:100%;overflow:hidden;display:block;border:none;padding:0;cursor:pointer;background:#F5E6D3;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+              <button ${available ? `onclick="showProductDetail(${_pidJ})"` : ''} style="position:relative;width:100%;height:100%;overflow:hidden;display:block;border:none;padding:0;${available?'cursor:pointer;':'cursor:default;'}background:#F5E6D3;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
                 <div style="width:100%;height:100%;">${imgHTML}</div>
                 ${p.isNew && available ? '<div style="position:absolute;top:6px;left:6px;background:#E05252;color:#fff;font-weight:700;font-size:7px;padding:2px 6px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.04em;">НОВИНКА</div>' : ''}
+                ${hurryBadge}
                 ${oosOverlay}
               </button>
             </div>
             <div style="padding:9px 10px 8px;display:flex;flex-direction:column;gap:2px;">
-              <div onclick="showProductDetail(${_pidJ})" style="cursor:pointer;">
+              <div ${available ? `onclick="showProductDetail(${_pidJ})"` : ''} style="${available?'cursor:pointer;':''}">
                 <h3 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#2d1505;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(p.name)}</h3>
                 <p style="font-family:'Montserrat',sans-serif;font-size:11px;color:#A08060;margin:1px 0 0;line-height:1;">${escHtml(weightInfo)}</p>
                 ${stockBadge}
@@ -2273,13 +2278,13 @@
       if (product) {
         const stockKey = (product.name || '').trim().toLowerCase();
         const stockQty = stockKey in stockData ? stockData[stockKey] : undefined;
+        const lowStock = stockQty !== undefined && stockQty > 0 && stockQty < 10;
         document.querySelectorAll(`[data-stockbadge="${productId}"]`).forEach(el => {
-          if (stockQty !== undefined && stockQty > 0 && stockQty < 10) {
-            el.textContent = `⚠ Осталось: ${stockQty} шт.`;
-            el.style.display = '';
-          } else {
-            el.style.display = 'none';
-          }
+          if (lowStock) { el.textContent = `Осталось: ${stockQty} шт.`; el.style.display = ''; }
+          else { el.style.display = 'none'; }
+        });
+        document.querySelectorAll(`[data-hurrybadge="${productId}"]`).forEach(el => {
+          el.style.display = lowStock ? '' : 'none';
         });
       }
 
