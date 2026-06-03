@@ -227,7 +227,7 @@
      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
       <div style="width:56px;height:56px;border-radius:50%;border:2.5px solid #D4732A;padding:2px;box-sizing:border-box;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
        <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;">
-        <img id="user-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;" onerror="this.style.display='none';document.getElementById('user-avatar-fallback').style.display='flex';">
+        <img id="user-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;" data-fb="avatar">
         <div id="user-avatar-fallback" style="width:100%;height:100%;background:linear-gradient(135deg,#E8B430,#C9A227);display:flex;align-items:center;justify-content:center;">
          <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style="pointer-events:none;"><path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.333 0-10 1.667-10 5v2h20v-2c0-3.333-6.667-5-10-5z"/></svg>
         </div>
@@ -295,15 +295,15 @@
        <div id="carousel-container" class="flex transition-transform duration-500 ease-out" style="height:166px;">
        <!-- Slide 1: Счастливый час -->
        <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:166px;background:#EDE4D8;flex-shrink:0;">
-        <img src="/images/carousel-happyhour.png" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;" onerror="this.style.display='none';" />
+        <img src="/images/carousel-happyhour.png" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;" data-fb="hide" />
        </div>
        <!-- Slide 2: Мамин хлеб -->
        <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:166px;background:#EDE4D8;flex-shrink:0;">
-        <img src="/images/carousel-brand.png" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;" onerror="this.style.display='none';" />
+        <img src="/images/carousel-brand.png" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;" data-fb="hide" />
        </div>
        <!-- Slide 3: Утренний предзаказ -->
        <div class="w-full flex-shrink-0 rounded-3xl relative overflow-hidden" style="height:166px;background:#EDE4D8;flex-shrink:0;">
-        <img src="/images/carousel-preorder.png" style="width:100%;height:100%;object-fit:cover;object-position:center calc(50% - 10px);display:block;" onerror="this.style.display='none';" />
+        <img src="/images/carousel-preorder.png" style="width:100%;height:100%;object-fit:cover;object-position:center calc(50% - 10px);display:block;" data-fb="hide" />
         <!-- Прозрачная кнопка поверх нарисованной "Заказать" -->
         <button data-action="showScreen" data-arg="preorder" style="position:absolute;bottom:20px;left:43%;width:117px;height:38px;background:transparent;border:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border-radius:50px;z-index:5;"></button>
        </div>
@@ -1121,7 +1121,7 @@
       </div>
       <!-- Right: hero image -->
       <div style="position:absolute;right:0;top:0;width:60%;height:100%;pointer-events:none;z-index:1;">
-       <img src="/images/mpriorder.png" style="width:100%;height:100%;object-fit:cover;object-position:left center;" onerror="this.style.display='none'">
+       <img src="/images/mpriorder.png" style="width:100%;height:100%;object-fit:cover;object-position:left center;" data-fb="hide">
       </div>
      </div>
     </div>
@@ -1502,6 +1502,28 @@
   </div>
 
   <script>
+    // ── BOT-L4: делегированная обработка ошибок загрузки <img> ──────────────────
+    // Вместо inline onerror="..." (inline-JS) — один слушатель в capture-фазе.
+    // Событие 'error' не всплывает, поэтому слушаем на document с useCapture=true.
+    // Поведение управляется data-атрибутами:
+    //   data-fb="hide"      → скрыть картинку
+    //   data-fb="avatar"    → скрыть и показать #user-avatar-fallback
+    //   data-fb-html="..."  → заменить родителя указанным HTML (эмодзи-заглушка)
+    document.addEventListener('error', function (e) {
+      var el = e.target;
+      if (!el || el.tagName !== 'IMG') return;
+      var fb = el.getAttribute('data-fb');
+      if (fb === 'hide') {
+        el.style.display = 'none';
+      } else if (fb === 'avatar') {
+        el.style.display = 'none';
+        var fbEl = document.getElementById('user-avatar-fallback');
+        if (fbEl) fbEl.style.display = 'flex';
+      } else if (el.getAttribute('data-fb-html') != null && el.parentNode) {
+        el.parentNode.innerHTML = el.getAttribute('data-fb-html');
+      }
+    }, true);
+
     // ── Telegram init ──────────────────────────────────────────────────────────
     let telegramId = null;
     let telegramName = "";
@@ -2143,7 +2165,7 @@
         ? `<p data-stockbadge="${p.id}" style="font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;">⚠ Осталось: ${stockQty} шт.</p>`
         : `<p data-stockbadge="${p.id}" style="display:none;font-size:${compact?'8px':'9px'};font-weight:700;font-family:'Montserrat',sans-serif;margin-top:3px;color:#e06520;"></p>`;
       const imgHTML = productImages[p.id]
-        ? `<img src="${productImages[p.id]}" class="w-full h-full" style="object-fit:cover;object-position:center 40%;" alt="${p.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige\\'>${p.image}</div>'">`
+        ? `<img src="${productImages[p.id]}" class="w-full h-full" style="object-fit:cover;object-position:center 40%;" alt="${p.name}" loading="lazy" data-fb-html="<div class=&quot;w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige&quot;>${p.image}</div>">`
         : `<div class="w-full h-full flex items-center justify-center ${compact ? 'text-4xl' : 'text-5xl'} bg-beige">${p.image}</div>`;
       const oosOverlay = !available ? `
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.52);display:flex;align-items:center;justify-content:center;padding:8px;z-index:3;">
@@ -2484,7 +2506,7 @@
         }
         const imgEl = document.getElementById('detail-image');
         if (productImages[productId]) {
-          imgEl.innerHTML = '<img src="' + productImages[productId] + '" class="w-full h-full object-cover" alt="' + product.name + '" onerror="this.parentNode.innerHTML=\'<span style=\\\'font-size:6rem;\\\'>' + product.image + '</span>\'">';
+          imgEl.innerHTML = '<img src="' + productImages[productId] + '" class="w-full h-full object-cover" alt="' + product.name + '" data-fb-html="<span style=&quot;font-size:6rem;&quot;>' + product.image + '</span>">';
         } else {
           imgEl.innerHTML = '<span style="font-size:6rem;">' + product.image + '</span>';
         }
@@ -4068,7 +4090,7 @@
       var product = productsById.get(pid);
       var emoji = (product && product.image) ? product.image : '🥐';
       if (imgSrc) {
-        return '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" loading="lazy" onerror="this.parentNode.innerHTML=\'<span style=\\\'font-size:1.8rem;line-height:1;\\\'>' + emoji + '</span>\'">';
+        return '<img src="' + imgSrc + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" loading="lazy" data-fb-html="<span style=&quot;font-size:1.8rem;line-height:1;&quot;>' + emoji + '</span>">';
       }
       return '<span style="font-size:1.8rem;line-height:1;">' + emoji + '</span>';
     }
