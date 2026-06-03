@@ -4332,7 +4332,7 @@
         var history = JSON.parse(localStorage.getItem('mh_order_history') || '[]');
         var now = new Date();
         var dateStr = now.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
-        history.unshift({ id: Date.now(), date: dateStr, items: items.map(function(i) { return { product_id: i.product_id, product_name: i.product_name, price: i.price, quantity: i.quantity, selected_size: i.selected_size || null }; }), total: total, name: name, phone: phone, type: type });
+        history.unshift({ id: Date.now(), date: dateStr, items: items.map(function(i) { return { product_id: i.product_id, product_name: i.product_name, price: i.price, quantity: i.quantity, selected_size: i.selected_size || null }; }), total: total, type: type });
         if (history.length > 10) history = history.slice(0, 10);
         localStorage.setItem('mh_order_history', JSON.stringify(history));
       } catch(e) {}
