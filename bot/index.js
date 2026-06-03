@@ -184,15 +184,23 @@ const CATALOG = [
 async function syncCatalogToWarehouse() {
   if (!pgPool) return;
   try {
+    // Колонка category может отсутствовать в схеме (Prisma не знает о ней) — добавляем безопасно.
+    await pgPool.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS category VARCHAR(64)`);
     for (const item of CATALOG) {
+      // Новые товары — создаём сразу с категорией.
       await pgPool.query(
-        `INSERT INTO "Product" (name, stock, price)
-         SELECT $1, 0, $2
+        `INSERT INTO "Product" (name, stock, price, category)
+         SELECT $1, 0, $2, $3
          WHERE NOT EXISTS (SELECT 1 FROM "Product" WHERE name = $1)`,
-        [item.name, item.price]
+        [item.name, item.price, item.category]
+      );
+      // Существующие товары — распределяем по категориям как в приложении.
+      await pgPool.query(
+        `UPDATE "Product" SET category = $2 WHERE name = $1 AND category IS DISTINCT FROM $2`,
+        [item.name, item.category]
       );
     }
-    console.log(`Product synced: ${CATALOG.length} items`);
+    console.log(`Product synced: ${CATALOG.length} items (с категориями)`);
   } catch(e) {
     console.error('syncCatalogToWarehouse:', e.message);
   }
