@@ -2189,7 +2189,7 @@
                 </button>
               </div>
               <div class="flex-1 px-3 pt-2 pb-3 flex flex-col justify-between gap-1">
-                <div ${available ? `onclick="showProductDetail(${_pidJ})"` : ''} style="${available?'cursor:pointer;':''}">
+                <div ${available ? `onclick="showProductDetail(${_pidJ})"` : ''} style="${available?'cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;':''}">
                   <h3 class="font-bold text-coffee leading-tight text-xs" style="font-family:'Playfair Display',serif;">${escHtml(p.name)}</h3>
                   <p class="text-xs mt-0.5" style="color:rgba(107,68,35,0.42);">${escHtml(weightInfo)}</p>
                   ${stockBadge}
@@ -2230,7 +2230,7 @@
               </button>
             </div>
             <div style="padding:9px 10px 8px;display:flex;flex-direction:column;gap:2px;">
-              <div ${available ? `onclick="showProductDetail(${_pidJ})"` : ''} style="${available?'cursor:pointer;':''}">
+              <div ${available ? `onclick="showProductDetail(${_pidJ})"` : ''} style="${available?'cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;':''}">
                 <h3 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#2d1505;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(p.name)}</h3>
                 <p style="font-family:'Montserrat',sans-serif;font-size:11px;color:#A08060;margin:1px 0 0;line-height:1;">${escHtml(weightInfo)}</p>
                 ${stockBadge}
