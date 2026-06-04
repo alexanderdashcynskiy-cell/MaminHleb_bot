@@ -198,7 +198,7 @@ const untrackedNames = new Set(
   CATALOG.filter(p => UNTRACKED_CATEGORIES.has(p.category)).map(p => p.name.toLowerCase())
 );
 
- {
+async function syncCatalogToWarehouse() {
   if (!pgPool) return;
   try {
     // Колонка category может отсутствовать в схеме (Prisma не знает о ней) — добавляем безопасно.
