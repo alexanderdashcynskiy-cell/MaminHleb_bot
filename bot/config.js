@@ -13,7 +13,7 @@ const config = {
   // Telegram
   BOT_TOKEN:        (process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN || '').trim(),
   ADMIN_ID:         (process.env.ADMIN_ID || '').trim(),
-  DELIVERY_CHAT_ID: (process.env.DELIVERY_CHAT_ID || '').trim(),
+  DELIVERY_CHAT_ID: (process.env.TELEGRAM_DELIVERY_CHAT_ID || process.env.DELIVERY_CHAT_ID || '').trim(),
   WEBHOOK_SECRET:   (process.env.WEBHOOK_SECRET || '').trim(),
 
   // HTTP
