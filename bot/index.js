@@ -449,6 +449,26 @@ function buildDeliveryBlock(body, isPreorder) {
   return `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74`;
 }
 
+async function decrementStock(body) {
+  if (!pgPool) return;
+  try {
+    const parsed = typeof body.items === 'string' ? JSON.parse(body.items) : body.items;
+    if (!Array.isArray(parsed)) return;
+    for (const i of parsed) {
+      const name = (i.product_name || '').trim();
+      const qty  = Math.floor(Number(i.quantity));
+      if (!name || !Number.isFinite(qty) || qty <= 0) continue;
+      await pgPool.query(
+        `UPDATE "Product" SET stock = GREATEST(0, stock - $1) WHERE name = $2`,
+        [qty, name]
+      );
+    }
+    console.log(`decrementStock: stock updated for order items`);
+  } catch(e) {
+    console.error('decrementStock:', e.message);
+  }
+}
+
 async function handleOrder(body) {
   if (isDuplicateOrder(body)) { console.log('Duplicate order ignored'); return { ok: true, duplicate: true }; }
   const isPreorder = body.type === 'Предзаказ';
@@ -462,6 +482,8 @@ async function handleOrder(body) {
     console.error(`handleOrder: order #${orderNum} NOT persisted — aborting`);
     return { ok: false, error: 'save_failed' };
   }
+
+  await decrementStock(body);
 
   if (clientId !== '0') {
     // Сохраняем clientId для /api/order/done (рейтинг при выдаче заказа)
