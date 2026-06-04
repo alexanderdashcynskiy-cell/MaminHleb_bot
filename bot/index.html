@@ -486,7 +486,7 @@
     </div>
 
     <!-- Scroll area -->
-    <div style="flex:1 1 0%;overflow-y:auto;min-height:0;padding-bottom:140px;">
+    <div style="flex:1 1 0%;overflow-y:auto;overflow-x:hidden;min-height:0;padding-bottom:140px;">
      <div id="cart-items-full" class="hide-scrollbar" style="display:flex;flex-direction:column;gap:10px;padding:0 clamp(8px,3vw,12px) 0;"></div>
      <div id="cart-empty-full" style="display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 0;">
       <span style="font-size:3.75rem;margin-bottom:1rem;">🥐</span>
@@ -511,7 +511,7 @@
         </button>
        </div>
        <!-- Left-aligned carousel, partial preview of next card -->
-       <div id="cart-suggestions" class="hide-scrollbar" style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100vw;position:relative;left:50%;transform:translateX(-50%);scroll-snap-type:x mandatory;padding-top:4px;padding-bottom:14px;" onscroll="onCartSuggestionsScroll(this)"><div id="cs-items" class="flex" style="gap:8px;align-items:center;"></div></div>
+       <div id="cart-suggestions" class="hide-scrollbar" style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;scroll-snap-type:x mandatory;padding-top:4px;padding-bottom:14px;" onscroll="onCartSuggestionsScroll(this)"><div id="cs-items" class="flex" style="gap:8px;align-items:center;"></div></div>
       </div>
      </div>
 
@@ -1856,9 +1856,9 @@
 
           // Decide direction once finger has moved enough
           if (!decided) {
-            if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+            if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
             decided = true;
-            isHoriz = Math.abs(dx) > Math.abs(dy);
+            isHoriz = Math.abs(dx) > Math.abs(dy) * 1.5;
             if (!isHoriz) {
               tracking = false;
               el.style.transition = '';
