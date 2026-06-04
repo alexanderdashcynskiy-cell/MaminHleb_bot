@@ -108,6 +108,17 @@ const storageAdapter = (() => {
 async function initDB() {
   await storageAdapter.init();
   if (!pgPool) return;
+  try {
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS "Product" (
+        id       SERIAL PRIMARY KEY,
+        name     VARCHAR(256) NOT NULL UNIQUE,
+        stock    INTEGER NOT NULL DEFAULT 0,
+        price    NUMERIC(10,2) NOT NULL DEFAULT 0,
+        category VARCHAR(64)
+      )
+    `);
+  } catch(e) { console.error('CREATE Product:', e.message); }
   // Логируем все таблицы и колонки (отладка)
   try {
     const tables = await pgPool.query(`
