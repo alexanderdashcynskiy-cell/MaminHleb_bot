@@ -192,7 +192,13 @@ const CATALOG = [
   { name: 'Трубочки со сгущёнкой', price: 2.50,  category: 'Десерты',  emoji: '🥮', desc: 'Хрустящие трубочки с нежной начинкой из сгущёнки' },
 ];
 
-async function syncCatalogToWarehouse() {
+// Категории, у которых нет складского учёта — всегда в наличии.
+const UNTRACKED_CATEGORIES = new Set(['Кофе']);
+const untrackedNames = new Set(
+  CATALOG.filter(p => UNTRACKED_CATEGORIES.has(p.category)).map(p => p.name.toLowerCase())
+);
+
+ {
   if (!pgPool) return;
   try {
     // Колонка category может отсутствовать в схеме (Prisma не знает о ней) — добавляем безопасно.
@@ -458,6 +464,7 @@ async function decrementStock(body) {
       const name = (i.product_name || '').trim();
       const qty  = Math.floor(Number(i.quantity));
       if (!name || !Number.isFinite(qty) || qty <= 0) continue;
+      if (untrackedNames.has(name.toLowerCase())) continue;
       await pgPool.query(
         `UPDATE "Product" SET stock = GREATEST(0, stock - $1) WHERE name = $2`,
         [qty, name]
@@ -871,7 +878,9 @@ app.get('/api/stock', stockLimiter, async (req, res) => {
   try {
     const result = await pgPool.query('SELECT name, stock FROM "Product"');
     const stock = {};
-    result.rows.forEach(r => { stock[r.name.toLowerCase()] = r.stock; });
+    result.rows.forEach(r => {
+      if (!untrackedNames.has(r.name.toLowerCase())) stock[r.name.toLowerCase()] = r.stock;
+    });
     res.json({ ok: true, stock, catalog: CATALOG, flags: {} });
   } catch(e) {
     console.error('/api/stock DB error:', e.message);
