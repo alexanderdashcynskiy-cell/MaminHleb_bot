@@ -1652,7 +1652,7 @@
       if (s == null) return '';
       return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
     }
-    let cart = (function() { try { return JSON.parse(localStorage.getItem('mh_cart') || '[]'); } catch(e) { return []; } })();
+    let cart = [];
     let currentCategory = 'all';
     const TOTAL_SLIDES = 3;
     let currentSlide = 0;
@@ -1728,6 +1728,7 @@
 
     // ── Init ───────────────────────────────────────────────────────────────────
     function initApp() {
+      try { localStorage.removeItem('mh_cart'); } catch(e) {}
         if(telegramName) {
         const greetingName = document.getElementById('user-greeting-name');
         if (greetingName) greetingName.textContent = telegramName;
@@ -2698,7 +2699,6 @@
     }
 
     function updateCartUI() {
-      try { localStorage.setItem('mh_cart', JSON.stringify(cart)); } catch(e) {}
       const badgeCount    = document.getElementById('cart-badge-count');
       const totalFull     = document.getElementById('cart-total-full');
       const itemsContainer= document.getElementById('cart-items-full');
