@@ -849,7 +849,7 @@ app.get('/api/stock', stockLimiter, async (req, res) => {
   try {
     const result = await pgPool.query('SELECT name, stock FROM "Product"');
     const stock = {};
-    result.rows.forEach(r => { stock[r.name] = r.stock; });
+    result.rows.forEach(r => { stock[r.name.toLowerCase()] = r.stock; });
     res.json({ ok: true, stock, catalog: CATALOG, flags: {} });
   } catch(e) {
     console.error('/api/stock DB error:', e.message);
