@@ -643,7 +643,7 @@
      </div>
 
      <!-- Form -->
-     <form id="checkout-form" style="padding:0 16px 4px;">
+     <form id="checkout-form" style="padding:0 16px 28px;">
 
       <!-- Контактные данные -->
       <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#2d1505;margin:4px 0 10px;">Контактные данные</div>
@@ -773,6 +773,25 @@
        Мы сделаем всё, чтобы вам понравилось
       </div>
 
+      <!-- Итого к оплате -->
+      <div style="background:#E8D5B8;border-radius:16px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 8px rgba(180,140,80,0.1);">
+       <div>
+        <div style="font-size:15px;font-weight:700;color:#2d1505;line-height:1.2;">Итого к оплате</div>
+        <div style="font-size:13px;color:#9a8060;margin-top:4px;">Оплата при получении</div>
+       </div>
+       <div style="display:flex;align-items:baseline;gap:5px;">
+        <span style="font-size:28px;font-weight:700;color:#B8922A;font-family:'Montserrat',sans-serif;line-height:1;"><span id="checkout-total">0.00</span></span>
+        <span class="icon icon-rub"></span>
+       </div>
+      </div>
+
+      <!-- Подтвердить заказ -->
+      <button type="submit" id="submit-checkout-btn"
+       style="width:100%;background:linear-gradient(90deg,#C9A227,#E8B430);border:none;border-radius:16px;padding:13px 20px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 14px rgba(180,140,30,0.35);text-align:center;">
+       <div style="font-size:17px;font-weight:700;color:#fff;line-height:1.2;pointer-events:none;">Подтвердить заказ →</div>
+       <div id="checkout-submit-sub" style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;pointer-events:none;">Самовывоз</div>
+      </button>
+
       <!-- Trust badges -->
       <div style="display:flex;justify-content:center;gap:0;padding:14px 0 8px;">
        <div style="flex:1;text-align:center;padding:0 8px;">
@@ -796,25 +815,6 @@
       </div>
 
      </form>
-    </div>
-
-    <!-- Статичный блок с итогом и кнопкой подтверждения -->
-    <div style="flex-shrink:0;padding:10px 16px max(20px,calc(env(safe-area-inset-bottom,16px) + 10px));background:#FFFEFC;box-shadow:0 -4px 20px rgba(180,140,80,0.10);">
-     <div style="background:#E8D5B8;border-radius:16px;padding:12px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 8px rgba(180,140,80,0.1);">
-      <div>
-       <div style="font-size:15px;font-weight:700;color:#2d1505;line-height:1.2;">Итого к оплате</div>
-       <div style="font-size:13px;color:#9a8060;margin-top:4px;">Оплата при получении</div>
-      </div>
-      <div style="display:flex;align-items:baseline;gap:5px;">
-       <span style="font-size:28px;font-weight:700;color:#B8922A;font-family:'Montserrat',sans-serif;line-height:1;"><span id="checkout-total">0.00</span></span>
-       <span class="icon icon-rub"></span>
-      </div>
-     </div>
-     <button type="submit" id="submit-checkout-btn" form="checkout-form"
-      style="width:100%;background:linear-gradient(90deg,#C9A227,#E8B430);border:none;border-radius:16px;padding:13px 20px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 14px rgba(180,140,30,0.35);text-align:center;">
-      <div style="font-size:17px;font-weight:700;color:#fff;line-height:1.2;pointer-events:none;">Подтвердить заказ →</div>
-      <div id="checkout-submit-sub" style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;pointer-events:none;">Самовывоз</div>
-     </button>
     </div>
    </div>
 
