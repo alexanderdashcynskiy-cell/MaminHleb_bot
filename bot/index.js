@@ -876,12 +876,16 @@ app.get('/api/stock', stockLimiter, async (req, res) => {
     return res.json({ ok: false, error: 'db_unavailable', stock: {}, catalog: [], flags: {} });
   }
   try {
-    const result = await pgPool.query('SELECT name, stock FROM "Product"');
+    const result = await pgPool.query('SELECT name, stock, "isNew", "isBestSeller" FROM "Product"');
     const stock = {};
+    const flags = {};
     result.rows.forEach(r => {
       if (!untrackedNames.has(r.name.toLowerCase())) stock[r.name.toLowerCase()] = r.stock;
+      if (r.isNew || r.isBestSeller) {
+        flags[r.name.toLowerCase()] = { isNew: !!r.isNew, bestseller: !!r.isBestSeller };
+      }
     });
-    res.json({ ok: true, stock, catalog: CATALOG, flags: {} });
+    res.json({ ok: true, stock, catalog: CATALOG, flags });
   } catch(e) {
     console.error('/api/stock DB error:', e.message);
     res.json({ ok: false, error: 'db_error', stock: {}, catalog: [], flags: {} });
@@ -969,17 +973,6 @@ function mskDateKey() {
   return `${msk.getUTCFullYear()}-${String(msk.getUTCMonth()+1).padStart(2,'0')}-${String(msk.getUTCDate()).padStart(2,'0')}`;
 }
 
-// ─── Check-in в 06:00 Минск каждый день ──────────────────────────────────────
-setInterval(() => {
-  const msk = new Date(Date.now() + 3 * 3600 * 1000);
-  const h   = msk.getUTCHours();
-  const dateKey = mskDateKey();
-  if (h >= 6 && h < 9 && getProp('checkin_sent_date') !== dateKey) {
-    setProp('checkin_sent_date', dateKey);
-    sendAdminCheckin().catch(e => console.error('checkin err:', e));
-  }
-}, 60000);
-
 // ─── Happy Hour уведомления ───────────────────────────────────────────────────
 async function sendHappyHourNotifications() {
   let clients = [];
@@ -1002,25 +995,44 @@ async function sendHappyHourNotifications() {
   }
 }
 
-setInterval(() => {
-  const msk = new Date(Date.now() + 3 * 3600 * 1000);
-  const day = msk.getUTCDay();
-  const h   = msk.getUTCHours();
-  const dateKey   = mskDateKey();
-  const isWeekend = day === 0 || day === 6;
-  const startH    = isWeekend ? HAPPY_HOUR.weekend.start : HAPPY_HOUR.weekday.start;
-  if (h === startH && getProp('happy_hour_sent_date') !== dateKey) {
-    setProp('happy_hour_sent_date', dateKey);
-    sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
-  }
-}, 60000);
-
 // ─── Запуск ───────────────────────────────────────────────────────────────────
 validateConfig();
 
 app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
-  await initDB();
+  await initDB();             // состояние загружено из PostgreSQL
   await syncCatalogToWarehouse();
   await setWebhook();
+
+  // Таймеры запускаются ПОСЛЕ initDB(), чтобы checkin_sent_date и
+  // happy_hour_sent_date были уже загружены — рестарт в нужный час
+  // не вызовет повторную отправку.
+
+  // ─── Check-in в 06:00 Минск каждый день ─────────────────────────
+  setInterval(() => {
+    const msk = new Date(Date.now() + 3 * 3600 * 1000);
+    const h   = msk.getUTCHours();
+    const m   = msk.getUTCMinutes();
+    const dateKey = mskDateKey();
+    // Узкое окно 06:00–06:09 вместо 06:00–09:00 — повторный рестарт
+    // позже 06:10 не пошлёт второе сообщение.
+    if (h === 6 && m < 10 && getProp('checkin_sent_date') !== dateKey) {
+      setProp('checkin_sent_date', dateKey);
+      sendAdminCheckin().catch(e => console.error('checkin err:', e));
+    }
+  }, 60000);
+
+  // ─── Happy Hour уведомления ──────────────────────────────────────
+  setInterval(() => {
+    const msk = new Date(Date.now() + 3 * 3600 * 1000);
+    const day = msk.getUTCDay();
+    const h   = msk.getUTCHours();
+    const dateKey   = mskDateKey();
+    const isWeekend = day === 0 || day === 6;
+    const startH    = isWeekend ? HAPPY_HOUR.weekend.start : HAPPY_HOUR.weekday.start;
+    if (h === startH && getProp('happy_hour_sent_date') !== dateKey) {
+      setProp('happy_hour_sent_date', dateKey);
+      sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
+    }
+  }, 60000);
 });
