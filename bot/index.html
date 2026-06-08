@@ -2645,7 +2645,10 @@
         const qtyCount = document.getElementById('detail-qty-count');
         if (qtyCount) qtyCount.textContent = item.quantity;
       } else {
-        btn.style.display = 'flex';
+        const oosWrap = document.getElementById('detail-oos-wrap');
+        if (!oosWrap || oosWrap.style.display !== 'flex') {
+          btn.style.display = 'flex';
+        }
         controls.style.display = 'none';
       }
     }
