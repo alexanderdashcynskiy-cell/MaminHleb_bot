@@ -876,12 +876,16 @@ app.get('/api/stock', stockLimiter, async (req, res) => {
     return res.json({ ok: false, error: 'db_unavailable', stock: {}, catalog: [], flags: {} });
   }
   try {
-    const result = await pgPool.query('SELECT name, stock FROM "Product"');
+    const result = await pgPool.query('SELECT name, stock, "isNew", "isBestSeller" FROM "Product"');
     const stock = {};
+    const flags = {};
     result.rows.forEach(r => {
       if (!untrackedNames.has(r.name.toLowerCase())) stock[r.name.toLowerCase()] = r.stock;
+      if (r.isNew || r.isBestSeller) {
+        flags[r.name.toLowerCase()] = { isNew: !!r.isNew, bestseller: !!r.isBestSeller };
+      }
     });
-    res.json({ ok: true, stock, catalog: CATALOG, flags: {} });
+    res.json({ ok: true, stock, catalog: CATALOG, flags });
   } catch(e) {
     console.error('/api/stock DB error:', e.message);
     res.json({ ok: false, error: 'db_error', stock: {}, catalog: [], flags: {} });
