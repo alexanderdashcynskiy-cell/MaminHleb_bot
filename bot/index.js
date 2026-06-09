@@ -57,8 +57,10 @@ setInterval(() => {
 const pgSsl = config.DATABASE_URL
   ? (config.DATABASE_SSL === 'verify' ? true : { rejectUnauthorized: false })
   : false;
+// max: 20 — Railway Starter PostgreSQL допускает до 25 соединений;
+// 5 исчерпывались уже при ~15 одновременных запросах к /api/stock
 const pgPool = config.DATABASE_URL
-  ? new Pool({ connectionString: config.DATABASE_URL, ssl: pgSsl, max: 5, idleTimeoutMillis: 30000 })
+  ? new Pool({ connectionString: config.DATABASE_URL, ssl: pgSsl, max: 20, idleTimeoutMillis: 120000, connectionTimeoutMillis: 5000, keepAlive: true })
   : null;
 
 // Bot Арх #3: storage adapter — pluggable key-value store; swap backend by replacing this object
@@ -471,6 +473,7 @@ async function decrementStock(body) {
       );
     }
     console.log(`decrementStock: stock updated for order items`);
+    invalidateStockCache();
   } catch(e) {
     console.error('decrementStock:', e.message);
   }
@@ -871,9 +874,19 @@ app.post('/review', orderLimiter, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Кэш /api/stock: каждое открытие Mini App дёргает этот endpoint, без кэша
+// 50 одновременных пользователей = 50 SELECT и исчерпание пула соединений.
+// TTL 30 с; при заказе кэш сбрасывается (см. decrementStock).
+const _stockCache = { payload: null, ts: 0 };
+const STOCK_CACHE_TTL = 30_000;
+function invalidateStockCache() { _stockCache.payload = null; _stockCache.ts = 0; }
+
 app.get('/api/stock', stockLimiter, async (req, res) => {
   if (!pgPool) {
     return res.json({ ok: false, error: 'db_unavailable', stock: {}, catalog: [], flags: {} });
+  }
+  if (_stockCache.payload && Date.now() - _stockCache.ts < STOCK_CACHE_TTL) {
+    return res.json(_stockCache.payload);
   }
   try {
     const result = await pgPool.query('SELECT name, stock, "isNew", "isBestSeller" FROM "Product"');
@@ -885,7 +898,10 @@ app.get('/api/stock', stockLimiter, async (req, res) => {
         flags[r.name.toLowerCase()] = { isNew: !!r.isNew, bestseller: !!r.isBestSeller };
       }
     });
-    res.json({ ok: true, stock, catalog: CATALOG, flags });
+    const payload = { ok: true, stock, catalog: CATALOG, flags };
+    _stockCache.payload = payload;
+    _stockCache.ts = Date.now();
+    res.json(payload);
   } catch(e) {
     console.error('/api/stock DB error:', e.message);
     res.json({ ok: false, error: 'db_error', stock: {}, catalog: [], flags: {} });
