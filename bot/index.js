@@ -1004,12 +1004,20 @@ async function sendHappyHourNotifications() {
     `Успейте забрать! 🥐`;
   const BATCH = 25;
   for (let i = 0; i < clients.length; i += BATCH) {
-    await Promise.all(
+    const results = await Promise.all(
       clients.slice(i, i + BATCH).map(cid =>
         tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' })
-          .catch(e => console.error(`happyHour ${cid}:`, e.message))
+          .catch(e => { console.error(`happyHour ${cid}:`, e.message); return { ok: false }; })
       )
     );
+    // Flood limit Telegram: при 429 ждём retry_after, иначе бот блокируется
+    // на N секунд, а мы продолжаем слать запросы впустую
+    const flood = results.find(r => r && r.error_code === 429 && r.parameters && r.parameters.retry_after);
+    if (flood) {
+      const waitSec = Math.min(flood.parameters.retry_after, 60);
+      console.warn(`happyHour: flood limit, waiting ${waitSec}s`);
+      await new Promise(r => setTimeout(r, waitSec * 1000));
+    }
     if (i + BATCH < clients.length) await new Promise(r => setTimeout(r, 1100));
   }
 }
