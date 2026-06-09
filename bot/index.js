@@ -57,8 +57,10 @@ setInterval(() => {
 const pgSsl = config.DATABASE_URL
   ? (config.DATABASE_SSL === 'verify' ? true : { rejectUnauthorized: false })
   : false;
+// max: 20 — Railway Starter PostgreSQL допускает до 25 соединений;
+// 5 исчерпывались уже при ~15 одновременных запросах к /api/stock
 const pgPool = config.DATABASE_URL
-  ? new Pool({ connectionString: config.DATABASE_URL, ssl: pgSsl, max: 5, idleTimeoutMillis: 30000 })
+  ? new Pool({ connectionString: config.DATABASE_URL, ssl: pgSsl, max: 20, idleTimeoutMillis: 120000, connectionTimeoutMillis: 5000, keepAlive: true })
   : null;
 
 // Bot Арх #3: storage adapter — pluggable key-value store; swap backend by replacing this object
@@ -119,23 +121,8 @@ async function initDB() {
       )
     `);
   } catch(e) { console.error('CREATE Product:', e.message); }
-  // Логируем все таблицы и колонки (отладка)
-  try {
-    const tables = await pgPool.query(`
-      SELECT table_schema, table_name
-      FROM information_schema.tables
-      WHERE table_type='BASE TABLE'
-        AND table_schema NOT IN ('pg_catalog','information_schema')
-      ORDER BY table_schema, table_name
-    `);
-    for (const t of tables.rows) {
-      const cols = await pgPool.query(`
-        SELECT column_name, data_type FROM information_schema.columns
-        WHERE table_schema=$1 AND table_name=$2 ORDER BY ordinal_position
-      `, [t.table_schema, t.table_name]);
-      console.log(`TABLE [${t.table_schema}.${t.table_name}]:`, cols.rows.map(c => `${c.column_name}(${c.data_type})`).join(', '));
-    }
-  } catch(e) { console.error('list tables:', e.message); }
+  // Дамп схемы БД в логи убран: Railway-логи доступны через dashboard/API,
+  // полный список таблиц и колонок — подарок атакующему
 }
 
 // BOT-M3: единый источник расписания «счастливого часа» и скидки.
@@ -201,22 +188,30 @@ const untrackedNames = new Set(
 async function syncCatalogToWarehouse() {
   if (!pgPool) return;
   try {
-    // Колонка category может отсутствовать в схеме (Prisma не знает о ней) — добавляем безопасно.
+    // Колонки могут отсутствовать в схеме (таблицу могла создать CRM) — добавляем безопасно.
     await pgPool.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS category VARCHAR(64)`);
-    for (const item of CATALOG) {
-      // Новые товары — создаём сразу с категорией.
-      await pgPool.query(
-        `INSERT INTO "Product" (name, stock, price, category)
-         SELECT $1, 0, $2, $3
-         WHERE NOT EXISTS (SELECT 1 FROM "Product" WHERE name = $1)`,
-        [item.name, item.price, item.category]
-      );
-      // Существующие товары — распределяем по категориям как в приложении.
-      await pgPool.query(
-        `UPDATE "Product" SET category = $2 WHERE name = $1 AND category IS DISTINCT FROM $2`,
-        [item.name, item.category]
-      );
-    }
+    await pgPool.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "isNew" BOOLEAN NOT NULL DEFAULT false`);
+    await pgPool.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "isBestSeller" BOOLEAN NOT NULL DEFAULT false`);
+
+    // Batch: раньше здесь было 2 запроса × 41 позиция = 82 round-trip при каждом
+    // холодном старте (2-5 сек блокировки readiness). Теперь 2 запроса на весь каталог.
+    const names      = CATALOG.map(p => p.name);
+    const prices     = CATALOG.map(p => p.price);
+    const categories = CATALOG.map(p => p.category);
+
+    await pgPool.query(
+      `INSERT INTO "Product" (name, stock, price, category)
+       SELECT t.n, 0, t.p, t.c
+       FROM unnest($1::text[], $2::float8[], $3::text[]) AS t(n, p, c)
+       WHERE NOT EXISTS (SELECT 1 FROM "Product" pr WHERE pr.name = t.n)`,
+      [names, prices, categories]
+    );
+    await pgPool.query(
+      `UPDATE "Product" pr SET category = t.c
+       FROM unnest($1::text[], $2::text[]) AS t(n, c)
+       WHERE pr.name = t.n AND pr.category IS DISTINCT FROM t.c`,
+      [names, categories]
+    );
     console.log(`Product synced: ${CATALOG.length} items (с категориями)`);
   } catch(e) {
     console.error('syncCatalogToWarehouse:', e.message);
@@ -410,6 +405,9 @@ function priceOrder(body, isPreorder) {
   try {
     const parsed = typeof body.items === 'string' ? JSON.parse(body.items) : body.items;
     if (Array.isArray(parsed)) {
+      // DoS-защита: без лимита атакующий может прислать 100 000 позиций —
+      // O(N) цикл здесь + O(N) SQL в decrementStock
+      if (parsed.length > 50) throw new Error(`too many items: ${parsed.length}`);
       itemsText = parsed.flatMap(i => {
         const name = (i.product_name || '').trim();
         const qty  = Math.floor(Number(i.quantity));
@@ -460,17 +458,25 @@ async function decrementStock(body) {
   try {
     const parsed = typeof body.items === 'string' ? JSON.parse(body.items) : body.items;
     if (!Array.isArray(parsed)) return;
+    const names = [], qtys = [];
     for (const i of parsed) {
       const name = (i.product_name || '').trim();
       const qty  = Math.floor(Number(i.quantity));
       if (!name || !Number.isFinite(qty) || qty <= 0) continue;
       if (untrackedNames.has(name.toLowerCase())) continue;
-      await pgPool.query(
-        `UPDATE "Product" SET stock = GREATEST(0, stock - $1) WHERE name = $2`,
-        [qty, name]
-      );
+      names.push(name);
+      qtys.push(qty);
     }
-    console.log(`decrementStock: stock updated for order items`);
+    if (names.length === 0) return;
+    // Один batch-UPDATE вместо N последовательных round-trip к PG
+    await pgPool.query(
+      `UPDATE "Product" pr SET stock = GREATEST(0, pr.stock - t.q)
+       FROM unnest($1::text[], $2::int[]) AS t(n, q)
+       WHERE pr.name = t.n`,
+      [names, qtys]
+    );
+    console.log(`decrementStock: stock updated for ${names.length} items`);
+    invalidateStockCache();
   } catch(e) {
     console.error('decrementStock:', e.message);
   }
@@ -871,9 +877,19 @@ app.post('/review', orderLimiter, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Кэш /api/stock: каждое открытие Mini App дёргает этот endpoint, без кэша
+// 50 одновременных пользователей = 50 SELECT и исчерпание пула соединений.
+// TTL 30 с; при заказе кэш сбрасывается (см. decrementStock).
+const _stockCache = { payload: null, ts: 0 };
+const STOCK_CACHE_TTL = 30_000;
+function invalidateStockCache() { _stockCache.payload = null; _stockCache.ts = 0; }
+
 app.get('/api/stock', stockLimiter, async (req, res) => {
   if (!pgPool) {
     return res.json({ ok: false, error: 'db_unavailable', stock: {}, catalog: [], flags: {} });
+  }
+  if (_stockCache.payload && Date.now() - _stockCache.ts < STOCK_CACHE_TTL) {
+    return res.json(_stockCache.payload);
   }
   try {
     const result = await pgPool.query('SELECT name, stock, "isNew", "isBestSeller" FROM "Product"');
@@ -885,7 +901,10 @@ app.get('/api/stock', stockLimiter, async (req, res) => {
         flags[r.name.toLowerCase()] = { isNew: !!r.isNew, bestseller: !!r.isBestSeller };
       }
     });
-    res.json({ ok: true, stock, catalog: CATALOG, flags });
+    const payload = { ok: true, stock, catalog: CATALOG, flags };
+    _stockCache.payload = payload;
+    _stockCache.ts = Date.now();
+    res.json(payload);
   } catch(e) {
     console.error('/api/stock DB error:', e.message);
     res.json({ ok: false, error: 'db_error', stock: {}, catalog: [], flags: {} });
@@ -985,12 +1004,20 @@ async function sendHappyHourNotifications() {
     `Успейте забрать! 🥐`;
   const BATCH = 25;
   for (let i = 0; i < clients.length; i += BATCH) {
-    await Promise.all(
+    const results = await Promise.all(
       clients.slice(i, i + BATCH).map(cid =>
         tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' })
-          .catch(e => console.error(`happyHour ${cid}:`, e.message))
+          .catch(e => { console.error(`happyHour ${cid}:`, e.message); return { ok: false }; })
       )
     );
+    // Flood limit Telegram: при 429 ждём retry_after, иначе бот блокируется
+    // на N секунд, а мы продолжаем слать запросы впустую
+    const flood = results.find(r => r && r.error_code === 429 && r.parameters && r.parameters.retry_after);
+    if (flood) {
+      const waitSec = Math.min(flood.parameters.retry_after, 60);
+      console.warn(`happyHour: flood limit, waiting ${waitSec}s`);
+      await new Promise(r => setTimeout(r, waitSec * 1000));
+    }
     if (i + BATCH < clients.length) await new Promise(r => setTimeout(r, 1100));
   }
 }
