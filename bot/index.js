@@ -502,12 +502,17 @@ async function handleOrder(body) {
     // Сохраняем clientId для /api/order/done (рейтинг при выдаче заказа)
     setProp(`client_id_${orderNum}`, clientId);
 
-    // Запомнить для happy hour уведомлений
+    // Запомнить для happy hour уведомлений.
+    // Лимит MAX_KNOWN_CLIENTS: без него массив растёт бесконечно — каждый
+    // getProp/setProp (де)сериализует сотни КБ JSON и блокирует event loop.
+    const MAX_KNOWN_CLIENTS = 5000;
     const clientsRaw = getProp('known_clients') || '[]';
     let clients = [];
     try { clients = JSON.parse(clientsRaw); } catch(e) {}
+    if (!Array.isArray(clients)) clients = [];
     if (!clients.includes(clientId)) {
       clients.push(clientId);
+      if (clients.length > MAX_KNOWN_CLIENTS) clients = clients.slice(-MAX_KNOWN_CLIENTS);
       setProp('known_clients', JSON.stringify(clients));
     }
 
