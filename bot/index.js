@@ -73,7 +73,7 @@ const storageAdapter = (() => {
       _store.set(key, value);
       if (pgPool) {
         pgPool.query(
-          'INSERT INTO bot_state (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+          'INSERT INTO bot_state (key, value, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()',
           [key, String(value)]
         ).catch(e => console.error('[storage] set failed:', e.message));
       }
@@ -85,6 +85,22 @@ const storageAdapter = (() => {
           .catch(e => console.error('[storage] del failed:', e.message));
       }
     },
+    // Эфемерные служебные ключи (дедуп заказов/сообщений, разовые receipt/done_msg)
+    // только пишутся и больше не читаются — без очистки bot_state растёт бесконечно
+    // (деградация БД + утечка памяти в _store). Чистим всё старше 7 дней.
+    async prune() {
+      if (!pgPool) return;
+      try {
+        const { rows } = await pgPool.query(
+          `DELETE FROM bot_state
+             WHERE updated_at < NOW() - INTERVAL '7 days'
+               AND (key LIKE 'dup_%' OR key LIKE 'msg_%' OR key LIKE 'receipt_%' OR key LIKE 'done_msg_%')
+           RETURNING key`
+        );
+        rows.forEach(r => _store.delete(r.key));
+        if (rows.length) console.log(`[storage] pruned ${rows.length} stale ephemeral keys`);
+      } catch(e) { console.error('[storage] prune failed:', e.message); }
+    },
     async init() {
       if (!pgPool) {
         console.warn('[storage] PostgreSQL not configured — state in memory only (lost on restart)');
@@ -93,10 +109,12 @@ const storageAdapter = (() => {
       try {
         await pgPool.query(`
           CREATE TABLE IF NOT EXISTS bot_state (
-            key   VARCHAR(512) PRIMARY KEY,
-            value TEXT NOT NULL
+            key        VARCHAR(512) PRIMARY KEY,
+            value      TEXT NOT NULL,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
           )
         `);
+        await pgPool.query(`ALTER TABLE bot_state ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
       } catch(e) { console.error('[storage] CREATE bot_state:', e.message); }
       try {
         const res = await pgPool.query('SELECT key, value FROM bot_state');
@@ -107,8 +125,12 @@ const storageAdapter = (() => {
   };
 })();
 
+// Периодическая очистка устаревших эфемерных ключей bot_state (раз в 6 часов).
+setInterval(() => { storageAdapter.prune(); }, 6 * 60 * 60 * 1000);
+
 async function initDB() {
   await storageAdapter.init();
+  storageAdapter.prune();
   if (!pgPool) return;
   try {
     await pgPool.query(`
@@ -258,8 +280,26 @@ function getProp(key)        { return storageAdapter.get(key); }
 function setProp(key, value) { storageAdapter.set(key, value); }
 function delProp(key)        { storageAdapter.del(key); }
 
-// Атомарный счётчик заказов (синхронный — без гонок в event loop Node.js)
-function getNextOrderNum() {
+// Счётчик заказов. С pgPool — атомарный INSERT … ON CONFLICT … RETURNING,
+// корректный и при нескольких инстансах (каждый со своим in-memory кэшем).
+// Без БД — синхронный fallback на кэш (гонок в одном event loop нет).
+async function getNextOrderNum() {
+  if (pgPool) {
+    try {
+      const { rows } = await pgPool.query(
+        `INSERT INTO bot_state (key, value, updated_at) VALUES ('order_counter', '1', NOW())
+         ON CONFLICT (key) DO UPDATE
+           SET value = (COALESCE(NULLIF(bot_state.value, ''), '0')::bigint + 1)::text,
+               updated_at = NOW()
+         RETURNING value`
+      );
+      // НЕ вызываем setProp: повторная неатомарная запись вернула бы гонку.
+      // order_counter читается только здесь, причём из БД, так что кэш не нужен.
+      return parseInt(rows[0].value, 10);
+    } catch (e) {
+      console.error('getNextOrderNum DB error, fallback to cache:', e.message);
+    }
+  }
   const n = parseInt(getProp('order_counter') || '0') + 1;
   setProp('order_counter', String(n));
   return n;
@@ -488,7 +528,7 @@ async function handleOrder(body) {
 
   const clientId = resolveClientId(body);
   const { total } = priceOrder(body, isPreorder);
-  const orderNum  = getNextOrderNum();
+  const orderNum  = await getNextOrderNum();
 
   const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId);
   if (!saved) {
@@ -502,12 +542,17 @@ async function handleOrder(body) {
     // Сохраняем clientId для /api/order/done (рейтинг при выдаче заказа)
     setProp(`client_id_${orderNum}`, clientId);
 
-    // Запомнить для happy hour уведомлений
+    // Запомнить для happy hour уведомлений.
+    // Лимит MAX_KNOWN_CLIENTS: без него массив растёт бесконечно — каждый
+    // getProp/setProp (де)сериализует сотни КБ JSON и блокирует event loop.
+    const MAX_KNOWN_CLIENTS = 5000;
     const clientsRaw = getProp('known_clients') || '[]';
     let clients = [];
     try { clients = JSON.parse(clientsRaw); } catch(e) {}
+    if (!Array.isArray(clients)) clients = [];
     if (!clients.includes(clientId)) {
       clients.push(clientId);
+      if (clients.length > MAX_KNOWN_CLIENTS) clients = clients.slice(-MAX_KNOWN_CLIENTS);
       setProp('known_clients', JSON.stringify(clients));
     }
 
@@ -610,7 +655,13 @@ async function handleCallback(cb) {
 
   // ── Оценка звёздами (rate_N_rowNum — от бота, star_N_orderNum — от CRM) ────
   if (action === 'rate' || action === 'star') {
-    const stars    = parseInt(parts[1]);
+    const stars    = parseInt(parts[1], 10);
+    // Диапазон 1–5 обязателен: иначе stars=999 запишется в БД и '⭐'.repeat(999)
+    // построит огромную строку (порча данных / мелкий DoS).
+    if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
+      await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
+      return;
+    }
     const refValue = parts[2]; // rowNum (rate) или orderNumber (star)
     const starStr  = '⭐'.repeat(stars) + ` (${stars}/5)`;
 
@@ -660,7 +711,8 @@ async function handleTextMessage(message) {
   // ── Check-in администратора ───────────────────────────────────────────────
   const checkinRaw = senderId === ADMIN_ID ? getProp(`pending_checkin_${ADMIN_ID}`) : null;
   if (checkinRaw) {
-    const cd = JSON.parse(checkinRaw);
+    let cd = {};
+    try { cd = JSON.parse(checkinRaw) || {}; } catch { cd = {}; }
     if (cd.promptMsgId) await tg('deleteMessage', { chat_id: senderId, message_id: cd.promptMsgId });
     await tg('sendMessage', {
       chat_id:    senderId,
@@ -675,7 +727,8 @@ async function handleTextMessage(message) {
   const pendingRaw = getProp(`pending_${senderId}`);
   if (!pendingRaw) return;
 
-  const data   = JSON.parse(pendingRaw);
+  let data = {};
+  try { data = JSON.parse(pendingRaw) || {}; } catch { delProp(`pending_${senderId}`); return; }
   const isSkip = msgText === '/skip';
 
   if (!isSkip && pgPool) {
@@ -945,15 +998,19 @@ app.get('/api/config', hhLimiter, (req, res) => {
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.post('/api/admin/checkin', async (req, res) => {
+  // Используем выделенный ADMIN_SECRET (как /api/order/done), а не WEBHOOK_SECRET —
+  // чтобы ротация/компрометация секрета Telegram-webhook не влияла на админ-действия.
   const secret = req.headers['x-admin-secret'] || '';
-  if (!WEBHOOK_SECRET || !safeEquals(secret, WEBHOOK_SECRET)) {
+  const ADMIN_SECRET = config.ADMIN_SECRET;
+  if (!ADMIN_SECRET || !safeEquals(secret, ADMIN_SECRET)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   try {
     await sendAdminCheckin();
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('/api/admin/checkin error:', e.message);
+    res.status(500).json({ error: 'Internal error' });
   }
 });
 

@@ -2333,7 +2333,7 @@
       var weightInfo = (p.sizes && p.sizes.length > 0) ? p.sizes[0].size : (p.weight || '');
       var imgHTML = productImages[p.id]
         ? '<img src="' + escHtml(productImages[p.id]) + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
-        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + escHtml(p.image) + '</div>';
       var hitBadge = p.bestseller
         ? '<div style="position:absolute;top:9px;left:9px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;pointer-events:none;box-shadow:0 2px 6px rgba(201,162,39,0.40);z-index:4;">Хит</div>' : '';
       var oosOverlay = !available
@@ -3528,7 +3528,7 @@
     function preorderCardHTML(p, isBakery) {
       var imgHTML = productImages[p.id]
         ? '<img src="' + escHtml(productImages[p.id]) + '" style="width:100%;height:100%;object-fit:cover;object-position:center;" alt="' + escHtml(p.name) + '" loading="lazy">'
-        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + p.image + '</div>';
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F2E8D8;">' + escHtml(p.image) + '</div>';
       var now = new Date(); var h = now.getHours();
       var freshBadge = (isBakery && h >= 7 && h < 11) ? '<div style="position:absolute;top:9px;right:9px;background:#fff;color:#C0360A;font-size:9px;font-weight:800;padding:3px 8px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;box-shadow:0 1px 6px rgba(0,0,0,0.12);z-index:4;">Из печи 🔥</div>' : '';
       var badge = p.bestseller ? '<div style="position:absolute;top:9px;left:9px;background:linear-gradient(135deg,#C9A227,#E8B430);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;font-family:\'Montserrat\',sans-serif;letter-spacing:0.02em;box-shadow:0 2px 6px rgba(201,162,39,0.40);z-index:4;">Хит</div>' : '';
