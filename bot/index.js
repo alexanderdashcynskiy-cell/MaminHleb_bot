@@ -280,8 +280,26 @@ function getProp(key)        { return storageAdapter.get(key); }
 function setProp(key, value) { storageAdapter.set(key, value); }
 function delProp(key)        { storageAdapter.del(key); }
 
-// Атомарный счётчик заказов (синхронный — без гонок в event loop Node.js)
-function getNextOrderNum() {
+// Счётчик заказов. С pgPool — атомарный INSERT … ON CONFLICT … RETURNING,
+// корректный и при нескольких инстансах (каждый со своим in-memory кэшем).
+// Без БД — синхронный fallback на кэш (гонок в одном event loop нет).
+async function getNextOrderNum() {
+  if (pgPool) {
+    try {
+      const { rows } = await pgPool.query(
+        `INSERT INTO bot_state (key, value, updated_at) VALUES ('order_counter', '1', NOW())
+         ON CONFLICT (key) DO UPDATE
+           SET value = (COALESCE(NULLIF(bot_state.value, ''), '0')::bigint + 1)::text,
+               updated_at = NOW()
+         RETURNING value`
+      );
+      // НЕ вызываем setProp: повторная неатомарная запись вернула бы гонку.
+      // order_counter читается только здесь, причём из БД, так что кэш не нужен.
+      return parseInt(rows[0].value, 10);
+    } catch (e) {
+      console.error('getNextOrderNum DB error, fallback to cache:', e.message);
+    }
+  }
   const n = parseInt(getProp('order_counter') || '0') + 1;
   setProp('order_counter', String(n));
   return n;
@@ -510,7 +528,7 @@ async function handleOrder(body) {
 
   const clientId = resolveClientId(body);
   const { total } = priceOrder(body, isPreorder);
-  const orderNum  = getNextOrderNum();
+  const orderNum  = await getNextOrderNum();
 
   const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId);
   if (!saved) {
