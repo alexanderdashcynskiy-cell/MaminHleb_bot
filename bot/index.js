@@ -10,7 +10,11 @@ const crypto    = require('crypto');
 const { config, validateConfig } = require('./config');
 
 const app = express();
-app.set('trust proxy', 1); // Railway reverse proxy adds X-Forwarded-For
+// Railway always puts a trusted reverse proxy in front; trust proxy: 1 lets
+// express-rate-limit key on real client IPs from X-Forwarded-For.
+// Do NOT expose this service directly to the internet without a proxy — an
+// attacker could forge X-Forwarded-For and bypass rate limiting.
+app.set('trust proxy', 1);
 app.use(helmet({
   contentSecurityPolicy:    false, // задаём через мета-тег в HTML
   frameguard:               false, // Mini App встраивается в Telegram WebView
@@ -49,9 +53,16 @@ const { BOT_TOKEN, ADMIN_ID, DELIVERY_CHAT_ID, WEBHOOK_SECRET, PORT } = config;
 
 // ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
 const cbSeen = new Map(); // id → timestamp; pruned hourly
+const CB_SEEN_MAX = 50_000;
 setInterval(() => {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   cbSeen.forEach((ts, id) => { if (ts < cutoff) cbSeen.delete(id); });
+  if (cbSeen.size > CB_SEEN_MAX) {
+    // Keep only the most recent half on burst traffic
+    const sorted = [...cbSeen.entries()].sort((a, b) => b[1] - a[1]);
+    cbSeen.clear();
+    sorted.slice(0, CB_SEEN_MAX / 2).forEach(([k, v]) => cbSeen.set(k, v));
+  }
 }, 60 * 60 * 1000);
 
 const pgSsl = config.DATABASE_URL
@@ -327,7 +338,9 @@ function escHtml(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // ─── Telegram API ─────────────────────────────────────────────────────────────
@@ -1057,13 +1070,10 @@ app.post('/api/admin/checkin', async (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    uptime: Math.floor(process.uptime()),
-    database: !!pgPool,
-    telegram: !!BOT_TOKEN,
-    ts: new Date().toISOString(),
-  });
+  const isAdmin = config.ADMIN_SECRET && safeEquals(req.headers['x-admin-secret'] || '', config.ADMIN_SECRET);
+  res.json(isAdmin
+    ? { status: 'ok', uptime: Math.floor(process.uptime()), database: !!pgPool, telegram: !!BOT_TOKEN, ts: new Date().toISOString() }
+    : { status: 'ok' });
 });
 
 // ─── Установка вебхука ────────────────────────────────────────────────────────
@@ -1102,10 +1112,13 @@ async function sendHappyHourNotifications() {
     `Настало время счастливого часа — скидка *30%* на всю оставшуюся продукцию для самовывоза.\n\n` +
     `Успейте забрать! 🥐`;
   const BATCH = 25;
+  const deadIds = new Set(); // 403 = bot blocked, 400 = invalid chat_id
   for (let i = 0; i < clients.length; i += BATCH) {
+    const batch = clients.slice(i, i + BATCH);
     const results = await Promise.all(
-      clients.slice(i, i + BATCH).map(cid =>
+      batch.map((cid, idx) =>
         tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' })
+          .then(r => { if (!r.ok && (r.error_code === 403 || r.error_code === 400)) deadIds.add(batch[idx]); return r; })
           .catch(e => { console.error(`happyHour ${cid}:`, e.message); return { ok: false }; })
       )
     );
@@ -1118,6 +1131,11 @@ async function sendHappyHourNotifications() {
       await new Promise(r => setTimeout(r, waitSec * 1000));
     }
     if (i + BATCH < clients.length) await new Promise(r => setTimeout(r, 1100));
+  }
+  if (deadIds.size > 0) {
+    const cleaned = clients.filter(c => !deadIds.has(c));
+    setProp('known_clients', JSON.stringify(cleaned));
+    console.log(`happyHour: removed ${deadIds.size} dead client IDs`);
   }
 }
 

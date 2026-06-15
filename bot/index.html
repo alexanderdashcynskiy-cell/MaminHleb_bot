@@ -1527,12 +1527,12 @@
     // ── Telegram init ──────────────────────────────────────────────────────────
     let telegramId = null;
     let telegramName = "";
-    window._tgInitData = "";
+    let _tgInitData = "";  // closure-scoped; not on window to prevent external access
     if (window.Telegram && Telegram.WebApp) {
       const tg = Telegram.WebApp;
       tg.ready();
       tg.expand();
-      window._tgInitData = tg.initData || "";
+      _tgInitData = tg.initData || "";
       const user = tg.initDataUnsafe?.user;
       telegramId = user?.id || null;
       telegramName = user?.first_name || "";
@@ -4362,7 +4362,7 @@
                     type: order.type,
                     name: order.name,
                     phone: order.phone,
-                    tgInitData: window._tgInitData || "",
+                    tgInitData: _tgInitData || "",
                     deliveryMethod: order.deliveryMethod || "pickup",
                     address: order.address || "Самовывоз",
                     time: order.time || "Как можно быстрее",
