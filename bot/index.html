@@ -1536,7 +1536,7 @@
       const user = tg.initDataUnsafe?.user;
       telegramId = user?.id || null;
       telegramName = user?.first_name || "";
-      if (user?.photo_url) {
+      if (user?.photo_url && /^https:\/\/(t\.me|cdn\.telegram\.org)\//.test(user.photo_url)) {
         var imgEl = document.getElementById('user-avatar-img');
         var fallbackEl = document.getElementById('user-avatar-fallback');
         if (imgEl) { imgEl.src = user.photo_url; imgEl.style.display = 'block'; }

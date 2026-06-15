@@ -553,7 +553,7 @@ async function handleOrder(body) {
     let clients = [];
     try { clients = JSON.parse(clientsRaw); } catch(e) {}
     if (!Array.isArray(clients)) clients = [];
-    if (!clients.includes(clientId)) {
+    if (!clients.includes(clientId) && /^\d{5,}$/.test(String(clientId))) {
       clients.push(clientId);
       if (clients.length > MAX_KNOWN_CLIENTS) clients = clients.slice(-MAX_KNOWN_CLIENTS);
       setProp('known_clients', JSON.stringify(clients));
@@ -712,7 +712,7 @@ async function handleTextMessage(message) {
   const senderId = String(message.from.id);
   const msgText  = message.text.trim();
 
-  const msgKey = `msg_${message.message_id}`;
+  const msgKey = `msg_${message.chat.id}_${message.message_id}`;
   if (getProp(msgKey)) return;
   setProp(msgKey, '1');
 
@@ -816,12 +816,22 @@ app.post('/order', orderLimiter, async (req, res) => {
     return res.status(400).json({ ok: false, error: 'invalid_type' });
   }
   if (type === 'Предзаказ') {
-    const timeStr = String(body.time || '').trim();
-    const m = timeStr.match(/^(\d{1,2}):(\d{2})$/);
-    if (!m) return res.status(400).json({ ok: false, error: 'invalid_preorder_time_format' });
-    const totalMin = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    // Full preorder datetime format: "YYYY-MM-DD в HH:MM"
+    const fullTimeStr = String(body.time || '').trim();
+    const fullM = fullTimeStr.match(/^(\d{4})-(\d{2})-(\d{2})\s+в\s+(\d{1,2}):(\d{2})$/);
+    if (!fullM) return res.status(400).json({ ok: false, error: 'invalid_preorder_time_format' });
+    const totalMin = parseInt(fullM[4], 10) * 60 + parseInt(fullM[5], 10);
     if (totalMin < 7 * 60 || totalMin > 11 * 60) {
       return res.status(400).json({ ok: false, error: 'preorder_time_out_of_range', message: 'Время предзаказа должно быть в диапазоне 07:00–11:00' });
+    }
+    const orderDate = new Date(`${fullM[1]}-${fullM[2]}-${fullM[3]}T00:00:00`);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const maxDate = new Date(today); maxDate.setDate(today.getDate() + 30);
+    if (orderDate < today) {
+      return res.status(400).json({ ok: false, error: 'preorder_date_in_past', message: 'Дата предзаказа не может быть в прошлом' });
+    }
+    if (orderDate > maxDate) {
+      return res.status(400).json({ ok: false, error: 'preorder_date_too_far', message: 'Дата предзаказа не может быть позже чем через 30 дней' });
     }
   }
 
