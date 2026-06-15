@@ -55,8 +55,11 @@ setInterval(() => {
 }, 60 * 60 * 1000);
 
 const pgSsl = config.DATABASE_URL
-  ? (config.DATABASE_SSL === 'verify' ? true : { rejectUnauthorized: false })
+  ? (config.DATABASE_SSL === 'no-verify' ? { rejectUnauthorized: false } : true)
   : false;
+if (config.DATABASE_URL && config.DATABASE_SSL === 'no-verify') {
+  console.warn('[db] TLS certificate verification DISABLED (DATABASE_SSL=no-verify). Vulnerable to MITM on untrusted networks. Set DATABASE_SSL=verify for production with a trusted CA.');
+}
 // max: 20 — Railway Starter PostgreSQL допускает до 25 соединений;
 // 5 исчерпывались уже при ~15 одновременных запросах к /api/stock
 const pgPool = config.DATABASE_URL
@@ -628,6 +631,11 @@ async function handleCallback(cb) {
 
   // ── Курьер подтверждает доставку ("✅ Доставлен" в чате доставки) ─────────
   if (action === 'delivered') {
+    // Only accept from the configured delivery chat to prevent unauthorized status changes
+    if (DELIVERY_CHAT_ID && String(cb.message?.chat?.id) !== String(DELIVERY_CHAT_ID)) {
+      await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
+      return;
+    }
     const dbId = parseInt(parts[1]);
     await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '✅ Статус обновлён', show_alert: false });
     // Убираем кнопку чтобы не нажимали повторно
@@ -789,9 +797,11 @@ app.post('/order', orderLimiter, async (req, res) => {
   }
   if (!body) return res.status(400).json({ ok: false, error: 'empty_body' });
 
-  const phone = String(body.phone || '').trim();
-  const name  = String(body.name  || '').trim();
+  const phone = String(body.phone || '').trim().slice(0, 30);
+  const name  = String(body.name  || '').trim().slice(0, 100);
   const type  = String(body.type  || '').trim();
+  body.address = String(body.address || '').trim().slice(0, 300);
+  body.note    = String(body.note    || '').trim().slice(0, 500);
 
   if (!phone || !PHONE_RE.test(phone)) {
     console.warn('/order rejected: missing or invalid phone (****' + String(phone).slice(-4) + ')');
@@ -804,6 +814,15 @@ app.post('/order', orderLimiter, async (req, res) => {
   if (!VALID_ORDER_TYPES.has(type)) {
     console.warn('/order rejected: invalid type', JSON.stringify(type));
     return res.status(400).json({ ok: false, error: 'invalid_type' });
+  }
+  if (type === 'Предзаказ') {
+    const timeStr = String(body.time || '').trim();
+    const m = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return res.status(400).json({ ok: false, error: 'invalid_preorder_time_format' });
+    const totalMin = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    if (totalMin < 7 * 60 || totalMin > 11 * 60) {
+      return res.status(400).json({ ok: false, error: 'preorder_time_out_of_range', message: 'Время предзаказа должно быть в диапазоне 07:00–11:00' });
+    }
   }
 
   // P2 #12 (сервер): дожидаемся подтверждения записи заказа и отдаём клиенту реальный
@@ -909,14 +928,18 @@ app.post('/review', orderLimiter, async (req, res) => {
   const text = String(body.text || '').trim().slice(0, 2000);
   const items = String(body.items || '').trim().slice(0, 1000);
   const tgId = String(body.telegramId || '0').replace(/[^0-9]/g, '').slice(0, 20) || '0';
+  const ratingRaw = parseInt(body.rating, 10);
+  const rating = Number.isInteger(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : null;
 
   if (!name || !text) {
     return res.status(400).json({ ok: false, error: 'name and text required' });
   }
 
+  const starsStr = rating ? '★'.repeat(rating) + '☆'.repeat(5 - rating) : '—';
   const adminMsg =
     `📝 <b>Новый отзыв из Mini App</b>\n\n` +
     `👤 <b>Имя:</b> ${escHtml(name)}\n` +
+    `⭐ <b>Оценка:</b> ${starsStr}\n` +
     `🆔 <b>Telegram ID:</b> ${escHtml(tgId)} <i>(не верифицирован)</i>\n` +
     (items ? `🛒 <b>Заказ:</b> ${escHtml(items)}\n` : '') +
     `\n💬 ${escHtml(text)}`;
@@ -925,6 +948,15 @@ app.post('/review', orderLimiter, async (req, res) => {
     await tg('sendMessage', { chat_id: String(ADMIN_ID), text: adminMsg, parse_mode: 'HTML' });
   } else {
     console.warn('/review: ADMIN_ID не задан — отзыв не переслан');
+  }
+
+  if (pgPool && rating !== null) {
+    try {
+      await pgPool.query(
+        `UPDATE "Order" SET rating=$1 WHERE "telegramId"=$2 AND rating IS NULL ORDER BY "orderNumber" DESC LIMIT 1`,
+        [rating, tgId]
+      );
+    } catch(e) { console.error('/review rating save:', e.message); }
   }
 
   res.json({ ok: true });

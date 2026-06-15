@@ -4273,28 +4273,29 @@
           <p class="text-coffee/60 text-xs font-semibold">— ${escHtml(r.name)}</p>
         </div>`).join('');
     }
-    function submitReview(event) {
+    async function submitReview(event) {
       if (event) event.preventDefault();
       const name = document.getElementById('review-name').value.trim();
       const text = document.getElementById('review-text').value.trim();
+      const rating = parseInt(document.getElementById('review-rating').value, 10) || 5;
       if (!name || !text) { showToast('Пожалуйста, укажите имя и текст отзыва', '⚠️'); return; }
       const items = (_lastReceiptData.cartSnapshot || [])
         .map(i => i.product_name + (i.selected_size ? ' ('+i.selected_size+')' : '') + ' x'+i.quantity)
         .join(', ');
-      fetch('/review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          text,
-          telegramId: telegramId || '0',
-          items
-        })
-      }).catch(() => {});
-      reviews.unshift({ name, rating: 5, text });
-      renderReviews();
-      showToast(`Спасибо, ${name}! Ваш отзыв получен 🙏`, '✓');
-      closeReviewForm();
+      try {
+        const res = await fetch('/review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, text, rating, telegramId: telegramId || '0', items })
+        });
+        if (!res.ok) { showToast('Не удалось отправить отзыв. Попробуйте позже.', '⚠️'); return; }
+        reviews.unshift({ name, rating, text });
+        renderReviews();
+        showToast(`Спасибо, ${name}! Ваш отзыв получен 🙏`, '✓');
+        closeReviewForm();
+      } catch {
+        showToast('Ошибка сети. Проверьте соединение.', '⚠️');
+      }
     }
 
     // ── Referral ───────────────────────────────────────────────────────────────
