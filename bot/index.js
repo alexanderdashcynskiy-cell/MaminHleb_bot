@@ -10,7 +10,11 @@ const crypto    = require('crypto');
 const { config, validateConfig } = require('./config');
 
 const app = express();
-app.set('trust proxy', 1); // Railway reverse proxy adds X-Forwarded-For
+// Railway always puts a trusted reverse proxy in front; trust proxy: 1 lets
+// express-rate-limit key on real client IPs from X-Forwarded-For.
+// Do NOT expose this service directly to the internet without a proxy — an
+// attacker could forge X-Forwarded-For and bypass rate limiting.
+app.set('trust proxy', 1);
 app.use(helmet({
   contentSecurityPolicy:    false, // задаём через мета-тег в HTML
   frameguard:               false, // Mini App встраивается в Telegram WebView
@@ -49,14 +53,24 @@ const { BOT_TOKEN, ADMIN_ID, DELIVERY_CHAT_ID, WEBHOOK_SECRET, PORT } = config;
 
 // ─── Состояние (память + PostgreSQL) ─────────────────────────────────────────
 const cbSeen = new Map(); // id → timestamp; pruned hourly
+const CB_SEEN_MAX = 50_000;
 setInterval(() => {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   cbSeen.forEach((ts, id) => { if (ts < cutoff) cbSeen.delete(id); });
+  if (cbSeen.size > CB_SEEN_MAX) {
+    // Keep only the most recent half on burst traffic
+    const sorted = [...cbSeen.entries()].sort((a, b) => b[1] - a[1]);
+    cbSeen.clear();
+    sorted.slice(0, CB_SEEN_MAX / 2).forEach(([k, v]) => cbSeen.set(k, v));
+  }
 }, 60 * 60 * 1000);
 
 const pgSsl = config.DATABASE_URL
-  ? (config.DATABASE_SSL === 'verify' ? true : { rejectUnauthorized: false })
+  ? (config.DATABASE_SSL === 'no-verify' ? { rejectUnauthorized: false } : true)
   : false;
+if (config.DATABASE_URL && config.DATABASE_SSL === 'no-verify') {
+  console.warn('[db] TLS certificate verification DISABLED (DATABASE_SSL=no-verify). Vulnerable to MITM on untrusted networks. Set DATABASE_SSL=verify for production with a trusted CA.');
+}
 // max: 20 — Railway Starter PostgreSQL допускает до 25 соединений;
 // 5 исчерпывались уже при ~15 одновременных запросах к /api/stock
 const pgPool = config.DATABASE_URL
@@ -324,7 +338,9 @@ function escHtml(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // ─── Telegram API ─────────────────────────────────────────────────────────────
@@ -550,7 +566,7 @@ async function handleOrder(body) {
     let clients = [];
     try { clients = JSON.parse(clientsRaw); } catch(e) {}
     if (!Array.isArray(clients)) clients = [];
-    if (!clients.includes(clientId)) {
+    if (!clients.includes(clientId) && /^\d{5,}$/.test(String(clientId))) {
       clients.push(clientId);
       if (clients.length > MAX_KNOWN_CLIENTS) clients = clients.slice(-MAX_KNOWN_CLIENTS);
       setProp('known_clients', JSON.stringify(clients));
@@ -628,6 +644,11 @@ async function handleCallback(cb) {
 
   // ── Курьер подтверждает доставку ("✅ Доставлен" в чате доставки) ─────────
   if (action === 'delivered') {
+    // Only accept from the configured delivery chat to prevent unauthorized status changes
+    if (DELIVERY_CHAT_ID && String(cb.message?.chat?.id) !== String(DELIVERY_CHAT_ID)) {
+      await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '', show_alert: false });
+      return;
+    }
     const dbId = parseInt(parts[1]);
     await tg('answerCallbackQuery', { callback_query_id: String(cb.id), text: '✅ Статус обновлён', show_alert: false });
     // Убираем кнопку чтобы не нажимали повторно
@@ -704,7 +725,7 @@ async function handleTextMessage(message) {
   const senderId = String(message.from.id);
   const msgText  = message.text.trim();
 
-  const msgKey = `msg_${message.message_id}`;
+  const msgKey = `msg_${message.chat.id}_${message.message_id}`;
   if (getProp(msgKey)) return;
   setProp(msgKey, '1');
 
@@ -789,9 +810,11 @@ app.post('/order', orderLimiter, async (req, res) => {
   }
   if (!body) return res.status(400).json({ ok: false, error: 'empty_body' });
 
-  const phone = String(body.phone || '').trim();
-  const name  = String(body.name  || '').trim();
+  const phone = String(body.phone || '').trim().slice(0, 30);
+  const name  = String(body.name  || '').trim().slice(0, 100);
   const type  = String(body.type  || '').trim();
+  body.address = String(body.address || '').trim().slice(0, 300);
+  body.note    = String(body.note    || '').trim().slice(0, 500);
 
   if (!phone || !PHONE_RE.test(phone)) {
     console.warn('/order rejected: missing or invalid phone (****' + String(phone).slice(-4) + ')');
@@ -804,6 +827,25 @@ app.post('/order', orderLimiter, async (req, res) => {
   if (!VALID_ORDER_TYPES.has(type)) {
     console.warn('/order rejected: invalid type', JSON.stringify(type));
     return res.status(400).json({ ok: false, error: 'invalid_type' });
+  }
+  if (type === 'Предзаказ') {
+    // Full preorder datetime format: "YYYY-MM-DD в HH:MM"
+    const fullTimeStr = String(body.time || '').trim();
+    const fullM = fullTimeStr.match(/^(\d{4})-(\d{2})-(\d{2})\s+в\s+(\d{1,2}):(\d{2})$/);
+    if (!fullM) return res.status(400).json({ ok: false, error: 'invalid_preorder_time_format' });
+    const totalMin = parseInt(fullM[4], 10) * 60 + parseInt(fullM[5], 10);
+    if (totalMin < 7 * 60 || totalMin > 11 * 60) {
+      return res.status(400).json({ ok: false, error: 'preorder_time_out_of_range', message: 'Время предзаказа должно быть в диапазоне 07:00–11:00' });
+    }
+    const orderDate = new Date(`${fullM[1]}-${fullM[2]}-${fullM[3]}T00:00:00`);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const maxDate = new Date(today); maxDate.setDate(today.getDate() + 30);
+    if (orderDate < today) {
+      return res.status(400).json({ ok: false, error: 'preorder_date_in_past', message: 'Дата предзаказа не может быть в прошлом' });
+    }
+    if (orderDate > maxDate) {
+      return res.status(400).json({ ok: false, error: 'preorder_date_too_far', message: 'Дата предзаказа не может быть позже чем через 30 дней' });
+    }
   }
 
   // P2 #12 (сервер): дожидаемся подтверждения записи заказа и отдаём клиенту реальный
@@ -909,14 +951,18 @@ app.post('/review', orderLimiter, async (req, res) => {
   const text = String(body.text || '').trim().slice(0, 2000);
   const items = String(body.items || '').trim().slice(0, 1000);
   const tgId = String(body.telegramId || '0').replace(/[^0-9]/g, '').slice(0, 20) || '0';
+  const ratingRaw = parseInt(body.rating, 10);
+  const rating = Number.isInteger(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : null;
 
   if (!name || !text) {
     return res.status(400).json({ ok: false, error: 'name and text required' });
   }
 
+  const starsStr = rating ? '★'.repeat(rating) + '☆'.repeat(5 - rating) : '—';
   const adminMsg =
     `📝 <b>Новый отзыв из Mini App</b>\n\n` +
     `👤 <b>Имя:</b> ${escHtml(name)}\n` +
+    `⭐ <b>Оценка:</b> ${starsStr}\n` +
     `🆔 <b>Telegram ID:</b> ${escHtml(tgId)} <i>(не верифицирован)</i>\n` +
     (items ? `🛒 <b>Заказ:</b> ${escHtml(items)}\n` : '') +
     `\n💬 ${escHtml(text)}`;
@@ -925,6 +971,15 @@ app.post('/review', orderLimiter, async (req, res) => {
     await tg('sendMessage', { chat_id: String(ADMIN_ID), text: adminMsg, parse_mode: 'HTML' });
   } else {
     console.warn('/review: ADMIN_ID не задан — отзыв не переслан');
+  }
+
+  if (pgPool && rating !== null) {
+    try {
+      await pgPool.query(
+        `UPDATE "Order" SET rating=$1 WHERE "telegramId"=$2 AND rating IS NULL ORDER BY "orderNumber" DESC LIMIT 1`,
+        [rating, tgId]
+      );
+    } catch(e) { console.error('/review rating save:', e.message); }
   }
 
   res.json({ ok: true });
@@ -1015,13 +1070,10 @@ app.post('/api/admin/checkin', async (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    uptime: Math.floor(process.uptime()),
-    database: !!pgPool,
-    telegram: !!BOT_TOKEN,
-    ts: new Date().toISOString(),
-  });
+  const isAdmin = config.ADMIN_SECRET && safeEquals(req.headers['x-admin-secret'] || '', config.ADMIN_SECRET);
+  res.json(isAdmin
+    ? { status: 'ok', uptime: Math.floor(process.uptime()), database: !!pgPool, telegram: !!BOT_TOKEN, ts: new Date().toISOString() }
+    : { status: 'ok' });
 });
 
 // ─── Установка вебхука ────────────────────────────────────────────────────────
@@ -1060,10 +1112,13 @@ async function sendHappyHourNotifications() {
     `Настало время счастливого часа — скидка *30%* на всю оставшуюся продукцию для самовывоза.\n\n` +
     `Успейте забрать! 🥐`;
   const BATCH = 25;
+  const deadIds = new Set(); // 403 = bot blocked, 400 = invalid chat_id
   for (let i = 0; i < clients.length; i += BATCH) {
+    const batch = clients.slice(i, i + BATCH);
     const results = await Promise.all(
-      clients.slice(i, i + BATCH).map(cid =>
+      batch.map((cid, idx) =>
         tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' })
+          .then(r => { if (!r.ok && (r.error_code === 403 || r.error_code === 400)) deadIds.add(batch[idx]); return r; })
           .catch(e => { console.error(`happyHour ${cid}:`, e.message); return { ok: false }; })
       )
     );
@@ -1076,6 +1131,11 @@ async function sendHappyHourNotifications() {
       await new Promise(r => setTimeout(r, waitSec * 1000));
     }
     if (i + BATCH < clients.length) await new Promise(r => setTimeout(r, 1100));
+  }
+  if (deadIds.size > 0) {
+    const cleaned = clients.filter(c => !deadIds.has(c));
+    setProp('known_clients', JSON.stringify(cleaned));
+    console.log(`happyHour: removed ${deadIds.size} dead client IDs`);
   }
 }
 

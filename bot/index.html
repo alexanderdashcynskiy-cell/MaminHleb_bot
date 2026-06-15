@@ -1527,16 +1527,16 @@
     // ── Telegram init ──────────────────────────────────────────────────────────
     let telegramId = null;
     let telegramName = "";
-    window._tgInitData = "";
+    let _tgInitData = "";  // closure-scoped; not on window to prevent external access
     if (window.Telegram && Telegram.WebApp) {
       const tg = Telegram.WebApp;
       tg.ready();
       tg.expand();
-      window._tgInitData = tg.initData || "";
+      _tgInitData = tg.initData || "";
       const user = tg.initDataUnsafe?.user;
       telegramId = user?.id || null;
       telegramName = user?.first_name || "";
-      if (user?.photo_url) {
+      if (user?.photo_url && /^https:\/\/(t\.me|cdn\.telegram\.org)\//.test(user.photo_url)) {
         var imgEl = document.getElementById('user-avatar-img');
         var fallbackEl = document.getElementById('user-avatar-fallback');
         if (imgEl) { imgEl.src = user.photo_url; imgEl.style.display = 'block'; }
@@ -4276,28 +4276,29 @@
           <p class="text-coffee/60 text-xs font-semibold">— ${escHtml(r.name)}</p>
         </div>`).join('');
     }
-    function submitReview(event) {
+    async function submitReview(event) {
       if (event) event.preventDefault();
       const name = document.getElementById('review-name').value.trim();
       const text = document.getElementById('review-text').value.trim();
+      const rating = parseInt(document.getElementById('review-rating').value, 10) || 5;
       if (!name || !text) { showToast('Пожалуйста, укажите имя и текст отзыва', '⚠️'); return; }
       const items = (_lastReceiptData.cartSnapshot || [])
         .map(i => i.product_name + (i.selected_size ? ' ('+i.selected_size+')' : '') + ' x'+i.quantity)
         .join(', ');
-      fetch('/review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          text,
-          telegramId: telegramId || '0',
-          items
-        })
-      }).catch(() => {});
-      reviews.unshift({ name, rating: 5, text });
-      renderReviews();
-      showToast(`Спасибо, ${name}! Ваш отзыв получен 🙏`, '✓');
-      closeReviewForm();
+      try {
+        const res = await fetch('/review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, text, rating, telegramId: telegramId || '0', items })
+        });
+        if (!res.ok) { showToast('Не удалось отправить отзыв. Попробуйте позже.', '⚠️'); return; }
+        reviews.unshift({ name, rating, text });
+        renderReviews();
+        showToast(`Спасибо, ${name}! Ваш отзыв получен 🙏`, '✓');
+        closeReviewForm();
+      } catch {
+        showToast('Ошибка сети. Проверьте соединение.', '⚠️');
+      }
     }
 
     // ── Referral ───────────────────────────────────────────────────────────────
@@ -4364,7 +4365,7 @@
                     type: order.type,
                     name: order.name,
                     phone: order.phone,
-                    tgInitData: window._tgInitData || "",
+                    tgInitData: _tgInitData || "",
                     deliveryMethod: order.deliveryMethod || "pickup",
                     address: order.address || "Самовывоз",
                     time: order.time || "Как можно быстрее",
