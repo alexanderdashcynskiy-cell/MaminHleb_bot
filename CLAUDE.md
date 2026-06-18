@@ -1,7 +1,8 @@
 # CLAUDE.md — MaminHleb_bot
 
 ## Проект
-Telegram-бот и Mini App для пекарни "Мамин Хлеб". Node.js, Express, Google Sheets API, Telegram Bot API, файловое хранилище состояния (state.json).
+Telegram-бот и Mini App для пекарни "Мамин Хлеб". Node.js, Express, PostgreSQL
+(через pg напрямую — без ORM), Telegram Bot API.
 
 ## Правила чтения файлов
 
@@ -13,18 +14,29 @@ Telegram-бот и Mini App для пекарни "Мамин Хлеб". Node.js
 
 ## Ключевые файлы
 
-- `bot/index.js` — 1195 строк, основной бэкенд бота
-- `bot/index.html` — 2341 строка, PRODUCTION Mini App (именно этот файл раздаётся)
-- `index.html` — 2440 строк, НЕ используется в production (мёртвый файл)
-- `bot/.env.example` — переменные окружения (неполный список)
+- `bot/index.js` — основной бэкенд бота
+- `bot/index.html` — PRODUCTION Mini App (единственный файл фронтенда)
+- `bot/public/fonts/` — самохостинг Google Fonts (Montserrat, Playfair Display, Poppins)
+- `bot/.env.example` — переменные окружения
 - `AUDIT.md` — результаты аудита v2.2, 204 проблемы
 
-## Известные критические баги
+## Архитектура (после security-аудита)
 
-- `bot/index.html:2315` — `mode: 'no-cors'`, ответ сервера никогда не читается
-- `bot/index.js:17` — `Access-Control-Allow-Origin: *`, открытый CORS
-- `bot/index.js:920` — `/webhook` без проверки `X-Telegram-Bot-Api-Secret-Token`
-- `bot/index.js:39` — `state.json` несовместим с ephemeral FS Railway
-- `bot/index.html:831` — `initDataUnsafe.user.id` используется как доверенный идентификатор
-- `bot/index.js:146,169,758,907` — `valueInputOption: USER_ENTERED`, риск formula injection
-- Два расходящихся файла Mini App: `bot/index.html` (prod) и `index.html` (мёртвый)
+- **Хранилище**: PostgreSQL таблица `bot_state` (key/value + TTL); state.json удалён
+- **Auth**: `X-Telegram-Bot-Api-Secret-Token` на `/webhook`; `X-Admin-Secret` на `/health` и `/api/order/done`
+- **initData**: HMAC-SHA256 верификация; закрыто в closure (`_tgInitData`), не на `window`
+- **CORS**: ограничен по origin; `trust proxy 1` задокументирован
+- **Поля заказа**: длина ограничена (phone 30, name 100, address 300, note 500)
+- **HTML**: `escHtml()` — 5-символьное экранирование для Telegram-сообщений
+- **Шрифты**: самохостинг через `bot/public/fonts/fonts.css`, без запросов к google.com
+
+## Статус багов (все исправлено в аудите)
+
+- ✅ `mode: 'no-cors'` — исправлен на стандартный fetch с обработкой ответа
+- ✅ `Access-Control-Allow-Origin: *` — ограничен whitelist-ом
+- ✅ `/webhook` без проверки секрета — `X-Telegram-Bot-Api-Secret-Token` добавлен
+- ✅ `state.json` на ephemeral FS — заменён на PostgreSQL `bot_state`
+- ✅ `initDataUnsafe.user.id` как доверенный ID — заменён на верифицированный initData
+- ✅ `valueInputOption: USER_ENTERED` — Google Sheets удалены, данные в PostgreSQL
+- ✅ Два файла Mini App — `index.html` в корне удалён, единственный файл `bot/index.html`
+- ✅ Google Fonts — самохостинг, CSP больше не разрешает fonts.googleapis.com
