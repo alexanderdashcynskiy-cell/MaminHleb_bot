@@ -467,7 +467,7 @@ function priceOrder(body, isPreorder) {
       itemsText = parsed.flatMap(i => {
         const name = (i.product_name || '').trim();
         const qty  = Math.floor(Number(i.quantity));
-        if (!name || !Number.isFinite(qty) || qty <= 0) return [];
+        if (!name || !Number.isFinite(qty) || qty <= 0 || qty > 500) return [];
         const serverPrice = catalogPriceMap[name.toLowerCase()];
         if (serverPrice === undefined) {
           console.warn(`priceOrder: unknown product "${name.replace(/[\r\n\t]/g, ' ')}" — rejected (not in CATALOG)`);
@@ -757,7 +757,7 @@ async function handleTextMessage(message) {
       const orderNum = data.orderNumber || data.rowNum;
       await pgPool.query(
         `UPDATE "Order" SET review=$1, rating=$2 WHERE "orderNumber"=$3`,
-        [msgText, data.stars || null, String(orderNum)]
+        [msgText.slice(0, 2000), data.stars || null, String(orderNum)]
       );
       console.log(`Review saved for order ${orderNum}`);
     } catch(e) {
@@ -976,7 +976,10 @@ app.post('/review', orderLimiter, async (req, res) => {
   if (pgPool && rating !== null) {
     try {
       await pgPool.query(
-        `UPDATE "Order" SET rating=$1 WHERE "telegramId"=$2 AND rating IS NULL ORDER BY "orderNumber" DESC LIMIT 1`,
+        `UPDATE "Order" SET rating=$1 WHERE id = (
+           SELECT id FROM "Order" WHERE "telegramId"=$2 AND rating IS NULL
+           ORDER BY "createdAt" DESC LIMIT 1
+         )`,
         [rating, tgId]
       );
     } catch(e) { console.error('/review rating save:', e.message); }
