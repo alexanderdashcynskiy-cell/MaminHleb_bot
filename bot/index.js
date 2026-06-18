@@ -1072,11 +1072,22 @@ app.post('/api/admin/checkin', async (req, res) => {
   }
 });
 
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
   const isAdmin = config.ADMIN_SECRET && safeEquals(req.headers['x-admin-secret'] || '', config.ADMIN_SECRET);
-  res.json(isAdmin
-    ? { status: 'ok', uptime: Math.floor(process.uptime()), database: !!pgPool, telegram: !!BOT_TOKEN, ts: new Date().toISOString() }
-    : { status: 'ok' });
+  if (!isAdmin) return res.json({ status: 'ok' });
+  // Реальный пинг БД: !!pgPool всегда true даже когда база недоступна —
+  // для дашборда мониторинга это давало ложное «БД ок».
+  let database = false;
+  if (pgPool) {
+    try { await pgPool.query('SELECT 1'); database = true; } catch { database = false; }
+  }
+  res.json({
+    status: 'ok',
+    uptime: Math.floor(process.uptime()),
+    database,
+    telegram: !!BOT_TOKEN,
+    ts: new Date().toISOString(),
+  });
 });
 
 // ─── Установка вебхука ────────────────────────────────────────────────────────
