@@ -12,8 +12,10 @@ const { config, validateConfig } = require('./config');
 // ─── Мониторинг ───────────────────────────────────────────────────────────────
 let _botReqTotal = 0;
 let _botReq5xx   = 0;
-const _botReqTimesMs = [];
-const _botStartedAt  = Date.now();
+const _botReqTimesMs   = [];
+const _botReqTimestamps = [];
+let _botPeakRpm = 0;
+const _botStartedAt = Date.now();
 
 const BOT_ERR_LOG = [];
 function pushBotErrLog(tag, msg) {
@@ -76,10 +78,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Метрики запросов: счётчик, 5xx, скользящее окно 500 ответов (p50/p95/avg)
+// Метрики запросов: счётчик, 5xx, скользящее окно 500 ответов (p50/p95/avg), RPM
 app.use((req, res, next) => {
   const start = Date.now();
   _botReqTotal++;
+  _botReqTimestamps.push(start);
+  const cutoff = start - 60_000;
+  let i = 0; while (i < _botReqTimestamps.length && _botReqTimestamps[i] < cutoff) i++;
+  if (i > 0) _botReqTimestamps.splice(0, i);
+  if (_botReqTimestamps.length > _botPeakRpm) _botPeakRpm = _botReqTimestamps.length;
   res.on('finish', () => {
     const ms = Date.now() - start;
     _botReqTimesMs.push(ms);
@@ -1170,6 +1177,10 @@ app.get('/health', async (req, res) => {
       p50,
       p95,
       window:    sorted.length,
+      rpm: {
+        current: _botReqTimestamps.filter(t => t >= Date.now() - 60_000).length,
+        peak:    _botPeakRpm,
+      },
     },
     ordersToday,
     stockCacheAge: _stockCache.ts ? Math.round((Date.now() - _stockCache.ts) / 1000) : null,
