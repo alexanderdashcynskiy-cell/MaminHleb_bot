@@ -9,6 +9,37 @@ const rateLimit = require('express-rate-limit');
 const crypto    = require('crypto');
 const { config, validateConfig } = require('./config');
 
+// ─── Мониторинг ───────────────────────────────────────────────────────────────
+let _botReqTotal = 0;
+let _botReq5xx   = 0;
+const _botReqTimesMs = [];
+const _botStartedAt  = Date.now();
+
+const BOT_ERR_LOG = [];
+function pushBotErrLog(tag, msg) {
+  BOT_ERR_LOG.push({ ts: Date.now(), tag, msg: String(msg).slice(0, 400) });
+  if (BOT_ERR_LOG.length > 100) BOT_ERR_LOG.shift();
+}
+
+// Глобальный перехват console.error — все 35 мест ошибок автоматически
+const _origConsoleError = console.error.bind(console);
+console.error = (...args) => {
+  _origConsoleError(...args);
+  try {
+    const first = args[0] != null ? String(args[0]) : '';
+    const m = first.match(/^\[([^\]]+)\]\s*(.*)$/);
+    const tag  = m ? m[1] : 'ERROR';
+    const rest = m ? m[2] : first;
+    const tail = args.slice(1).map(a => (a instanceof Error ? a.message : String(a))).join(' ');
+    pushBotErrLog(tag, [rest, tail].filter(Boolean).join(' '));
+  } catch {}
+};
+
+process.on('unhandledRejection', (reason) => {
+  const msg = reason instanceof Error ? reason.message : String(reason);
+  console.error('[UNHANDLED]', msg);
+});
+
 const app = express();
 // Railway always puts a trusted reverse proxy in front; trust proxy: 1 lets
 // express-rate-limit key on real client IPs from X-Forwarded-For.
@@ -42,6 +73,19 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Headers',  'Content-Type');
   }
   if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+// Метрики запросов: счётчик, 5xx, скользящее окно 500 ответов (p50/p95/avg)
+app.use((req, res, next) => {
+  const start = Date.now();
+  _botReqTotal++;
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    _botReqTimesMs.push(ms);
+    if (_botReqTimesMs.length > 500) _botReqTimesMs.shift();
+    if (res.statusCode >= 500) _botReq5xx++;
+  });
   next();
 });
 
@@ -1075,18 +1119,62 @@ app.post('/api/admin/checkin', async (req, res) => {
 app.get('/health', async (req, res) => {
   const isAdmin = config.ADMIN_SECRET && safeEquals(req.headers['x-admin-secret'] || '', config.ADMIN_SECRET);
   if (!isAdmin) return res.json({ status: 'ok' });
-  // Реальный пинг БД: !!pgPool всегда true даже когда база недоступна —
-  // для дашборда мониторинга это давало ложное «БД ок».
-  let database = false;
+
+  let database = false, dbLatencyMs = 0;
   if (pgPool) {
-    try { await pgPool.query('SELECT 1'); database = true; } catch { database = false; }
+    try {
+      const t = Date.now();
+      await pgPool.query('SELECT 1');
+      database = true;
+      dbLatencyMs = Date.now() - t;
+    } catch { database = false; }
   }
+
+  // Метрики запросов + перцентили
+  const sorted = [..._botReqTimesMs].sort((a, b) => a - b);
+  const p50    = sorted[Math.floor(sorted.length * 0.5)]  ?? 0;
+  const p95    = sorted[Math.floor(sorted.length * 0.95)] ?? 0;
+  const avgMs  = sorted.length ? Math.round(sorted.reduce((a, b) => a + b, 0) / sorted.length) : 0;
+
+  // Разбивка ошибок по тегу
+  const errByTag = {};
+  BOT_ERR_LOG.forEach(e => { errByTag[e.tag] = (errByTag[e.tag] || 0) + 1; });
+
+  // Заказы за сегодня (UTC+3 Минск)
+  let ordersToday = 0;
+  if (pgPool) {
+    try {
+      const MINSK_MS = 3 * 60 * 60 * 1000;
+      const minskNow = new Date(Date.now() + MINSK_MS);
+      minskNow.setUTCHours(0, 0, 0, 0);
+      const todayStart = new Date(minskNow.getTime() - MINSK_MS);
+      const { rows } = await pgPool.query(
+        'SELECT COUNT(*) FROM "Order" WHERE "createdAt" >= $1', [todayStart]
+      );
+      ordersToday = parseInt(rows[0].count, 10) || 0;
+    } catch {}
+  }
+
   res.json({
-    status: 'ok',
-    uptime: Math.floor(process.uptime()),
+    status:      'ok',
+    startedAt:   _botStartedAt,
+    uptime:      Math.floor(process.uptime()),
     database,
-    telegram: !!BOT_TOKEN,
-    ts: new Date().toISOString(),
+    dbLatencyMs,
+    telegram:    !!BOT_TOKEN,
+    ts:          new Date().toISOString(),
+    requests: {
+      total:     _botReqTotal,
+      errors5xx: _botReq5xx,
+      avgMs,
+      p50,
+      p95,
+      window:    sorted.length,
+    },
+    ordersToday,
+    stockCacheAge: _stockCache.ts ? Math.round((Date.now() - _stockCache.ts) / 1000) : null,
+    errByTag,
+    recentErrors:  BOT_ERR_LOG.slice().reverse().slice(0, 30),
   });
 });
 
