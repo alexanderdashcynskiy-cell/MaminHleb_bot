@@ -336,7 +336,7 @@ async function saveOrderToDB(body, isPreorder, total, orderNum, clientId, itemsT
     return true;
   } catch(e) {
     console.error('saveOrderToDB FAILED:', e.message);
-    console.error('  code:', e.code, '| detail:', e.detail);
+    console.error('  code:', e.code);
     return false;
   }
 }
@@ -842,9 +842,9 @@ app.post('/webhook', (req, res) => {
   const body = req.body;
   if (!body) return;
   if (body.callback_query) {
-    handleCallback(body.callback_query).catch(e => console.error('callback err:', e));
+    handleCallback(body.callback_query).catch(e => console.error('callback err:', e?.message || String(e)));
   } else if (body.message?.text) {
-    handleTextMessage(body.message).catch(e => console.error('message err:', e));
+    handleTextMessage(body.message).catch(e => console.error('message err:', e?.message || String(e)));
   }
 });
 
@@ -909,7 +909,7 @@ app.post('/order', orderLimiter, async (req, res) => {
     }
     return res.status(502).json({ ok: false, error: (result && result.error) || 'order_failed' });
   } catch(e) {
-    console.error('order err:', e);
+    console.error('order err:', e?.message || String(e));
     return res.status(500).json({ ok: false, error: 'internal' });
   }
 });
@@ -958,7 +958,7 @@ app.post('/api/order/done', async (req, res) => {
     text:         `🎉 Ваш заказ №${orderNum} уже у вас!\n\nСпасибо, что выбрали нас! 🙏\n\nОцените качество обслуживания:`,
     reply_markup: { inline_keyboard: ratingKeyboard(orderNum) }
   });
-  console.log(`/api/order/done: rating send →`, JSON.stringify(ratingResult).slice(0, 200));
+  console.log(`/api/order/done: rating send → ok=${ratingResult?.ok}`);
   if (ratingResult?.ok) {
     setProp(`done_msg_${orderNum}`, JSON.stringify({ chatId: String(clientId), msgId: ratingResult.result.message_id }));
   }
@@ -1206,7 +1206,7 @@ async function setWebhook() {
   };
   if (WEBHOOK_SECRET) webhookPayload.secret_token = WEBHOOK_SECRET;
   const res = await tg('setWebhook', webhookPayload);
-  console.log('setWebhook:', JSON.stringify(res));
+  console.log('setWebhook: ok=', res?.ok, res?.description || '');
 }
 
 function mskDateKey() {
@@ -1232,7 +1232,7 @@ async function sendHappyHourNotifications() {
       batch.map((cid, idx) =>
         tg('sendMessage', { chat_id: String(cid), text, parse_mode: 'Markdown' })
           .then(r => { if (!r.ok && (r.error_code === 403 || r.error_code === 400)) deadIds.add(batch[idx]); return r; })
-          .catch(e => { console.error(`happyHour ${cid}:`, e.message); return { ok: false }; })
+          .catch(e => { console.error(`happyHour …${String(cid).slice(-4)}:`, e.message); return { ok: false }; })
       )
     );
     // Flood limit Telegram: при 429 ждём retry_after, иначе бот блокируется
@@ -1275,7 +1275,7 @@ app.listen(PORT, async () => {
     // позже 06:10 не пошлёт второе сообщение.
     if (h === 6 && m < 10 && getProp('checkin_sent_date') !== dateKey) {
       setProp('checkin_sent_date', dateKey);
-      sendAdminCheckin().catch(e => console.error('checkin err:', e));
+      sendAdminCheckin().catch(e => console.error('checkin err:', e?.message || String(e)));
     }
   }, 60000);
 
@@ -1289,7 +1289,7 @@ app.listen(PORT, async () => {
     const startH    = isWeekend ? HAPPY_HOUR.weekend.start : HAPPY_HOUR.weekday.start;
     if (h === startH && getProp('happy_hour_sent_date') !== dateKey) {
       setProp('happy_hour_sent_date', dateKey);
-      sendHappyHourNotifications().catch(e => console.error('happyHour err:', e));
+      sendHappyHourNotifications().catch(e => console.error('happyHour err:', e?.message || String(e)));
     }
   }, 60000);
 });
