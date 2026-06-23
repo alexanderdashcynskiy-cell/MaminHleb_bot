@@ -1255,6 +1255,13 @@ async function sendHappyHourNotifications() {
 // ─── Запуск ───────────────────────────────────────────────────────────────────
 validateConfig();
 
+// Global error handler — prevents Express default handler from leaking stack traces.
+app.use((err, _req, res, _next) => {
+  console.error('[UNHANDLED ROUTE ERROR]', err?.message || String(err));
+  if (res.headersSent) return;
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
   await initDB();             // состояние загружено из PostgreSQL
