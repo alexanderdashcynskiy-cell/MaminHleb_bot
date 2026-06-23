@@ -848,6 +848,10 @@ app.post('/order', orderLimiter, async (req, res) => {
   const phone = String(body.phone || '').trim().slice(0, 30);
   const name  = String(body.name  || '').trim().slice(0, 100);
   const type  = String(body.type  || '').trim();
+  // Усечённые значения нужно записать ОБРАТНО в body — saveOrderToDB читает body.name/
+  // body.phone напрямую. Без этого лимиты (name 100, phone 30) не доходят до БД.
+  body.phone   = phone;
+  body.name    = name;
   body.address = String(body.address || '').trim().slice(0, 300);
   body.note    = String(body.note    || '').trim().slice(0, 500);
 
