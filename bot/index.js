@@ -544,22 +544,6 @@ function priceOrder(body, isPreorder) {
   return { itemsText, total, totalStr, hhActive };
 }
 
-// Формат блока доставки/самовывоза/предзаказа. P2 #15: валидируем формат "YYYY-MM-DD в HH:MM".
-function buildDeliveryBlock(body, isPreorder) {
-  if (isPreorder && body.time && body.time !== 'undefined') {
-    const pt = parsePreorderTime(body.time);
-    return `*ПРЕДЗАКАЗ:*\n📅 Дата: ${pt.niceDate}\n🕐 Время: ${pt.rawTime}`;
-  }
-  if (body.address && body.address !== 'undefined' && body.address !== 'Самовывоз') {
-    const payLabel = body.payment === 'card' ? '💳 Картой' : body.payment === 'cash' ? '💵 Наличными' : '';
-    return `*АДРЕС ДОСТАВКИ:*\n🚕 ${body.address}${payLabel ? `\n${payLabel}` : ''}`;
-  }
-  if (body.time && body.time !== 'undefined') {
-    return `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74\n🕐 Время: ${body.time}`;
-  }
-  return `*САМОВЫВОЗ:*\n📍 г. Витебск, ул. Ленина 74`;
-}
-
 async function decrementStock(body) {
   if (!pgPool) return;
   try {
