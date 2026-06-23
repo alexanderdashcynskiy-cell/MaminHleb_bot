@@ -1246,7 +1246,17 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, async () => {
+const shutdown = async (signal) => {
+  console.log(`[${signal}] Graceful shutdown…`);
+  server.close(async () => {
+    if (pgPool) await pgPool.end();
+    process.exit(0);
+  });
+};
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
+
+const server = app.listen(PORT, async () => {
   console.log(`Bot listening on port ${PORT}`);
   await initDB();             // состояние загружено из PostgreSQL
   await syncCatalogToWarehouse();
