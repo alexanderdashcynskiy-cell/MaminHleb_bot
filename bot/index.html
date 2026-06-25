@@ -1710,6 +1710,16 @@
           // Перерисовываем карточки, чтобы показать актуальный остаток и новые флаги
           renderBestsellers();
           renderProducts();
+          // Если пользователь уже на экране «Хиты продаж» — обновляем сетку сразу
+          var bsScreen = document.getElementById('screen-bestsellers');
+          if (bsScreen && bsScreen.style.display !== 'none') {
+            var bGrid = document.getElementById('bestsellers-grid');
+            if (bGrid) {
+              var _defaultIds = ['pastry-cheese','pastry-sausage','pastry-khachapuri','piroshki-meat','coffee-cappuccino'];
+              var _bIds = _featuredBestsellers.length > 0 ? _featuredBestsellers : _defaultIds;
+              bGrid.innerHTML = products.filter(function(p){return _bIds.includes(p.id);}).map(function(p){return productCardHTML(p,false);}).join('');
+            }
+          }
         }
       } catch(e) {
         console.log('fetchStock failed (offline?):', e.message);

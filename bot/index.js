@@ -310,6 +310,12 @@ const CATALOG = [
   { name: 'Трубочки со сгущёнкой', price: 2.50,  category: 'Десерты',  emoji: '🥮', desc: 'Хрустящие трубочки с нежной начинкой из сгущёнки' },
 ];
 
+// Маппинг русских категорий (как в БД) → клиентские slug-и (как в CATALOG)
+const CAT_MAP = {
+  'Хлеб': 'bread', 'Десерты': 'desserts', 'Пироги': 'pies',
+  'Торты': 'cakes', 'Пирожки': 'pastries', 'Пицца': 'pizza', 'Кофе': 'buns',
+};
+
 // Категории, у которых нет складского учёта — всегда в наличии.
 const UNTRACKED_CATEGORIES = new Set(['Кофе']);
 const untrackedNames = new Set(
@@ -1105,6 +1111,16 @@ const _stockCache = { payload: null, ts: 0 };
 const STOCK_CACHE_TTL = 30_000;
 function invalidateStockCache() { _stockCache.payload = null; _stockCache.ts = 0; }
 
+app.post('/api/admin/invalidate-cache', (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  const ADMIN_SECRET = config.ADMIN_SECRET;
+  if (!ADMIN_SECRET || !safeEquals(secret, ADMIN_SECRET)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  invalidateStockCache();
+  res.json({ ok: true });
+});
+
 app.get('/api/stock', stockLimiter, async (req, res) => {
   if (!pgPool) {
     return res.json({ ok: false, error: 'db_unavailable', stock: {}, catalog: [], flags: {} });
@@ -1113,16 +1129,34 @@ app.get('/api/stock', stockLimiter, async (req, res) => {
     return res.json(_stockCache.payload);
   }
   try {
-    const result = await pgPool.query('SELECT name, stock, "isNew", "isBestSeller" FROM "Product"');
+    const result = await pgPool.query(
+      'SELECT id, name, stock, price, category, image, weight, "isNew", "isBestSeller" FROM "Product"'
+    );
     const stock = {};
     const flags = {};
+    const catalogNames = new Set(CATALOG.map(p => p.name.toLowerCase()));
+    const extraCatalog = [];
     result.rows.forEach(r => {
       if (!untrackedNames.has(r.name.toLowerCase())) stock[r.name.toLowerCase()] = r.stock;
       if (r.isNew || r.isBestSeller) {
         flags[r.name.toLowerCase()] = { isNew: !!r.isNew, bestseller: !!r.isBestSeller };
       }
+      // Товары добавленные через CRM и отсутствующие в хардкоде CATALOG
+      if (!catalogNames.has(r.name.toLowerCase())) {
+        extraCatalog.push({
+          id: `db-${r.id}`,
+          name: r.name,
+          price: parseFloat(r.price) || 0,
+          category: CAT_MAP[r.category] || 'pastries',
+          image: r.image || '📦',
+          description: '',
+          weight: r.weight || '',
+          isNew: !!r.isNew,
+          bestseller: !!r.isBestSeller,
+        });
+      }
     });
-    const payload = { ok: true, stock, catalog: CATALOG, flags };
+    const payload = { ok: true, stock, catalog: [...CATALOG, ...extraCatalog], flags };
     _stockCache.payload = payload;
     _stockCache.ts = Date.now();
     res.json(payload);
