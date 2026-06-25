@@ -38,8 +38,16 @@ console.error = (...args) => {
 };
 
 process.on('unhandledRejection', (reason) => {
-  const msg = reason instanceof Error ? reason.message : String(reason);
+  const msg = reason instanceof Error ? `${reason.message}\n${reason.stack}` : String(reason);
   console.error('[UNHANDLED]', msg);
+});
+
+// Синхронные исключения вне try/catch иначе убивают процесс молча, без записи
+// в BOT_ERR_LOG и без закрытия пула. Логируем и даём процессу упасть штатно —
+// Railway/PM2 перезапустят. process.exit здесь НЕ вызываем: после
+// uncaughtException состояние процесса считается повреждённым.
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT]', err instanceof Error ? `${err.message}\n${err.stack}` : String(err));
 });
 
 const app = express();
@@ -208,6 +216,42 @@ async function initDB() {
       )
     `);
   } catch(e) { console.error('CREATE Product:', e.message); }
+
+  // Таблица "Order" — раньше её создавала только CRM (server.ts ensureTables).
+  // Если бот стартовал до развёртывания CRM, все saveOrderToDB() падали с
+  // "relation Order does not exist" и заказы терялись. Схема байт-совместима
+  // с CRM ensureTables — кто стартует первым, тот и создаёт; второй no-op.
+  try {
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS "Order" (
+        "id"           SERIAL PRIMARY KEY,
+        "orderNumber"  TEXT NOT NULL DEFAULT '',
+        "createdAt"    TIMESTAMP DEFAULT NOW(),
+        "customerName" TEXT NOT NULL DEFAULT 'Гость',
+        "phone"        TEXT NOT NULL DEFAULT '',
+        "content"      TEXT NOT NULL DEFAULT '',
+        "amount"       FLOAT NOT NULL DEFAULT 0,
+        "status"       TEXT NOT NULL DEFAULT 'Новый',
+        "address"      TEXT NOT NULL DEFAULT '',
+        "isPreorder"   BOOLEAN NOT NULL DEFAULT false,
+        "telegramId"   TEXT NOT NULL DEFAULT '',
+        "crmMessageId" INT,
+        "review"       TEXT,
+        "rating"       INT,
+        "adminReply"   TEXT,
+        "replyStatus"  TEXT,
+        "paymentMethod" TEXT
+      )
+    `);
+    // Колонки могли отсутствовать, если таблицу создала старая версия CRM.
+    await pgPool.query(`ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "paymentMethod" TEXT`);
+    // Индексы — без них WHERE по telegramId/orderNumber/createdAt идут seq scan.
+    await pgPool.query(`CREATE UNIQUE INDEX IF NOT EXISTS "Order_orderNumber_key" ON "Order" ("orderNumber")`);
+    await pgPool.query(`CREATE INDEX IF NOT EXISTS "Order_status_idx"     ON "Order" ("status")`);
+    await pgPool.query(`CREATE INDEX IF NOT EXISTS "Order_createdAt_idx"  ON "Order" ("createdAt")`);
+    await pgPool.query(`CREATE INDEX IF NOT EXISTS "Order_phone_idx"      ON "Order" ("phone")`);
+    await pgPool.query(`CREATE INDEX IF NOT EXISTS "Order_telegramId_idx" ON "Order" ("telegramId")`);
+  } catch(e) { console.error('CREATE Order:', e.message); }
   // Дамп схемы БД в логи убран: Railway-логи доступны через dashboard/API,
   // полный список таблиц и колонок — подарок атакующему
 }
@@ -578,7 +622,7 @@ async function handleOrder(body) {
   const isPreorder = body.type === 'Предзаказ';
 
   const clientId = resolveClientId(body);
-  const { total } = priceOrder(body, isPreorder);
+  const { total, itemsText, hhActive } = priceOrder(body, isPreorder);
   const orderNum  = await getNextOrderNum();
 
   const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId);
@@ -614,6 +658,33 @@ async function handleOrder(body) {
       parse_mode: 'Markdown'
     });
     if (r?.ok) setProp(`receipt_${orderNum}`, JSON.stringify({ chatId: clientId, msgId: r.result.message_id }));
+  }
+
+  // Уведомление администратору/доставке о новом заказе. Раньше бот молча писал
+  // заказ в БД и сообщал клиенту «ожидайте подтверждения», но персонал узнавал о
+  // заказе только из CRM-дашборда — при недоступной CRM заказы оставались
+  // незамеченными. tg() никогда не бросает, поэтому сбой не ломает оформление.
+  const addr = (() => {
+    const a = body.address || 'Самовывоз';
+    const t = (body.time || '').trim();
+    if (!isPreorder && a === 'Самовывоз' && t) return `Самовывоз (${t})`;
+    return a;
+  })();
+  const adminOrderMsg =
+    `🔔 <b>Новый заказ №${orderNum}</b>${isPreorder ? ' <i>(предзаказ)</i>' : ''}\n\n` +
+    `👤 <b>Имя:</b> ${escHtml(body.name || 'Гость')}\n` +
+    (body.phone ? `📞 <b>Телефон:</b> ${escHtml(body.phone)}\n` : '') +
+    `📍 <b>Доставка:</b> ${escHtml(addr)}\n` +
+    (itemsText ? `\n🛒 <b>Состав:</b>\n${escHtml(itemsText)}\n` : '') +
+    `\n💰 <b>Итого:</b> ${total.toFixed(2)} Br${hhActive ? ' 🎉 (Счастливый час)' : ''}`;
+
+  // Адресаты без дублей: админ + чат доставки (если задан и отличается).
+  const notifyTargets = [...new Set([ADMIN_ID, DELIVERY_CHAT_ID].filter(Boolean).map(String))];
+  for (const chatId of notifyTargets) {
+    await tg('sendMessage', { chat_id: chatId, text: adminOrderMsg, parse_mode: 'HTML' });
+  }
+  if (notifyTargets.length === 0) {
+    console.warn(`handleOrder: ни ADMIN_ID, ни DELIVERY_CHAT_ID не заданы — заказ №${orderNum} не отправлен персоналу`);
   }
 
   return { ok: true, orderNum };
@@ -1250,10 +1321,22 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+let _shuttingDown = false;
 const shutdown = async (signal) => {
+  if (_shuttingDown) return;   // второй SIGTERM не должен запускать второй таймер
+  _shuttingDown = true;
   console.log(`[${signal}] Graceful shutdown…`);
+  // Принудительный выход, если server.close() зависнет на keep-alive
+  // соединениях — иначе процесс никогда не завершится и Railway убьёт его
+  // жёстко по своему таймауту.
+  const forceTimer = setTimeout(() => {
+    console.error('[shutdown] Forced exit after 10s timeout');
+    process.exit(1);
+  }, 10000);
+  forceTimer.unref();
   server.close(async () => {
-    if (pgPool) await pgPool.end();
+    try { if (pgPool) await pgPool.end(); } catch {}
+    clearTimeout(forceTimer);
     process.exit(0);
   });
 };
