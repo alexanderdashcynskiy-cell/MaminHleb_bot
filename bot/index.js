@@ -329,6 +329,10 @@ async function syncCatalogToWarehouse() {
     await pgPool.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS category VARCHAR(64)`);
     await pgPool.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "isNew" BOOLEAN NOT NULL DEFAULT false`);
     await pgPool.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "isBestSeller" BOOLEAN NOT NULL DEFAULT false`);
+    // image/weight создаёт CRM (Prisma). Если бот стартует первым на чистой БД —
+    // /api/stock читает эти колонки и падает с "column does not exist". Гарантируем их наличие.
+    await pgPool.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "image" TEXT NOT NULL DEFAULT '📦'`);
+    await pgPool.query(`ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "weight" TEXT NOT NULL DEFAULT ''`);
 
     // Batch: раньше здесь было 2 запроса × 41 позиция = 82 round-trip при каждом
     // холодном старте (2-5 сек блокировки readiness). Теперь 2 запроса на весь каталог.
@@ -459,7 +463,10 @@ async function tg(method, payload, timeoutMs = 10_000) {
       body:    JSON.stringify(payload),
       signal:  ctrl.signal
     });
-    return res.json();
+    // await обязателен: без него res.json() возвращается как promise и при
+    // не-JSON ответе (HTML-страница лимита, ошибка прокси/шлюза) reject уходит
+    // в вызывающий код мимо этого catch — tg() «бросает», хотя обязан не бросать.
+    return await res.json();
   } catch(e) {
     if (e.name === 'AbortError') {
       console.error(`tg(${method}): timeout after ${timeoutMs}ms`);
@@ -553,14 +560,36 @@ function resolveClientId(body) {
 
 // P0 #5: серверные цены из CATALOG; P3 #14: скидка happy hour на стороне сервера.
 // Возвращает { itemsText, total, totalStr, hhActive } без побочных эффектов.
-function priceOrder(body, isPreorder) {
-  const catalogPriceMap = {};
-  CATALOG.forEach(p => { catalogPriceMap[p.name.toLowerCase()] = p.price; });
+async function priceOrder(body, isPreorder) {
+  const priceMap = {};
+  CATALOG.forEach(p => { priceMap[p.name.toLowerCase()] = p.price; });
+
+  let parsed = null;
+  try {
+    parsed = typeof body.items === 'string' ? JSON.parse(body.items) : body.items;
+  } catch(e) { parsed = null; }
+
+  // Цены товаров, добавленных через CRM, отсутствуют в хардкоде CATALOG —
+  // без этого серверная цена была бы 0 (товар отдавался бесплатно). Дотягиваем
+  // цены из БД одним запросом для всех позиций, которых нет в CATALOG.
+  if (Array.isArray(parsed) && parsed.length <= 50 && pgPool) {
+    const missing = [...new Set(parsed
+      .map(i => (i.product_name || '').trim().toLowerCase())
+      .filter(n => n && priceMap[n] === undefined))];
+    if (missing.length) {
+      try {
+        const { rows } = await pgPool.query(
+          'SELECT name, price FROM "Product" WHERE lower(name) = ANY($1::text[])',
+          [missing]
+        );
+        rows.forEach(r => { priceMap[r.name.toLowerCase()] = parseFloat(r.price) || 0; });
+      } catch(e) { console.error('priceOrder DB price lookup:', e.message); }
+    }
+  }
 
   let itemsText = '';
   let total = 0;
   try {
-    const parsed = typeof body.items === 'string' ? JSON.parse(body.items) : body.items;
     if (Array.isArray(parsed)) {
       // DoS-защита: без лимита атакующий может прислать 100 000 позиций —
       // O(N) цикл здесь + O(N) SQL в decrementStock
@@ -569,9 +598,9 @@ function priceOrder(body, isPreorder) {
         const name = (i.product_name || '').trim();
         const qty  = Math.floor(Number(i.quantity));
         if (!name || !Number.isFinite(qty) || qty <= 0 || qty > 500) return [];
-        const serverPrice = catalogPriceMap[name.toLowerCase()];
+        const serverPrice = priceMap[name.toLowerCase()];
         if (serverPrice === undefined) {
-          console.warn(`priceOrder: unknown product "${name.replace(/[\r\n\t]/g, ' ')}" — rejected (not in CATALOG)`);
+          console.warn(`priceOrder: unknown product "${name.replace(/[\r\n\t]/g, ' ')}" — rejected (not in CATALOG/DB)`);
           return [];
         }
         const price = serverPrice;
@@ -628,7 +657,7 @@ async function handleOrder(body) {
   const isPreorder = body.type === 'Предзаказ';
 
   const clientId = resolveClientId(body);
-  const { total, itemsText, hhActive } = priceOrder(body, isPreorder);
+  const { total, itemsText, hhActive } = await priceOrder(body, isPreorder);
   const orderNum  = await getNextOrderNum();
 
   const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId);
