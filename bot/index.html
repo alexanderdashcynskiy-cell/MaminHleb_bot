@@ -2093,7 +2093,8 @@
           }
         }
       } catch(e) {
-        showToast('Err: ' + (e.message || e).toString().substring(0, 40), '❌');
+        console.error('showScreen error:', e);
+        showToast('Что-то пошло не так. Попробуйте ещё раз.', '⚠️');
       }
       updateFloatingCart();
     }
@@ -2561,7 +2562,8 @@
         openProductModal();
         setTimeout(updateDetailQtyControls, 0);
       } catch(e) {
-        showToast('Err: ' + (e.message || e).toString().substring(0, 40), '❌');
+        console.error('openProductDetail error:', e);
+        showToast('Не удалось открыть товар. Попробуйте ещё раз.', '⚠️');
       }
     }
 
