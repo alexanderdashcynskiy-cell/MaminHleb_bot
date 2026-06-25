@@ -2123,10 +2123,10 @@
           iconWrap.classList.add('pop');
         }
       });
-      renderProducts();
+      renderProducts(true);
     }
 
-    function renderProducts() {
+    function renderProducts(animate = false) {
       let filtered;
       if (currentCategory === 'all') {
         filtered = _featuredNew.length > 0
@@ -2136,17 +2136,36 @@
         filtered = products.filter(p => p.category === currentCategory);
       }
       const grid = document.getElementById('products-grid');
-      grid.style.transition = 'none';
+      const html = filtered.map(p => productCardHTML(p, false)).join('');
+
+      // Обновления остатков/корзины — без анимации, чтобы карточки не мигали.
+      if (!animate) {
+        grid.style.transition = '';
+        grid.style.opacity = '1';
+        grid.style.transform = '';
+        grid.innerHTML = html;
+        return;
+      }
+
+      // Переключение категории — плавный фейд-аут старого → подмена → фейд-ин нового.
+      grid.style.transition = 'opacity 0.16s ease, transform 0.16s ease';
       grid.style.opacity = '0';
-      grid.style.transform = 'translateY(8px)';
-      requestAnimationFrame(function() {
-        grid.innerHTML = filtered.map(p => productCardHTML(p, false)).join('');
+      grid.style.transform = 'translateY(10px)';
+      setTimeout(function() {
+        grid.innerHTML = html;
+        grid.scrollTop = 0;
+        // Сброс без анимации в стартовое состояние, затем плавное проявление.
+        grid.style.transition = 'none';
+        grid.style.opacity = '0';
+        grid.style.transform = 'translateY(10px)';
         requestAnimationFrame(function() {
-          grid.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
-          grid.style.opacity = '1';
-          grid.style.transform = 'translateY(0)';
+          requestAnimationFrame(function() {
+            grid.style.transition = 'opacity 0.28s ease, transform 0.28s cubic-bezier(0.22,1,0.36,1)';
+            grid.style.opacity = '1';
+            grid.style.transform = 'translateY(0)';
+          });
         });
-      });
+      }, 160);
     }
 
     function productCardHTML(p, compact = false) {
