@@ -265,6 +265,11 @@ const HAPPY_HOUR = {
   discount: 0.30,                  // 30% скидка
 };
 
+// Стоимость доставки. Single source of truth серверной цены — должна совпадать
+// с DELIVERY_COST в Mini App (bot/index.html). priceOrder() добавляет её к сумме
+// при deliveryMethod === 'delivery', иначе доставка не попадала в сумму заказа.
+const DELIVERY_COST = 3.50;
+
 // Bot Арх #5: shared catalog schema with frontend — server is the canonical source
 const CATALOG = [
   { name: 'Круассан Французский',    price: 3.50,  category: 'Пирожки',  emoji: '🥐', desc: 'Классический французский круассан с хрустящей слоёной корочкой' },
@@ -620,7 +625,12 @@ async function priceOrder(body, isPreorder) {
   const hhPct = Math.round(HAPPY_HOUR.discount * 100);
   const totalStr = (hhActive ? `~~${(total / hhFactor).toFixed(2)}~~ ` : '') + total.toFixed(2) + ' Br' + (hhActive ? ` 🎉 -${hhPct}% Счастливый час` : '');
 
-  return { itemsText, total, totalStr, hhActive };
+  // Доставка добавляется ПОСЛЕ скидки happy hour (скидка только на товары, как в
+  // Mini App). Предзаказ всегда самовывоз. Сравнение нечувствительно к регистру.
+  const isDelivery = !isPreorder && String(body.deliveryMethod || '').trim().toLowerCase() === 'delivery';
+  if (isDelivery) total = Math.round((total + DELIVERY_COST) * 100) / 100;
+
+  return { itemsText, total, totalStr, hhActive, deliveryFee: isDelivery ? DELIVERY_COST : 0 };
 }
 
 async function decrementStock(body) {
@@ -657,7 +667,7 @@ async function handleOrder(body) {
   const isPreorder = body.type === 'Предзаказ';
 
   const clientId = resolveClientId(body);
-  const { total, itemsText, hhActive } = await priceOrder(body, isPreorder);
+  const { total, itemsText, hhActive, deliveryFee } = await priceOrder(body, isPreorder);
   const orderNum  = await getNextOrderNum();
 
   const saved = await saveOrderToDB(body, isPreorder, total, orderNum, clientId);
@@ -711,6 +721,7 @@ async function handleOrder(body) {
     (body.phone ? `📞 <b>Телефон:</b> ${escHtml(body.phone)}\n` : '') +
     `📍 <b>Доставка:</b> ${escHtml(addr)}\n` +
     (itemsText ? `\n🛒 <b>Состав:</b>\n${escHtml(itemsText)}\n` : '') +
+    (deliveryFee ? `\n🚚 <b>Доставка:</b> ${deliveryFee.toFixed(2)} Br\n` : '') +
     `\n💰 <b>Итого:</b> ${total.toFixed(2)} Br${hhActive ? ' 🎉 (Счастливый час)' : ''}`;
 
   // Адресаты без дублей: админ + чат доставки (если задан и отличается).
